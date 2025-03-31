@@ -92,6 +92,7 @@ const createNodes = (
           "EVENTSTORE_RUN_PROJECTIONS=All",
           "EVENTSTORE_LOG_CONFIG=/etc/eventstore/config/logconfig.json",
           "EVENTSTORE_DISCOVER_VIA_DNS=false",
+          "EVENTSTORE_ALLOW_UNKNOWN_OPTIONS=true",
           "EventStore__Plugins__UserCertificates__Enabled=true",
           ...(insecure
             ? [`EVENTSTORE_INSECURE=true`]
@@ -278,7 +279,7 @@ export class Cluster {
       paramsString = `?${params.join("&")}`;
     }
 
-    return `esdb://${credentials}@${endpoints}${paramsString}`;
+    return `kurrentdb://${credentials}@${endpoints}${paramsString}`;
   };
 
   public up = async (): Promise<void> => {

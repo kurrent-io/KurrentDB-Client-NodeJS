@@ -1,8 +1,5 @@
 # @kurrent/opentelemetry
 
-[![license][license-badge]][license-badge-url]
-[![Github action CI workflow][ci-badge]][ci-badge-url]
-
 This module provides automatic tracing instrumentation for [KurrentDB-Client-NodeJS].
 
 Compatible with OpenTelemetry JS API and SDK `1.0+`.
@@ -46,29 +43,32 @@ registerInstrumentations({
 - For more about OpenTelemetry JavaScript: <https://github.com/open-telemetry/opentelemetry-js>
 - For help or feedback on this project, open an issue or submit a PR
 
-
-## Support
-
-Information on support can be found on our website: [Kurrent Support]
-
 ## Communities
 
-- [Discuss]
-- [Discord (Kurrent)][discord-kurrent]
-- [Discord (ddd-cqrs-es)][Discord-ddd-cqrs-es]
+[Join our global community](https://www.kurrent.io/community) of developers.
+
+- [Discuss](https://discuss.kurrent.io/)
+- [Discord (Kurrent)](https://discord.gg/Phn9pmCw3t)
+- [Discord (ddd-cqrs-es)](https://discord.com/invite/sEZGSHNNbH)
 
 ## Contributing
 
-Refer to our [contribution guidelines]
+Development is done on the `master` branch.
+We attempt to do our best to ensure that the history remains clean and to do so, we generally ask contributors to squash
+their commits into a set or single logical commit.
 
-[Kurrent support]: https://kurrent.io/support/
-[discuss]: https://discuss.kurrent.io/
-[discord-kurrent]: https://discord.gg/Phn9pmCw3t
-[Discord-ddd-cqrs-es]: https://discord.com/invite/sEZGSHNNbH
-[contribution guidelines]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/CONTRIBUTING.md
-[license-badge]: https://img.shields.io/npm/l/@kurrent/kurrentdb-client.svg
-[license-badge-url]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/LICENSE
-[ci-badge-url]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions
-[KurrentDB-Client-NodeJS]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS
-[ci-badge]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/workflows/CI/badge.svg?branch=master
-[ci-badge-url]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions
+- [Create an issue](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/issues)
+- [Documentation](https://docs.kurrent.io/)
+- [Contributing guide](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/CONTRIBUTING.md)
+
+## Building the client
+
+The client is built using the [NodeJS](https://nodejs.org/) JavaScript runtime. To build the client, you need to have Node
+installed on your machine. You can download it from the official NodeJS website.
+Once you have it installed, you can build the client by running the following command in the root directory of the
+project:
+
+```bash
+yarn install
+yarn build
+```

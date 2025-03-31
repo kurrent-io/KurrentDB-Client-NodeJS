@@ -7,14 +7,12 @@ import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("http api", () => {
   interface PingResult {
-    msgTypeId: number;
     text: string;
   }
   function ping(this: KurrentDBClient) {
     return this.HTTPRequest<PingResult>("GET", "/ping", {});
   }
   const goodPing = {
-    msgTypeId: expect.any(Number),
     text: "Ping request successfully handled",
   };
 

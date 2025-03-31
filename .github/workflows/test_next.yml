@@ -6,11 +6,12 @@ on:
     branches:
       - master
   schedule:
-    - cron: "0 3 * * *" # Every day at 3am UTC.
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight UTC
 
 jobs:
   test:
     name: Test
     uses: ./.github/workflows/tests.yml
     with:
-      version: "ci"
+      image: ${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES).ci.fullname }}
+    secrets: inherit

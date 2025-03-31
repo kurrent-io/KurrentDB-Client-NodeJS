@@ -5,7 +5,7 @@ Development is done on the `master` branch. We attempt to do our best to ensure 
 ## Initial Setup
 
 **Prerequisites:**
-- Node.js (version 14 or higher, although version 12.18.3 is also supported)
+- Node.js (version 20 or higher)
 
 **Repository Setup:**
 1. Clone the repository:

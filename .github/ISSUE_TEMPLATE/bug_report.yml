@@ -1,60 +1,97 @@
-name: Bug Report
-description: Create a bug report to help us improve
+name: Bug report
+description: Help us improve the client
+labels:
+  - triage
 body:
-  - type: markdown
-    attributes:
-    value: |
-    Thanks for taking the time to fill out this bug report!
   - type: textarea
-    id: description
+    id: current-behavior
     attributes:
-    label: Bug Description
-    description: A clear and concise description of what the bug is
-    placeholder: Tell us what you see!
+      label: 🐛 Current behavior
+      description: A clear and concise description of what the bug is.
     validations:
-    required: true
+      required: true
   - type: textarea
-    id: reproduction
+    id: reproduction-steps
     attributes:
-    label: To Reproduce
-    description: Steps to reproduce the behavior
-    placeholder: |
-      1. Start the KurrentDB server
-      2. Connect the client to the server
-      3. Create a new stream
-      4. Append an event to the stream
-      5. Read the event from the stream
-      6. Observe the issue
+      label: 🔍 Steps to reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. Scroll down to ...
+        4. See error
+
+        You can attach screenshots by dragging and dropping, or selecting and pasting them in the text field.
     validations:
-    required: true
+      required: true
+  - type: input
+    id: reproduction-links
+    attributes:
+      label: Reproducible link
+      description: A link to a minimal reproducible example. This could be a GitHub repository, CodeSandbox, or any other online code editor.
+      placeholder: e.g, github.com/company/repo
+    validations:
+      required: true
   - type: textarea
-    id: expected
+    id: expected-behavior
     attributes:
-    label: Expected behavior
-    description: A clear and concise description of what you expected to happen
+      label: 💭 Expected behavior
+      description: A clear and concise description of what you expected to happen.
     validations:
-    required: true
-  - type: markdown
-    attributes:
-    value: '## Environment'
+      required: true
   - type: input
-    id: db
+    id: client-version
     attributes:
-    label: KurrentDB Version
-    placeholder: ex. 24.10.0
+      label: Package version
+      description: What version of the client you're experiencing the issue with.
+      placeholder: e.g., KurrentDB-Client-NodeJS 1.1.2
     validations:
-    required: true
+      required: true
   - type: input
-    id: client
+    id: kurrentdb-version
     attributes:
-    label: Client Version
-    placeholder: ex. 1.0.0
+      label: KurrentDB Version
+      description: What version of the database you are using.
+      placeholder: e.g., KurrentDB v24.10
     validations:
-    required: true
+      required: true
   - type: input
-    id: nodejs-version
+    id: connection
     attributes:
-    label: Node.js Version
-    placeholder: ex. 18.16.0
+      label: Connection string
+      description: What connection string you're using. Hide and sensitive information if necessary.
+      placeholder: e.g., kurrentdb://admin:changeit@localhost:2113
     validations:
-    required: true
+      required: true
+  - type: dropdown
+    id: deployment-environment
+    attributes:
+      label: ☁️ Deployment Environment
+      description: How is KurrentDB deployed?
+      options:
+        - Single-node (Docker)
+        - Single-node (Bare metal/VM)
+        - Multi-node cluster (On-prem)
+        - Multi-node cluster (Cloud)
+        - Managed KurrentDB Cloud
+        - Other (please specify below)
+    validations:
+      required: true
+  - type: input
+    id: deployment-other
+    attributes:
+      label: Other Deployment Details
+      description: If you selected "Other," please specify your deployment setup.
+      placeholder: e.g., Kubernetes with custom networking
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g., macOS 13.1
+  - type: checkboxes
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/algolia/.github/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

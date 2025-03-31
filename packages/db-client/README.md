@@ -1,6 +1,6 @@
 # @kurrent/kurrentdb-client
 
-[![npm][npm-badge]][npm-badge-url]
+[![npm](https://img.shields.io/npm/v/@kurrent/kurrentdb-client.svg)](https://www.npmjs.com/package/@kurrent/kurrentdb-client)
 [![Previous LTS](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_previous_LTS.yml/badge.svg)](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_previous_LTS.yml)
 [![LTS](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_LTS.yml/badge.svg)](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_LTS.yml)
 [![next](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_next.yml/badge.svg)](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_next.yml)
@@ -176,28 +176,32 @@ async function simpleTest(): Promise<void> {
 console.log(reservation);
 ```
 
-## Support
-
-Information on support can be found on our website: [Kurrent Support]
-
 ## Communities
 
-- [Discuss]
-- [Discord (Kurrent)][discord-kurrent]
-- [Discord (ddd-cqrs-es)][discord-ddd-cqrs-es]
+[Join our global community](https://www.kurrent.io/community) of developers.
+
+- [Discuss](https://discuss.kurrent.io/)
+- [Discord (Kurrent)](https://discord.gg/Phn9pmCw3t)
+- [Discord (ddd-cqrs-es)](https://discord.com/invite/sEZGSHNNbH)
 
 ## Contributing
 
-Refer to our [Contribution Guidelines]
+Development is done on the `master` branch.
+We attempt to do our best to ensure that the history remains clean and to do so, we generally ask contributors to squash
+their commits into a set or single logical commit.
 
-[Kurrent support]: https://kurrent.io/support/
-[discuss]: https://discuss.kurrent.io/
-[discord-kurrent]: https://discord.gg/Phn9pmCw3t
-[discord-ddd-cqrs-es]: https://discord.com/invite/sEZGSHNNbH
-[npm-badge]: https://img.shields.io/npm/v/@kurrent/kurrentdb-client.svg
-[npm-badge-url]: https://www.npmjs.com/package/@kurrent/kurrentdb-client
-[ci-badge]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/workflows/CI/badge.svg?branch=master
-[license-badge]: https://img.shields.io/npm/l/@kurrent/kurrentdb-client.svg
-[license-badge-url]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/LICENSE
-[contribution guidelines]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/CONTRIBUTING.md
-[Kurrent docs]: https://docs.kurrent.io/server/v25.0/quick-start/installation.html
+- [Create an issue](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/issues)
+- [Documentation](https://docs.kurrent.io/)
+- [Contributing guide](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/CONTRIBUTING.md)
+
+## Building the client
+
+The client is built using the [NodeJS](https://nodejs.org/) JavaScript runtime. To build the client, you need to have Node
+installed on your machine. You can download it from the official NodeJS website.
+Once you have it installed, you can build the client by running the following command in the root directory of the
+project:
+
+```bash
+yarn install
+yarn build
+```

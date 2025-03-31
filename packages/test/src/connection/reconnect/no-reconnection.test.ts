@@ -87,7 +87,7 @@ describe("reconnect", () => {
       for (let i = 5; i < 20; i += 5) {
         await Promise.all(
           Array.from({ length: i }, () =>
-            client.appendToStream(STREAM_NAME, jsonTestEvents(30_000), {
+            client.appendToStream(STREAM_NAME, jsonTestEvents(20_000), {
               credentials,
             })
           )

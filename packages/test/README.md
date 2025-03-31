@@ -1,27 +1,33 @@
 # @kurrent/test
 
-[![license][license-badge]][license-badge-url]
-
 This package includes our tests and test utils
-
-## Support
-
-Information on support can be found on our website: [Kurrent Support]
 
 ## Communities
 
-- [Discuss]
-- [Discord (Kurrent)][discord-kurrent]
-- [Discord (ddd-cqrs-es)][discord-ddd-cqrs-es]
+[Join our global community](https://www.kurrent.io/community) of developers.
+
+- [Discuss](https://discuss.kurrent.io/)
+- [Discord (Kurrent)](https://discord.gg/Phn9pmCw3t)
+- [Discord (ddd-cqrs-es)](https://discord.com/invite/sEZGSHNNbH)
 
 ## Contributing
 
-Refer to our [contribution guidelines][contributing-guidelines].
+Development is done on the `master` branch.
+We attempt to do our best to ensure that the history remains clean and to do so, we generally ask contributors to squash
+their commits into a set or single logical commit.
 
-[Kurrent support]: https://kurrent.io/support/
-[discuss]: https://discuss.kurrent.io/
-[discord-kurrent]: https://discord.gg/Phn9pmCw3t
-[discord-ddd-cqrs-es]: https://discord.com/invite/sEZGSHNNbH
-[contributing-guidelines]: https://github.com/prisma/prisma/blob/main/CONTRIBUTING.md
-[license-badge]: https://img.shields.io/npm/l/@kurrent/kurrentdb-client.svg
-[license-badge-url]: https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/LICENSE
+- [Create an issue](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/issues)
+- [Documentation](https://docs.kurrent.io/)
+- [Contributing guide](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/blob/master/CONTRIBUTING.md)
+
+## Building the client
+
+The client is built using the [NodeJS](https://nodejs.org/) JavaScript runtime. To build the client, you need to have Node
+installed on your machine. You can download it from the official NodeJS website.
+Once you have it installed, you can build the client by running the following command in the root directory of the
+project:
+
+```bash
+yarn install
+yarn build
+```
