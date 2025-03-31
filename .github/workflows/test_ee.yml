@@ -6,7 +6,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: "0 3 * * *" # Every day at 3am UTC.
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight UTC
 
 jobs:
   tests:
@@ -54,4 +54,4 @@ jobs:
       - name: Run Tests
         run: yarn test ${{ matrix.group.path }} --ci --run-in-band --forceExit
         env:
-          KURRENT_IMAGE: eventstore-ee:${{ env.KURRENT_VERSION }}
+          KURRENT_IMAGE: "docker.eventstore.com/eventstore-ee/eventstoredb-commercial:${{ env.KURRENT_VERSION }}"

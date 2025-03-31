@@ -1,11 +1,12 @@
-name: "Dispatch"
+name: QA
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version tag"
+      image:
+        description: 'Full image name'
         required: true
+        default: 'docker.kurrent.io/kurrent-staging/kurrentdb:ci'
         type: string
 
 jobs:
@@ -13,4 +14,4 @@ jobs:
     name: Test
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ inputs.version }}
+      image: ${{ inputs.image }}

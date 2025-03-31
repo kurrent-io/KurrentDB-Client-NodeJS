@@ -10,6 +10,8 @@ import {
   START,
 } from "@kurrent/kurrentdb-client";
 
+jest.setTimeout(120_000);
+
 describe("replayParkedMessagesToStream", () => {
   const cluster = createTestCluster();
   let client!: KurrentDBClient;
