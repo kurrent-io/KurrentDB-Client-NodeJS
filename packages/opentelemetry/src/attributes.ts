@@ -1,4 +1,4 @@
-const kdb = "db.kdb";
+const kurrentdb = "db.kurrentdb";
 const db = "db";
 const server = "server";
 const streams = "streams";
@@ -14,8 +14,8 @@ export const KurrentAttributes = {
   STREAM_APPEND: `${streams}.append`,
   STREAM_SUBSCRIBE: `${streams}.subscribe`,
 
-  KURRENT_DB_STREAM: `${kdb}.stream`,
-  KURRENT_DB_SUBSCRIPTION_ID: `${kdb}.subscription.id`,
-  KURRENT_DB_EVENT_ID: `${kdb}.event.id`,
-  KURRENT_DB_EVENT_TYPE: `${kdb}.event.type`,
+  KURRENT_DB_STREAM: `${kurrentdb}.stream`,
+  KURRENT_DB_SUBSCRIPTION_ID: `${kurrentdb}.subscription.id`,
+  KURRENT_DB_EVENT_ID: `${kurrentdb}.event.id`,
+  KURRENT_DB_EVENT_TYPE: `${kurrentdb}.event.type`,
 };
