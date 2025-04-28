@@ -5,8 +5,6 @@
 [![LTS](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_LTS.yml/badge.svg)](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_LTS.yml)
 [![next](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_next.yml/badge.svg)](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/actions/workflows/test_next.yml)
 
-[![license][license-badge]][license-badge-url]
-
 This is the package for the NodeJS client for KurrentDB 20+ and uses gRPC as the communication protocol.
 
 ## Installation
