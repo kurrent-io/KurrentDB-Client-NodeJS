@@ -23,7 +23,7 @@ jobs:
       KURRENT_VERSION: "24.2.0-jammy"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
 
       - uses: actions/setup-node@v4
         with:
