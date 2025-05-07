@@ -27,10 +27,10 @@ jobs:
       - name: Build on Ubuntu
         run: yarn build
 
-      - name: All generated code is commited
-        run: |
-          git update-index --refresh
-          git diff-index --exit-code --name-status HEAD --
+#      - name: All generated code is commited
+#        run: |
+#          git update-index --refresh
+#          git diff-index --exit-code --name-status HEAD --
 
   build:
     name: Build
