@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-and-test:
+    timeout-minutes: 10
     name: "${{ matrix.group.name }}"
     strategy:
       fail-fast: false
