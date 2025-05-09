@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package kurrentdb.protocol.streams.v2;
+
+option csharp_namespace    = "KurrentDB.Protocol.Streams.V2";
+option java_package        = "io.kurrentdb.protocol.streams.v2";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+
+service StreamsService {
+  // Executes an atomic operation to append records to multiple streams.
+  // This transactional method ensures that all appends either succeed
+  // completely, or are entirely rolled back, thereby maintaining strict data
+  // consistency across all involved streams.
+  rpc MultiStreamAppend(MultiStreamAppendRequest) returns (MultiStreamAppendResponse);
+
+  // Streaming version of MultiStreamAppend that allows clients to send multiple
+  // append requests over a single connection. When the stream completes, all
+  // records are appended transactionally (all succeed or fail together).
+  // Provides improved efficiency for high-throughput scenarios while
+  // maintaining the same transactional guarantees.
+  rpc MultiStreamAppendSession(stream AppendStreamRequest) returns (MultiStreamAppendResponse);
+
+//  // Appends records to a specific stream.
+//  rpc AppendStream(AppendStreamRequest) returns (AppendStreamResponse);
+//
+//  // This method is not transactional and opens a channel for streaming append requests.
+//  // The server will respond with the results of each append operation as they are processed.
+//  rpc AppendStreamSession(stream AppendStreamRequest) returns (stream AppendStreamResponse);
+}
+
+// Record to be appended to a stream.
+message AppendRecord {
+  // Universally Unique identifier for the record.
+  // If not provided, the server will generate a new one.
+  optional string record_id = 1;
+  // A collection of properties providing additional system information about the
+  // record.
+  map<string, DynamicValue> properties = 2;
+  // The actual data payload of the record, stored as bytes.
+  bytes data = 3;
+//  // Optional timestamp indicating when the record was created.
+//  // If not provided, the server will use the current time.
+//  optional google.protobuf.Timestamp timestamp = 4;
+}
+
+// Constants that match the expected state of a stream during an
+// append operation. It can be used to specify whether the stream should exist,
+// not exist, or can be in any state.
+enum ExpectedRevisionConstants {
+  // The stream should exist and the expected revision should match the current
+  EXPECTED_REVISION_CONSTANTS_SINGLE_EVENT = 0;
+  // It is not important whether the stream exists or not.
+  EXPECTED_REVISION_CONSTANTS_ANY = -2;
+  // The stream should not exist. If it does, the append will fail.
+  EXPECTED_REVISION_CONSTANTS_NO_STREAM = -1;
+  // The stream should exist
+  EXPECTED_REVISION_CONSTANTS_EXISTS = -4;
+}
+
+// Represents the input for appending records to a specific stream.
+message AppendStreamRequest {
+  // The name of the stream to append records to.
+  string stream = 1;
+  // The records to append to the stream.
+  repeated AppendRecord records = 2;
+  // The expected revision of the stream. If the stream's current revision does
+  // not match, the append will fail.
+  // The expected revision can also be one of the special values
+  // from ExpectedRevisionConstants.
+  // Missing value means no expectation, the same as EXPECTED_REVISION_CONSTANTS_ANY
+  optional sint64 expected_revision = 3 [jstype = JS_STRING];
+}
+
+// Success represents the successful outcome of an append operation.
+message AppendStreamSuccess {
+  // The name of the stream to which records were appended.
+  string stream = 1;
+  // The position of the last appended record in the stream.
+  int64 position = 2 [jstype = JS_STRING];
+  // The expected revision of the stream after the append operation.
+  int64 stream_revision = 3 [jstype = JS_STRING];
+}
+
+// Failure represents the detailed error information when an append operation fails.
+message AppendStreamFailure {
+  // The name of the stream to which records were appended.
+  string stream = 1;
+
+  // The error details
+  oneof error {
+    // Failed because the actual stream revision didn't match the expected revision.
+    ErrorDetails.WrongExpectedRevision wrong_expected_revision = 2;
+    // Failed because the client lacks sufficient permissions.
+    ErrorDetails.AccessDenied access_denied = 3;
+    // Failed because the target stream has been deleted.
+    ErrorDetails.StreamDeleted stream_deleted = 4;
+  }
+}
+
+// AppendStreamOutput represents the output of appending records to a specific
+// stream.
+message AppendStreamResponse {
+  // The result of the append operation.
+  oneof result {
+    // Success represents the successful outcome of an append operation.
+    AppendStreamSuccess success = 1;
+    // Failure represents the details of a failed append operation.
+    AppendStreamFailure failure = 2;
+  }
+}
+
+// MultiStreamAppendRequest represents a request to append records to multiple streams.
+message MultiStreamAppendRequest {
+  // A list of AppendStreamInput messages, each representing a stream to which records should be appended.
+  repeated AppendStreamRequest input = 1;
+}
+
+// Response from the MultiStreamAppend operation.
+message MultiStreamAppendResponse {
+  oneof result {
+    // Success represents the successful outcome of a multi-stream append operation.
+    Success success = 1;
+    // Failure represents the details of a failed multi-stream append operation.
+    Failure failure = 2;
+  }
+
+  message Success {
+    repeated AppendStreamSuccess output = 1;
+  }
+
+  message Failure {
+    repeated AppendStreamFailure output = 1;
+  }
+}
+
+// ErrorDetails provides detailed information about specific error conditions.
+message ErrorDetails {
+  // When the user does not have sufficient permissions to perform the operation.
+  message AccessDenied {
+    // The simplified reason for access denial.
+    string reason = 1;
+  }
+
+  // When the stream has been deleted.
+  message StreamDeleted {
+    // The time when the stream was deleted.
+    google.protobuf.Timestamp deleted_at = 1;
+
+    // If the stream was hard deleted, you cannot reuse the stream name,
+    // it will raise an exception if you try to append to it again.
+    bool tombstoned = 2;
+  }
+
+  // When the expected revision of the stream does not match the actual revision.
+  message WrongExpectedRevision {
+    // The actual revision of the stream.
+    int64 stream_revision = 1 [jstype = JS_STRING];
+  }
+
+  // When the transaction exceeds the maximum size allowed
+  // (its bigger than the configured chunk size).
+  message TransactionMaxSizeExceeded {
+    // The maximum allowed size of the transaction.
+    uint32 max_size = 1;
+  }
+}
+
+//===================================================================
+// Shared
+//===================================================================
+
+// Represents a list of dynamically typed values.
+message DynamicValueList {
+  // Repeated property of dynamically typed values.
+  repeated DynamicValue values = 1;
+}
+
+// Represents a map of dynamically typed values.
+message DynamicValueMap {
+  // A map of string keys to dynamically typed values.
+  map<string, DynamicValue> values = 1;
+}
+
+// Represents a dynamic value
+message DynamicValue {
+  oneof kind {
+    // Represents a null value.
+    google.protobuf.NullValue null_value = 1;
+    // Represents a 32-bit signed integer value.
+    sint32 int32_value = 2;
+    // Represents a 64-bit signed integer value.
+    sint64 int64_value = 3;
+    // Represents a byte array value.
+    bytes bytes_value = 4;
+    // Represents a 64-bit double-precision floating-point value.
+    double double_value = 5;
+    // Represents a 32-bit single-precision floating-point value
+    float float_value = 6;
+    // Represents a string value.
+    string string_value = 7;
+    // Represents a boolean value.
+    bool boolean_value = 8;
+    // Represents a timestamp value.
+    google.protobuf.Timestamp timestamp_value = 9;
+    // Represents a duration value.
+    google.protobuf.Duration duration_value = 10;
+
+//    // Represents a json struct
+//    google.protobuf.Struct struct_value = 12;
+
+    // Represents a list of dynamic values.
+    //ListDynamicValue list_value = 11;
+  }
+}
