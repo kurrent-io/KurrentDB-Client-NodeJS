@@ -18,8 +18,7 @@ distributed messaging challenges and ensures data consistency.
 
 ### Documentation
 
-* [API Reference](https://pkg.go.dev/github.com/kurrent.io/KurrentDB-Client-Go?tab=doc)
-* [Samples](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/tree/master/samples)
+* [Samples](https://github.com/kurrent-io/KurrentDB-Client-NodeJS/tree/master/packages/test/src/samples)
 
 ## Packages
 
