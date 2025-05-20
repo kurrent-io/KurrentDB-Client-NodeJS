@@ -479,25 +479,73 @@ export interface PersistentSubscriptionBase<E> extends ReadableSubscription<E> {
   ): Promise<void>;
 }
 
+/**
+ * The $all or stream subscription has caught up and become live.
+ */
+export interface CaughtUp {
+  /**
+   * Current time in the server when the subscription caught up.
+   */
+  date?: Date;
+
+  /**
+   * Checkpoint for resuming a stream subscription.
+   * For stream subscriptions it is populated unless the stream is empty.
+   * For $all subscriptions it is not populated.
+   */
+  revision?: bigint;
+
+  /**
+   * Checkpoint for resuming a $all subscription.
+   * For stream subscriptions it is not populated.
+   * For $all subscriptions it is populated unless the database is empty.
+   */
+  position?: Position;
+}
+
+/**
+ * The $all or stream subscription has fallen back into catchup mode and is no longer live.
+ */
+export interface FellBehind {
+  /**
+   * Current time in the server when the subscription fell behind.
+   */
+  date?: Date;
+
+  /**
+   * Checkpoint for resuming a stream subscription.
+   * For stream subscriptions it is populated unless the stream is empty.
+   * For $all subscriptions it is not populated.
+   */
+  revision?: bigint;
+
+  /**
+   * Checkpoint for resuming an $all subscription.
+   * For stream subscriptions it is not populated.
+   * For $all subscriptions it is populated unless the database is empty.
+   */
+  position?: Position;
+}
+
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
-  addListener(event: "caughtUp", listener: () => void): this;
-  addListener(event: "fellBehind", listener: () => void): this;
+  addListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  addListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
-  on(event: "caughtUp", listener: () => void): this;
-  on(event: "fellBehind", listener: () => void): this;
+  on(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  on(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
-  once(event: "caughtUp", listener: () => void): this;
-  once(event: "fellBehind", listener: () => void): this;
+  once(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  once(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
-  prependListener(event: "caughtUp", listener: () => void): this;
-  prependListener(event: "fellBehind", listener: () => void): this;
+  prependListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  prependListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
-  prependOnceListener(event: "caughtUp", listener: () => void): this;
-  prependOnceListener(event: "fellBehind", listener: () => void): this;
+  prependOnceListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  prependOnceListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
-  removeListener(event: "caughtUp", listener: () => void): this;
-  removeListener(event: "fellBehind", listener: () => void): this;
+  removeListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
+  removeListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
 }
 
 export type PersistentSubscriptionToStream<E extends EventType = EventType> =
