@@ -4,7 +4,13 @@ import type { ClientReadableStream, ServiceError } from "@grpc/grpc-js";
 
 import type { ReadResp } from "../../../generated/streams_pb";
 
-import type {CaughtUp, FellBehind, Filter, Position, ReadableSubscription} from "../../types";
+import type {
+  CaughtUp,
+  FellBehind,
+  Filter,
+  Position,
+  ReadableSubscription,
+} from "../../types";
 import {
   ConvertGrpcEvent,
   convertToCommandError,
@@ -60,19 +66,19 @@ export class Subscription<E>
     }
 
     if (resp.hasCaughtUp?.()) {
-      let info: CaughtUp = {}
-      let grpc = resp.getCaughtUp()!;
+      const info: CaughtUp = {};
+      const grpc = resp.getCaughtUp()!;
 
       if (grpc.hasTimestamp()) {
         info.date = grpc.getTimestamp()!.toDate();
         if (grpc.hasStreamRevision()) {
-            info.revision = BigInt(grpc.getStreamRevision()!);
+          info.revision = BigInt(grpc.getStreamRevision()!);
         } else if (grpc.hasPosition()) {
           const position = grpc.getPosition()!;
-            info.position = {
-                commit: BigInt(position.getCommitPosition()),
-                prepare: BigInt(position.getPreparePosition()),
-            };
+          info.position = {
+            commit: BigInt(position.getCommitPosition()),
+            prepare: BigInt(position.getPreparePosition()),
+          };
         }
       }
 
@@ -80,8 +86,8 @@ export class Subscription<E>
     }
 
     if (resp.hasFellBehind?.()) {
-      let info: FellBehind = {}
-      let grpc = resp.getFellBehind()!;
+      const info: FellBehind = {};
+      const grpc = resp.getFellBehind()!;
 
       if (grpc.hasTimestamp()) {
         info.date = grpc.getTimestamp()!.toDate();

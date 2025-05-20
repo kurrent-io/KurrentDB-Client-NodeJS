@@ -539,13 +539,25 @@ export interface CatchupSubscription {
   once(event: "fellBehind", listener: (info: FellBehind) => void): this;
 
   prependListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
-  prependListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
+  prependListener(
+    event: "fellBehind",
+    listener: (info: FellBehind) => void
+  ): this;
 
-  prependOnceListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
-  prependOnceListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
+  prependOnceListener(
+    event: "caughtUp",
+    listener: (info: CaughtUp) => void
+  ): this;
+  prependOnceListener(
+    event: "fellBehind",
+    listener: (info: FellBehind) => void
+  ): this;
 
   removeListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;
-  removeListener(event: "fellBehind", listener: (info: FellBehind) => void): this;
+  removeListener(
+    event: "fellBehind",
+    listener: (info: FellBehind) => void
+  ): this;
 }
 
 export type PersistentSubscriptionToStream<E extends EventType = EventType> =
