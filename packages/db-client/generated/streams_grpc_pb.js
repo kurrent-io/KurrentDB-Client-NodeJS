@@ -5,6 +5,7 @@ var grpc = require('@grpc/grpc-js');
 var streams_pb = require('./streams_pb.js');
 var shared_pb = require('./shared_pb.js');
 var status_pb = require('./status_pb.js');
+var google_protobuf_duration_pb = require('google-protobuf/google/protobuf/duration_pb.js');
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
 var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
 

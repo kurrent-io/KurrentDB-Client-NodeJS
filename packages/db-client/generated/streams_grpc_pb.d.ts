@@ -8,6 +8,7 @@ import * as grpc from "@grpc/grpc-js";
 import * as streams_pb from "./streams_pb";
 import * as shared_pb from "./shared_pb";
 import * as status_pb from "./status_pb";
+import * as google_protobuf_duration_pb from "google-protobuf/google/protobuf/duration_pb";
 import * as google_protobuf_empty_pb from "google-protobuf/google/protobuf/empty_pb";
 import * as google_protobuf_timestamp_pb from "google-protobuf/google/protobuf/timestamp_pb";
 

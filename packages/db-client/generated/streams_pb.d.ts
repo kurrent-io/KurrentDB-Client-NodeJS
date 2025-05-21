@@ -7,6 +7,7 @@
 import * as jspb from "google-protobuf";
 import * as shared_pb from "./shared_pb";
 import * as status_pb from "./status_pb";
+import * as google_protobuf_duration_pb from "google-protobuf/google/protobuf/duration_pb";
 import * as google_protobuf_empty_pb from "google-protobuf/google/protobuf/empty_pb";
 import * as google_protobuf_timestamp_pb from "google-protobuf/google/protobuf/timestamp_pb";
 
@@ -493,6 +494,21 @@ export namespace ReadResp {
 
     export class CaughtUp extends jspb.Message { 
 
+        hasTimestamp(): boolean;
+        clearTimestamp(): void;
+        getTimestamp(): google_protobuf_timestamp_pb.Timestamp | undefined;
+        setTimestamp(value?: google_protobuf_timestamp_pb.Timestamp): CaughtUp;
+
+        hasStreamRevision(): boolean;
+        clearStreamRevision(): void;
+        getStreamRevision(): string | undefined;
+        setStreamRevision(value: string): CaughtUp;
+
+        hasPosition(): boolean;
+        clearPosition(): void;
+        getPosition(): ReadResp.Position | undefined;
+        setPosition(value?: ReadResp.Position): CaughtUp;
+
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): CaughtUp.AsObject;
         static toObject(includeInstance: boolean, msg: CaughtUp): CaughtUp.AsObject;
@@ -505,10 +521,28 @@ export namespace ReadResp {
 
     export namespace CaughtUp {
         export type AsObject = {
+            timestamp?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+            streamRevision?: string,
+            position?: ReadResp.Position.AsObject,
         }
     }
 
     export class FellBehind extends jspb.Message { 
+
+        hasTimestamp(): boolean;
+        clearTimestamp(): void;
+        getTimestamp(): google_protobuf_timestamp_pb.Timestamp | undefined;
+        setTimestamp(value?: google_protobuf_timestamp_pb.Timestamp): FellBehind;
+
+        hasStreamRevision(): boolean;
+        clearStreamRevision(): void;
+        getStreamRevision(): string | undefined;
+        setStreamRevision(value: string): FellBehind;
+
+        hasPosition(): boolean;
+        clearPosition(): void;
+        getPosition(): ReadResp.Position | undefined;
+        setPosition(value?: ReadResp.Position): FellBehind;
 
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): FellBehind.AsObject;
@@ -522,6 +556,9 @@ export namespace ReadResp {
 
     export namespace FellBehind {
         export type AsObject = {
+            timestamp?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+            streamRevision?: string,
+            position?: ReadResp.Position.AsObject,
         }
     }
 
@@ -656,6 +693,11 @@ export namespace ReadResp {
         getPreparePosition(): string;
         setPreparePosition(value: string): Checkpoint;
 
+        hasTimestamp(): boolean;
+        clearTimestamp(): void;
+        getTimestamp(): google_protobuf_timestamp_pb.Timestamp | undefined;
+        setTimestamp(value?: google_protobuf_timestamp_pb.Timestamp): Checkpoint;
+
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): Checkpoint.AsObject;
         static toObject(includeInstance: boolean, msg: Checkpoint): Checkpoint.AsObject;
@@ -667,6 +709,30 @@ export namespace ReadResp {
     }
 
     export namespace Checkpoint {
+        export type AsObject = {
+            commitPosition: string,
+            preparePosition: string,
+            timestamp?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+        }
+    }
+
+    export class Position extends jspb.Message { 
+        getCommitPosition(): string;
+        setCommitPosition(value: string): Position;
+        getPreparePosition(): string;
+        setPreparePosition(value: string): Position;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): Position.AsObject;
+        static toObject(includeInstance: boolean, msg: Position): Position.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: Position, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): Position;
+        static deserializeBinaryFromReader(message: Position, reader: jspb.BinaryReader): Position;
+    }
+
+    export namespace Position {
         export type AsObject = {
             commitPosition: string,
             preparePosition: string,
@@ -1148,12 +1214,18 @@ export namespace BatchAppendReq {
         getStreamExists(): google_protobuf_empty_pb.Empty | undefined;
         setStreamExists(value?: google_protobuf_empty_pb.Empty): Options;
 
+        hasDeadline21100(): boolean;
+        clearDeadline21100(): void;
+        getDeadline21100(): google_protobuf_timestamp_pb.Timestamp | undefined;
+        setDeadline21100(value?: google_protobuf_timestamp_pb.Timestamp): Options;
+
         hasDeadline(): boolean;
         clearDeadline(): void;
-        getDeadline(): google_protobuf_timestamp_pb.Timestamp | undefined;
-        setDeadline(value?: google_protobuf_timestamp_pb.Timestamp): Options;
+        getDeadline(): google_protobuf_duration_pb.Duration | undefined;
+        setDeadline(value?: google_protobuf_duration_pb.Duration): Options;
 
         getExpectedStreamPositionCase(): Options.ExpectedStreamPositionCase;
+        getDeadlineOptionCase(): Options.DeadlineOptionCase;
 
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): Options.AsObject;
@@ -1172,7 +1244,8 @@ export namespace BatchAppendReq {
             noStream?: google_protobuf_empty_pb.Empty.AsObject,
             any?: google_protobuf_empty_pb.Empty.AsObject,
             streamExists?: google_protobuf_empty_pb.Empty.AsObject,
-            deadline?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+            deadline21100?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+            deadline?: google_protobuf_duration_pb.Duration.AsObject,
         }
 
         export enum ExpectedStreamPositionCase {
@@ -1181,6 +1254,12 @@ export namespace BatchAppendReq {
             NO_STREAM = 3,
             ANY = 4,
             STREAM_EXISTS = 5,
+        }
+
+        export enum DeadlineOptionCase {
+            DEADLINE_OPTION_NOT_SET = 0,
+            DEADLINE_21_10_0 = 6,
+            DEADLINE = 7,
         }
 
     }

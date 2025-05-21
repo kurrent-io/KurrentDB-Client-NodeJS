@@ -129,7 +129,7 @@ export const batchAppend = async function (
     );
 
     options.setStreamIdentifier(identifier);
-    options.setDeadline(deadline);
+    options.setDeadline21100(deadline);
 
     switch (streamState) {
       case "any": {

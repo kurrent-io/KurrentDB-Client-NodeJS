@@ -4,7 +4,13 @@ import type { ClientReadableStream, ServiceError } from "@grpc/grpc-js";
 
 import type { ReadResp } from "../../../generated/streams_pb";
 
-import type { Filter, Position, ReadableSubscription } from "../../types";
+import type {
+  CaughtUp,
+  FellBehind,
+  Filter,
+  Position,
+  ReadableSubscription,
+} from "../../types";
 import {
   ConvertGrpcEvent,
   convertToCommandError,
@@ -60,11 +66,43 @@ export class Subscription<E>
     }
 
     if (resp.hasCaughtUp?.()) {
-      this.emit("caughtUp");
+      const info: CaughtUp = {};
+      const grpc = resp.getCaughtUp()!;
+
+      if (grpc.hasTimestamp()) {
+        info.date = grpc.getTimestamp()!.toDate();
+        if (grpc.hasStreamRevision()) {
+          info.revision = BigInt(grpc.getStreamRevision()!);
+        } else if (grpc.hasPosition()) {
+          const position = grpc.getPosition()!;
+          info.position = {
+            commit: BigInt(position.getCommitPosition()),
+            prepare: BigInt(position.getPreparePosition()),
+          };
+        }
+      }
+
+      this.emit("caughtUp", info);
     }
 
     if (resp.hasFellBehind?.()) {
-      this.emit("fellBehind");
+      const info: FellBehind = {};
+      const grpc = resp.getFellBehind()!;
+
+      if (grpc.hasTimestamp()) {
+        info.date = grpc.getTimestamp()!.toDate();
+        if (grpc.hasStreamRevision()) {
+          info.revision = BigInt(grpc.getStreamRevision()!);
+        } else if (grpc.hasPosition()) {
+          const position = grpc.getPosition()!;
+          info.position = {
+            commit: BigInt(position.getCommitPosition()),
+            prepare: BigInt(position.getPreparePosition()),
+          };
+        }
+      }
+
+      this.emit("fellBehind", info);
     }
 
     if (resp.hasCheckpoint?.() && this.#checkpointReached) {
