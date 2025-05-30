@@ -69,7 +69,7 @@ Client.prototype.readAll = function (
     fromPosition,
     resolvesLink: resolveLinkTos,
     direction,
-    requiresLeader: baseOptions.requiresLeader ?? true,
+    requiresLeader: baseOptions.requiresLeader ?? false,
     credentials: baseOptions.credentials,
     filter: baseOptions.filter,
   };
