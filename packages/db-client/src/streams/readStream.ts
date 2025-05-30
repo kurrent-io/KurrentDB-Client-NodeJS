@@ -70,7 +70,7 @@ Client.prototype.readStream = function <
     fromRevision,
     resolvesLink: resolveLinkTos,
     direction,
-    requiresLeader: baseOptions.requiresLeader ?? true,
+    requiresLeader: baseOptions.requiresLeader ?? false,
     credentials: baseOptions.credentials,
   };
   switch (fromRevision) {
