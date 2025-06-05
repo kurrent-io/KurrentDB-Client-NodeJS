@@ -518,6 +518,7 @@ describe("subscribeToAll", () => {
       var collected_subscribe_to_all: AllStreamResolvedEvent[] = []
       var collected_subscribe_to_stream: ResolvedEvent[] = []
       var collected_read_all: AllStreamResolvedEvent[] = []
+      var collected_read_stream: ResolvedEvent[] = []
 
       await client.appendToStream(TRUNCATED_STREAM, jsonTestEvents(CREATED_EVENTS));
 
@@ -568,6 +569,15 @@ describe("subscribeToAll", () => {
         collected_read_all.push(resolvedEvent);
       }
 
+      const read_stream_events = client.readStream(TRUNCATED_STREAM, {
+        direction: FORWARDS,
+        fromRevision: START,
+      });
+
+      for await (const resolvedEvent of read_stream_events) {
+        collected_read_stream.push(resolvedEvent);
+      }
+
       try {
         await Promise.all([deferAll.promise, deferStream.promise]);
         
@@ -576,11 +586,17 @@ describe("subscribeToAll", () => {
 
         expect(collected_subscribe_to_all.length).toBe(25);
         expect(collected_read_all.length).toBe(25);
+
+        // After truncation, the counts will be different - the truncation is stored in the stream metadata,
+        // and the metadata is not applied when reading/subscribing to $all
+        // so your $all reads and subscriptions will still include all the events until they are scavenged
         expect(collected_subscribe_to_stream.length).toBe(CREATED_EVENTS - TRUNCATE_BEFORE);
+        expect(collected_read_stream.length).toBe(CREATED_EVENTS - TRUNCATE_BEFORE);
 
         expect(collected_subscribe_to_all.at(-1)?.event?.revision).toBe(24n);
         expect(collected_read_all.at(-1)?.event?.revision).toBe(24);
         expect(collected_subscribe_to_stream.at(-1)?.event?.revision).toBe(24n);
+        expect(collected_read_stream.at(-1)?.event?.revision).toBe(24);
       } catch (error) {
         throw error;
       }
