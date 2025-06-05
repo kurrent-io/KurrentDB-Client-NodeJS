@@ -21,7 +21,7 @@ $ npm install --save @kurrent/kurrentdb-client
 
 Tests are run exclusively against Long-Term Support (LTS) versions. While the code may function with older versions, we do not provide any guarantees or support for them.
 
-Server setup instructions can be found under the installation section of the [Kurrent Docs]. Follow the Docker setup for the simplest configuration.
+Server setup instructions can be found under the installation section of the [KurrentDB Docs](https://docs.kurrent.io/server/v25.0/quick-start/installation.html). Follow the Docker setup for the simplest configuration.
 
 ## Example
 
@@ -37,9 +37,7 @@ const {
   START,
 } = require('@kurrent/kurrentdb-client');
 
-const client = new KurrentDBClient({
-  endpoint: "localhost:2113",
-});
+const client = KurrentDBClient.connectionString`kurrentdb://admin:changeit@localhost:2113?tls=false`;
 
 async function simpleTest() {
   const streamName = "es_supported_clients";
@@ -83,9 +81,7 @@ import {
   JSONEventType,
 } from '@kurrent/kurrentdb-client';
 
-const client = new KurrentDBClient({
-  endpoint: 'localhost:2113',
-});
+const client = KurrentDBClient.connectionString`kurrentdb://admin:changeit@localhost:2113?tls=false`;
 
 interface Reservation {
   reservationId: string;
