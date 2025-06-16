@@ -25,7 +25,7 @@ distributed messaging challenges and ensures data consistency.
 This monorepo contains the following packages:
 
 | Subfolder                                            | Package                                                                                |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
+|------------------------------------------------------|----------------------------------------------------------------------------------------|
 | [`packages/db-client/`](packages/db-client/)         | [`@kurrent/kurrentdb-client`](https://www.npmjs.com/package/@kurrent/kurrentdb-client) |
 | [`packages/opentelemetry/`](packages/opentelemetry/) | [`@kurrent/opentelemetry`](https://www.npmjs.com/package/@kurrent/opentelemetry)       |
 | [`packages/test/`](packages/test/)                   | Internal tests                                                                         |
