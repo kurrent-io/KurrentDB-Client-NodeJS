@@ -1,0 +1,28 @@
+{
+  "name": "kurrent-docs",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "sync": "node tools/sync-repos.js",
+    "convert": "python3 tools/convert.py",
+    "build-prod": "npm run sync && npm run convert && npm run build"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.34.3",
+    "@astrojs/starlight-docsearch": "^0.6.0",
+    "@astrojs/starlight-tailwind": "^4.0.1",
+    "@lorenzo_lewis/starlight-utils": "^0.3.2",
+    "@tailwindcss/vite": "^4.1.4",
+    "astro": "^5.8.0",
+    "playwright": "^1.52.0",
+    "rehype-mermaid": "^3.0.0",
+    "sharp": "^0.32.5",
+    "starlight-image-zoom": "^0.12.0",
+    "tailwindcss": "^4.1.5"
+  }
+}

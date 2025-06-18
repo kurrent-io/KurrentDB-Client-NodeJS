@@ -1,0 +1,47 @@
+{
+  "main": [
+    {
+      "label": "Clients",
+      "items": [
+        {
+          "label": "GRPC",
+          "autogenerate": { "directory": "client/grpc" }
+        },
+        {
+          "label": "TCP",
+          "items": [
+            {
+              "label": ".NET 21.2",
+              "autogenerate": { "directory": "client/tcp/dotnet/21.2" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Server",
+      "autogenerate": { "directory": "server" }
+    },
+    {
+      "label": "Cloud",
+      "items": [
+        {
+          "label": "Overview",
+          "autogenerate": { "directory": "cloud" }
+        },
+        {
+          "label": "Dedicated",
+          "autogenerate": { "directory": "cloud/dedicated" }
+        },
+        {
+          "label": "Shared",
+          "autogenerate": { "directory": "cloud/shared" }
+        }
+      ]
+    },
+    {
+      "label": "Tutorials",
+      "autogenerate": { "directory": "tutorials" }
+    }
+  ]
+}

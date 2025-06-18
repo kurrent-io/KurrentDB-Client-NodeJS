@@ -1,0 +1,32 @@
+[submodule "src/content/docs/server"]
+	path = src/content/docs/server
+	url = https://github.com/kurrent-io/KurrentDB.git
+	branch = master
+[submodule "src/content/docs/http-api"]
+	path = src/content/docs/http-api
+	url = https://github.com/kurrent-io/KurrentDB.git
+	branch = master
+[submodule "src/content/clients/dotnet"]
+	path = src/content/clients/dotnet
+	url = https://github.com/kurrent-io/EventStore-Client-Dotnet.git
+	branch = release/v23
+[submodule "src/content/clients/java"]
+	path = src/content/clients/java
+	url = https://github.com/kurrent-io/KurrentDB-Client-Java.git
+	branch = trunk
+[submodule "src/content/clients/rust"]
+	path = src/content/clients/rust
+	url = https://github.com/kurrent-io/KurrentDB-Client-Rust.git
+	branch = master
+[submodule "src/content/clients/node"]
+	path = src/content/clients/node
+	url = https://github.com/kurrent-io/KurrentDB-Client-NodeJS.git
+	branch = master
+[submodule "src/content/clients/go"]
+	path = src/content/clients/go
+	url = https://github.com/kurrent-io/KurrentDB-Client-Go.git
+	branch = main
+[submodule "src/content/clients/python"]
+	path = src/content/clients/python
+	url = https://github.com/pyeventsourcing/kurrentdbclient.git
+	branch = 1.0

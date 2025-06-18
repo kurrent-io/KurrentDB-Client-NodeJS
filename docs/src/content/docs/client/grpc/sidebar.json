@@ -1,0 +1,42 @@
+[
+  {
+    "label": "Overview",
+    "link": "/client\\grpc"
+  },
+  {
+    "label": "Appending Events",
+    "link": "/client\\grpc/appending-events"
+  },
+  {
+    "label": "Authentication",
+    "link": "/client\\grpc/authentication"
+  },
+  {
+    "label": "Delete Stream",
+    "link": "/client\\grpc/delete-stream"
+  },
+  {
+    "label": "Getting Started",
+    "link": "/client\\grpc/getting-started"
+  },
+  {
+    "label": "Observability",
+    "link": "/client\\grpc/observability"
+  },
+  {
+    "label": "Persistent Subscriptions",
+    "link": "/client\\grpc/persistent-subscriptions"
+  },
+  {
+    "label": "Projections",
+    "link": "/client\\grpc/projections"
+  },
+  {
+    "label": "Reading Events",
+    "link": "/client\\grpc/reading-events"
+  },
+  {
+    "label": "Subscriptions",
+    "link": "/client\\grpc/subscriptions"
+  }
+]

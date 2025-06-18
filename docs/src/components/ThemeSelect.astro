@@ -1,0 +1,169 @@
+---
+import Sun from './icons/Sun.astro';
+import Moon from './icons/Moon.astro';
+---
+
+<!-- Force light theme as default if none is set -->
+<script is:inline>
+  (function() {
+    const saved = localStorage.getItem('starlight-theme');
+    if (!saved) {
+      localStorage.setItem('starlight-theme', 'light');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
+
+<theme-select>
+  <button id="theme-toggle" aria-label="Toggle theme">
+    <span class="sun"><Sun /></span>
+    <span class="moon"><Moon /></span>
+  </button>
+</theme-select>
+
+<style>
+  theme-select {
+    display: inline-flex;
+  }
+
+  #theme-toggle {
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+  }
+
+  #theme-toggle:hover {
+    opacity: 0.7;
+  }
+
+  .sun, .moon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  :root[data-theme="light"] .moon,
+  :root[data-theme="dark"] .sun {
+    display: none;
+  }
+</style>
+
+<script>
+  class ThemeSelect extends HTMLElement {
+    constructor() {
+      super();
+      
+      const button = this.querySelector('#theme-toggle');
+      if (!button) return;
+      
+      this.switchMermaidTheme = (isDark) => {
+        document.querySelectorAll('picture').forEach(picture => {
+          const darkSource = picture.querySelector('source[media*="prefers-color-scheme: dark"]');
+          
+          if (darkSource) {
+            if (isDark) {
+              darkSource.media = 'all';
+            } else {
+              darkSource.media = '(prefers-color-scheme: dark)';
+            }
+          }
+        });
+      };
+      
+      const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      setTimeout(() => {
+        this.switchMermaidTheme(initialTheme === 'dark');
+        this.disableZoomForMermaid();
+      }, 100);
+      
+      // Disable ALL zoom for Mermaid images
+      this.disableZoomForMermaid = () => {
+        setTimeout(() => {
+          document.querySelectorAll('picture img').forEach(img => {
+            if (!img.hasAttribute('data-zoom-disabled')) {
+              img.setAttribute('data-zoom-disabled', 'true');
+              img.setAttribute('data-zoom', 'off');
+              img.style.cursor = 'default';
+              img.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              };
+              img.removeAttribute('data-zoomable');
+              img.removeAttribute('data-starlight-image-zoom');
+              
+              const zoomContainer = img.closest('starlight-image-zoom-zoomable');
+              if (zoomContainer) {
+                const zoomButton = zoomContainer.querySelector('.starlight-image-zoom-control');
+                if (zoomButton) {
+                  zoomButton.remove();
+                }
+              }
+            }
+          });
+        }, 500);
+      };
+      
+      button.addEventListener('click', () => {
+        // Get current theme from Starlight's system
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        localStorage.setItem('starlight-theme', newTheme);
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        
+        setTimeout(() => {
+          this.switchMermaidTheme(newTheme === 'dark');
+          this.disableZoomForMermaid();
+        }, 50);
+        
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'starlight-theme',
+          newValue: newTheme,
+          storageArea: localStorage
+        }));
+      });
+    }
+  }
+
+  customElements.define('theme-select', ThemeSelect);
+  
+  document.addEventListener('astro:page-load', () => {
+    const themeSelect = document.querySelector('theme-select');
+    if (themeSelect && themeSelect.switchMermaidTheme) {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      setTimeout(() => {
+        themeSelect.switchMermaidTheme(currentTheme === 'dark');
+        themeSelect.disableZoomForMermaid();
+      }, 100);
+    }
+  });
+  
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+        const themeSelect = document.querySelector('theme-select');
+        if (themeSelect && themeSelect.switchMermaidTheme) {
+          const newTheme = document.documentElement.getAttribute('data-theme') || 'light';
+          setTimeout(() => {
+            themeSelect.switchMermaidTheme(newTheme === 'dark');
+            themeSelect.disableZoomForMermaid();
+          }, 50);
+        }
+      }
+    });
+  });
+  
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  });
+</script>

@@ -1,0 +1,554 @@
+---
+// src/components/CustomSidebar.astro
+import type { Props } from '@astrojs/starlight/props';
+import { getSidebarConfig } from '../utils/sidebar';
+
+const currentPath = Astro.url.pathname;
+
+// Get dynamic sidebar configuration
+const { sidebar: dynamicSidebar, versionInfo } = getSidebarConfig(currentPath);
+
+// Transform sidebar items to Starlight format
+function transformToStarlightSidebar(items: any[]): any[] {
+  return items.map(item => {
+    const transformed: any = {
+      label: item.label,
+    };
+    
+    if (item.link) {
+      transformed.href = item.link;
+    }
+    
+    if (item.items && item.items.length > 0) {
+      transformed.items = transformToStarlightSidebar(item.items);
+    }
+    
+    if (item.collapsed !== undefined) {
+      transformed.collapsed = item.collapsed;
+    }
+    
+    return transformed;
+  });
+}
+
+// Use dynamic sidebar
+const sidebarItems = transformToStarlightSidebar(dynamicSidebar);
+
+// Get version switch path
+const getVersionSwitchPath = (targetVersion: string) => {
+  if (!versionInfo?.isVersioned || !versionInfo.currentVersion) return currentPath;
+  
+  // Replace current version with target version in the path
+  const versionPattern = versionInfo.currentVersion.startsWith('v') 
+    ? new RegExp(`/${versionInfo.currentVersion}(/|$)`)
+    : new RegExp(`/${versionInfo.currentVersion}(/|$)`);
+  
+  return currentPath.replace(versionPattern, `/${targetVersion}$1`);
+};
+
+// Helper functions for active state
+function isActive(href: string, currentPath: string): boolean {
+  if (!href) return false;
+  
+  // Normalize paths for comparison
+  const normalizedHref = href.endsWith('/') ? href.slice(0, -1) : href;
+  const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+  
+  // Exact match
+  if (normalizedPath === normalizedHref) return true;
+  
+  // Also check if the current path is a sub-path of the href
+  // This helps with index pages
+  if (normalizedPath === normalizedHref + '/index') return true;
+  
+  return false;
+}
+
+function hasActiveDescendant(item: any, path: string): boolean {
+  if (item.href && isActive(item.href, path)) return true;
+  
+  // Check if any descendant is active
+  if (item.items) {
+    for (const child of item.items) {
+      if (hasActiveDescendant(child, path)) return true;
+    }
+  }
+  
+  return false;
+}
+
+// Generate unique IDs for each sidebar section
+function generateItemId(item: any, index: number, parentId: string = ''): string {
+  const base = item.label.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  return parentId ? `${parentId}-${base}-${index}` : `${base}-${index}`;
+}
+
+// Check if we're in mobile view
+const isMobile = Astro.props.isMobile || false;
+---
+
+<starlight-sidebar class="sidebar astro-vrdttmbt" data-mobile={isMobile ? 'true' : 'false'}>
+  <div class="sidebar-pane" style="overflow-y: hidden !important;">
+    {versionInfo?.isVersioned && versionInfo.availableVersions && versionInfo.availableVersions.length > 0 && (
+      <div class="sl-version-selector">
+        <span class="sl-version-label">Version</span>
+        <select 
+          class="sl-version-select"
+          onchange="window.location.href = this.value;"
+        >
+          {versionInfo.availableVersions.map(({ version, label }) => (
+            <option 
+              value={getVersionSwitchPath(version)}
+              selected={version === versionInfo.currentVersion}
+            >
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+    )}
+    
+    <div class="sidebar-scroll-container">
+      <ul class="top-level">
+      {sidebarItems.map((item, index) => {
+        const active = isActive(item.href, currentPath);
+        const hasActive = hasActiveDescendant(item, currentPath);
+        const itemId = generateItemId(item, index);
+        const isExpanded = item.collapsed === false || active || hasActive;
+        
+        return (
+          <li>
+            {item.href ? (
+              <a 
+                href={item.href} 
+                aria-current={active ? "page" : undefined}
+                data-current-parent={hasActive ? "true" : undefined}
+              >
+                <span>{item.label}</span>
+              </a>
+            ) : (
+              <details 
+                open={isExpanded} 
+                data-sidebar-group={itemId}
+              >
+                <summary>
+                  <div class="group-label">
+                    <span>{item.label}</span>
+                  </div>
+                  <svg aria-hidden="true" class="caret" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="m8.3 4.3 7.4 7.4c.2.2.3.4.3.7s-.1.5-.3.7l-7.4 7.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.4-.4-.4-1 0-1.4l6.7-6.7-6.7-6.7c-.4-.4-.4-1 0-1.4s1-.4 1.4 0z"/>
+                  </svg>
+                </summary>
+                {item.items && item.items.length > 0 && (
+                  <ul>
+                    {item.items.map((subItem: any, subIndex: number) => {
+                      const subActive = isActive(subItem.href, currentPath);
+                      const subHasActive = hasActiveDescendant(subItem, currentPath);
+                      const subItemId = generateItemId(subItem, subIndex, itemId);
+                      const subExpanded = subItem.collapsed === false || subActive || subHasActive;
+                      
+                      return (
+                        <li>
+                          {subItem.href ? (
+                            <a 
+                              href={subItem.href} 
+                              aria-current={subActive ? "page" : undefined}
+                              data-current-parent={subHasActive ? "true" : undefined}
+                            >
+                              <span>{subItem.label}</span>
+                            </a>
+                          ) : (
+                            <details 
+                              open={subExpanded}
+                              data-sidebar-group={subItemId}
+                            >
+                              <summary>
+                                <div class="group-label">
+                                  <span>{subItem.label}</span>
+                                </div>
+                                <svg aria-hidden="true" class="caret" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="m8.3 4.3 7.4 7.4c.2.2.3.4.3.7s-.1.5-.3.7l-7.4 7.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.4-.4-.4-1 0-1.4l6.7-6.7-6.7-6.7c-.4-.4-.4-1 0-1.4s1-.4 1.4 0z"/>
+                                </svg>
+                              </summary>
+                              {subItem.items && subItem.items.length > 0 && (
+                                <ul>
+                                  {subItem.items.map((subSubItem: any) => {
+                                    const subSubActive = isActive(subSubItem.href, currentPath);
+                                    
+                                    return (
+                                      <li>
+                                        <a 
+                                          href={subSubItem.href} 
+                                          aria-current={subSubActive ? "page" : undefined}
+                                        >
+                                          <span>{subSubItem.label}</span>
+                                        </a>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              )}
+                            </details>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </details>
+            )}
+          </li>
+        );
+      })}
+      </ul>
+    </div>
+  </div>
+</starlight-sidebar>
+
+<script>
+  // Store and restore sidebar state
+  const SIDEBAR_STATE_KEY = 'kurrent-sidebar-state';
+  
+  // Function to get the current state of all sidebar groups
+  function getSidebarState(): Record<string, boolean> {
+    const state: Record<string, boolean> = {};
+    const details = document.querySelectorAll('details[data-sidebar-group]');
+    
+    details.forEach((detail) => {
+      const groupId = detail.getAttribute('data-sidebar-group');
+      if (groupId) {
+        state[groupId] = detail.open;
+      }
+    });
+    
+    return state;
+  }
+  
+  // Function to restore sidebar state
+  function restoreSidebarState() {
+    const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+    if (!savedState) return;
+    
+    try {
+      const state = JSON.parse(savedState);
+      const details = document.querySelectorAll('details[data-sidebar-group]');
+      
+      details.forEach((detail) => {
+        const groupId = detail.getAttribute('data-sidebar-group');
+        if (groupId && groupId in state) {
+          detail.open = state[groupId];
+        }
+      });
+    } catch (e) {
+      console.error('Failed to restore sidebar state:', e);
+    }
+  }
+  
+  // Function to save sidebar state
+  function saveSidebarState() {
+    const state = getSidebarState();
+    localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(state));
+  }
+  
+  // Listen for toggle events on all details elements
+  function setupSidebarListeners() {
+    const details = document.querySelectorAll('details[data-sidebar-group]');
+    
+    details.forEach((detail) => {
+      detail.addEventListener('toggle', () => {
+        // Small delay to ensure the state has updated
+        setTimeout(saveSidebarState, 0);
+      });
+    });
+  }
+  
+  // Function to expand active paths on initial load
+  function expandActivePaths() {
+    // Find all links with aria-current="page" or data-current-parent="true"
+    const activeLinks = document.querySelectorAll('[aria-current="page"], [data-current-parent="true"]');
+    
+    activeLinks.forEach((link) => {
+      // Walk up the tree and open all parent details elements
+      let parent = link.parentElement;
+      while (parent) {
+        if (parent.tagName === 'DETAILS' && parent.hasAttribute('data-sidebar-group')) {
+          parent.open = true;
+        }
+        parent = parent.parentElement;
+      }
+    });
+  }
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    // First expand active paths
+    expandActivePaths();
+    
+    // Then restore any saved state (this won't close active paths)
+    restoreSidebarState();
+    
+    // Setup listeners for future changes
+    setupSidebarListeners();
+  });
+  
+  // Also run on Astro page transitions
+  document.addEventListener('astro:page-load', () => {
+    // First expand active paths
+    expandActivePaths();
+    
+    // Then restore any saved state
+    restoreSidebarState();
+    
+    // Setup listeners
+    setupSidebarListeners();
+  });
+  
+  // Mobile sidebar integration
+  function initMobileSidebar() {
+    const sidebar = document.querySelector('starlight-sidebar');
+    const mobileMenuButton = document.querySelector('starlight-menu-button');
+    
+    if (!sidebar || !mobileMenuButton) return;
+    
+    // Listen for Starlight's mobile menu toggle events
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-expanded') {
+          const isOpen = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+          // You can add custom behavior here when menu opens/closes
+        }
+      });
+    });
+    
+    observer.observe(mobileMenuButton, {
+      attributes: true,
+      attributeFilter: ['aria-expanded']
+    });
+  }
+  
+  // Initialize mobile sidebar behavior
+  document.addEventListener('DOMContentLoaded', initMobileSidebar);
+  document.addEventListener('astro:page-load', initMobileSidebar);
+</script>
+
+<style>
+  /* Main sidebar container */
+  starlight-sidebar {
+    width: var(--sl-sidebar-width);
+    max-height: 100%;
+    position: sticky;
+    top: var(--sl-nav-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--sl-nav-height));
+  }
+  
+  .sidebar-pane {
+    --sl-sidebar-item-padding-inline: 0.5rem;
+    flex: 1;
+    padding: 0 var(--sl-sidebar-pad-x) 1rem;
+  }
+  
+  /* Override Starlight's default with higher specificity */
+  :global(.sidebar-pane) {
+    overflow-y: hidden !important;
+  }
+  
+  /* Sidebar scroll container */
+  .sidebar-scroll-container {
+    max-height: calc(100vh - var(--sl-nav-height) - 8rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0 calc(-1 * var(--sl-sidebar-pad-x));
+    padding: 0 var(--sl-sidebar-pad-x);
+  }
+  
+  /* Inner scrollable container */
+  .top-level {
+    padding: 0;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .sidebar-scroll-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .sidebar-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--sl-color-gray-5);
+    border-radius: 3px;
+  }
+  
+  /* Firefox */
+  .sidebar-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sl-color-gray-5) transparent;
+  }
+  
+  /* Version selector */
+  .sl-version-selector {
+    margin: 0 0 1rem 0;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .sl-version-label {
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .sl-version-select {
+    flex: 1;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.25rem;
+    background-color: var(--sl-color-bg);
+    color: var(--sl-color-text);
+    font-size: var(--sl-text-sm);
+    cursor: pointer;
+  }
+  
+  /* Lists */
+  ul {
+    --sl-sidebar-item-padding-inline: 0.5rem;
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    overflow-wrap: anywhere;
+  }
+  
+  ul ul li {
+    margin-inline-start: var(--sl-sidebar-item-padding-inline);
+    border-inline-start: 1px solid var(--sl-color-hairline);
+    padding-inline-start: var(--sl-sidebar-item-padding-inline);
+  }
+  
+  /* Links */
+  a {
+    display: block;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    color: var(--sl-color-gray-2);
+    padding: 0.3rem var(--sl-sidebar-item-padding-inline);
+    line-height: 1.4;
+  }
+  
+  
+  [aria-current="page"],
+  [data-current-parent="true"] {
+    font-weight: 600;
+    color: var(--sl-color-text-invert);
+    background-color: var(--sl-color-text-accent);
+  }
+  
+  a[data-current-parent="true"]:not([aria-current="page"]) {
+    background-color: transparent;
+    color: var(--sl-color-white);
+  }
+  
+  /* Groups */
+  details > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem var(--sl-sidebar-item-padding-inline);
+    line-height: 1.4;
+    cursor: pointer;
+    user-select: none;
+    color: var(--sl-color-gray-1);
+  }
+  
+  details > summary::marker,
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  
+  .caret {
+    transition: transform 0.2s ease-in-out;
+    flex-shrink: 0;
+  }
+  
+  details[open] > summary .caret {
+    transform: rotate(90deg);
+  }
+  
+  /* Top level specific styles */
+  .top-level > li + li {
+    margin-top: 0.25rem;
+  }
+  
+  .top-level > li > details > summary {
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  
+  /* Mobile sidebar styles */
+  @media (max-width: 50rem) {
+    starlight-sidebar {
+      /* Remove display: none to allow Starlight's mobile menu to work */
+      display: flex;
+      position: relative;
+      top: 0;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      padding: 0;
+    }
+    
+    .sidebar-pane {
+      padding: 1rem var(--sl-sidebar-pad-x);
+    }
+    
+    .sidebar-scroll-container {
+      max-height: none;
+      overflow-y: visible;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Adjust version selector for mobile */
+    .sl-version-selector {
+      margin: 0 0 1rem 0;
+      padding: 0.5rem;
+      background-color: var(--sl-color-bg-nav);
+    }
+  }
+  
+  /* Dark mode adjustments */
+  :root[data-theme="dark"] .sl-version-selector {
+    background-color: var(--sl-color-bg-nav);
+  }
+  
+  :root[data-theme="dark"] .sl-version-select {
+    background-color: var(--sl-color-black);
+    border-color: var(--sl-color-gray-5);
+  }
+  
+  /* Mobile-specific dark mode */
+  @media (max-width: 50rem) {
+    :root[data-theme="dark"] .sl-version-selector {
+      background-color: var(--sl-color-gray-6);
+    }
+  }
+</style>

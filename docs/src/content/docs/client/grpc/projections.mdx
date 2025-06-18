@@ -1,0 +1,232 @@
+---
+title: "Untitled"
+---
+
+import typescript_createClient_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_CreateContinuous_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_CreateContinuous_Conflict_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_RestartSubSystem_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Enable_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_EnableNotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Disable_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_DisableNotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Delete_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_DeleteNotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Abort_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Abort_NotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Reset_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Reset_NotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Update_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_Update_NotFound_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_ListAll_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_ListContinuous_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_GetStatus_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_GetState_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+import typescript_GetResult_projection_management from '/src/content/_samples/clients/node/6.2.1/projection-management.ts?raw';
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+
+
+﻿---
+order: 6
+title: Projections
+---
+
+# Projection management
+
+The various gRPC client APIs include dedicated clients that allow you to manage projections.
+
+For a detailed explanation of projections, see the [server documentation](@server/features/projections/README.md).
+
+You can find the full sample code from this documentation page in the respective [clients repositories](https://github.com/kurrent-io/?q=client).
+
+## Required packages
+
+Install the client SDK package to your project.
+
+### NodeJS
+
+Add `@kurrent/kurrentdb-client` to your project using Yarn, NPM, or pnpm.
+
+TypeScript type declarations are included in the package.
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install --save @kurrent/kurrentdb-client
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @kurrent/kurrentdb-client
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @kurrent/kurrentdb-client
+    ```
+  </TabItem>
+</Tabs>
+
+## Creating a client
+
+Projection management operations are exposed through a dedicated client.
+
+<Code lang="typescript" code={typescript_createClient_projection_management} />
+
+## Create a projection
+
+Creates a projection that runs until the last event in the store, and then continues processing new events as they are appended to the store. The query parameter contains the JavaScript you want created as a projection.
+Projections have explicit names, and you can enable or disable them via this name.
+
+<Code lang="typescript" code={typescript_CreateContinuous_projection_management} />
+
+Trying to create projections with the same name will result in an error:
+
+<Code lang="typescript" code={typescript_CreateContinuous_Conflict_projection_management} />
+
+## Restart the subsystem
+
+It is possible to restart the entire projection subsystem using the projections management client API. The user must be in the `$ops` or `$admin` group to perform this operation.
+
+<Code lang="typescript" code={typescript_RestartSubSystem_projection_management} />
+
+## Enable a projection
+
+Enables an existing projection by name.
+Once enabled, the projection will start to process events even after restarting the server or the projection subsystem.
+You must have access to a projection to enable it, see the [ACL documentation](@server/security/user-authorization.md).
+
+<Code lang="typescript" code={typescript_Enable_projection_management} />
+
+You can only enable an existing projection. When you try to enable a non-existing projection, you'll get an error:
+
+<Code lang="typescript" code={typescript_EnableNotFound_projection_management} />
+
+## Disable a projection
+
+Disables a projection, this will save the projection checkpoint.
+Once disabled, the projection will not process events even after restarting the server or the projection subsystem.
+You must have access to a projection to disable it, see the [ACL documentation](@server/security/user-authorization.md).
+
+<Code lang="typescript" code={typescript_Disable_projection_management} />
+
+You can only disable an existing projection. When you try to disable a non-existing projection, you'll get an error:
+
+<Code lang="typescript" code={typescript_DisableNotFound_projection_management} />
+
+## Delete a projection
+
+Deletes an existing projection. You must disable the projection before deleting it, running projections cannot be deleted. Deleting a projection includes deleting the checkpoint and the emitted streams.
+
+<Code lang="typescript" code={typescript_Delete_projection_management} />
+
+You can only delete an existing projection. When you try to delete a non-existing projection, you'll get an error:
+
+<Code lang="typescript" code={typescript_DeleteNotFound_projection_management} />
+
+## Abort a projection
+
+Aborts a projection, this will not save the projection's checkpoint.
+
+<Code lang="typescript" code={typescript_Abort_projection_management} />
+
+You can only abort an existing projection. When you try to abort a non-existing projection, you'll get an error:
+
+<Code lang="typescript" code={typescript_Abort_NotFound_projection_management} />
+
+## Reset a projection
+
+Resets a projection, which causes deleting the projection checkpoint. This will force the projection to start afresh and re-emit events. Streams that are written to from the projection will also be soft-deleted.
+
+<Code lang="typescript" code={typescript_Reset_projection_management} />
+
+Resetting a projection that does not exist will result in an error.
+
+<Code lang="typescript" code={typescript_Reset_NotFound_projection_management} />
+
+## Update a projection
+
+Updates a projection with a given name. The query parameter contains the new JavaScript. Updating system projections using this operation is not supported at the moment.
+
+<Code lang="typescript" code={typescript_Update_projection_management} />
+
+You can only update an existing projection. When you try to update a non-existing projection, you'll get an error:
+
+<Code lang="typescript" code={typescript_Update_NotFound_projection_management} />
+
+## List all projections
+
+Returns a list of all projections, user defined & system projections.
+See the [projection details](#projection-details) section for an explanation of the returned values.
+
+<Code lang="typescript" code={typescript_ListAll_projection_management} />
+
+## List continuous projections
+
+Returns a list of all continuous projections.
+See the [projection details](#projection-details) section for an explanation of the returned values.
+
+<Code lang="typescript" code={typescript_ListContinuous_projection_management} />
+
+## Get status
+
+Gets the status of a named projection.
+See the [projection details](#projection-details) section for an explanation of the returned values.
+
+<Code lang="typescript" code={typescript_GetStatus_projection_management} />
+
+## Get state
+
+Retrieves the state of a projection.
+
+<Code lang="typescript" code={typescript_GetState_projection_management} />
+
+## Get result
+
+Retrieves the result of the named projection and partition.
+
+<Code lang="typescript" code={typescript_GetResult_projection_management} />
+
+## Projection Details
+
+[List all](#list-all-projections), [list continuous](#list-continuous-projections) and [get status](#get-status) all return the details and statistics of projections
+
+| Field                                | Description                                                                                                                                                                                           |
+|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Name`, `EffectiveName`              | The name of the projection                                                                                                                                                                            |
+| `Status`                             | A human readable string of the current statuses of the projection (see below)                                                                                                                         |
+| `StateReason`                        | A human readable string explaining the reason of the current projection state                                                                                                                         |
+| `CheckpointStatus`                   | A human readable string explaining the current operation performed on the checkpoint : `requested`, `writing`                                                                                         |
+| `Mode`                               | `Continuous`, `OneTime` , `Transient`                                                                                                                                                                 |
+| `CoreProcessingTime`                 | The total time, in ms, the projection took to handle events since the last restart                                                                                                                    |
+| `Progress`                           | The progress, in %, indicates how far this projection has processed event, in case of a restart this could be -1% or some number. It will be updated as soon as a new event is appended and processed |
+| `WritesInProgress`                   | The number of write requests to emitted streams currently in progress, these writes can be batches of events                                                                                          |
+| `ReadsInProgress`                    | The number of read requests currently in progress                                                                                                                                                     |
+| `PartitionsCached`                   | The number of cached projection partitions                                                                                                                                                            |
+| `Position`                           | The Position of the last processed event                                                                                                                                                              |
+| `LastCheckpoint`                     | The Position of the last checkpoint of this projection                                                                                                                                                |
+| `EventsProcessedAfterRestart`        | The number of events processed since the last restart of this projection                                                                                                                              |
+| `BufferedEvents`                     | The number of events in the projection read buffer                                                                                                                                                    |
+| `WritePendingEventsBeforeCheckpoint` | The number of events waiting to be appended to emitted streams before the pending checkpoint can be written                                                                                           |
+| `WritePendingEventsAfterCheckpoint`  | The number of events to be appended to emitted streams since the last checkpoint                                                                                                                      |
+| `Version`                            | This is used internally, the version is increased when the projection is edited or reset                                                                                                              |
+| `Epoch`                              | This is used internally, the epoch is increased when the projection is reset                                                                                                                          |
+
+The `Status` string is a combination of the following values.
+The first 3 are the most common one, as the other one are transient values while the projection is initialised or stopped
+
+| Value              | Description                                                                                                             |
+|--------------------|-------------------------------------------------------------------------------------------------------------------------|
+| Running            | The projection is running and processing events                                                                         |
+| Stopped            | The projection is stopped and is no longer processing new events                                                        |
+| Faulted            | An error occurred in the projection, `StateReason` will give the fault details, the projection is not processing events |
+| Initial            | This is the initial state, before the projection is fully initialised                                                   |
+| Suspended          | The projection is suspended and will not process events, this happens while stopping the projection                     |
+| LoadStateRequested | The state of the projection is being retrieved, this happens while the projection is starting                           |
+| StateLoaded        | The state of the projection is loaded, this happens while the projection is starting                                    |
+| Subscribed         | The projection has successfully subscribed to its readers, this happens while the projection is starting                |
+| FaultedStopping    | This happens before the projection is stopped due to an error in the projection                                         |
+| Stopping           | The projection is being stopped                                                                                         |
+| CompletingPhase    | This happens while the projection is stopping                                                                           |
+| PhaseCompleted     | This happens while the projection is stopping                                                                           |
