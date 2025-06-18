@@ -22,6 +22,7 @@ export const multiAppend = async function (
     "multiStreamAppend",
     (client) =>
       new Promise<MultiAppendResult>(async (resolve, reject) => {
+        baseOptions.requiresLeader = false;
         const sink = client.multiStreamAppendSession(
           ...this.callArguments(baseOptions),
           (error, response) => {
