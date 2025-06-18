@@ -13,7 +13,7 @@ import type {
   AllStreamResolvedEvent,
   EventType,
   PersistentSubscriptionToAllResolvedEvent,
-  PersistentSubscriptionToStreamResolvedEvent,
+  PersistentSubscriptionToStreamResolvedEvent, EventData,
 } from "./events";
 
 import type * as constants from "../constants";
@@ -526,6 +526,41 @@ export interface FellBehind {
    */
   position?: Position;
 }
+
+export interface AppendStreamRequest {
+  streamName: string;
+  events: EventData[];
+  expectedState: AppendStreamState;
+}
+
+export interface AppendStreamSuccess {
+  streamName: string;
+  revision: bigint;
+  position: bigint;
+}
+
+export interface BaseAppendErrorDetails {
+  type: string;
+}
+
+export type AppendErrorDetails =
+  | ({ type: "access_denied"; reason: string; } & BaseAppendErrorDetails)
+  | ({ type: "stream_deleted"; reason: string; } & BaseAppendErrorDetails)
+  | ({ type: "wrong_expected_revision"; revision: bigint; } & BaseAppendErrorDetails)
+  | ({ type: "transaction_max_size_exceeded"; maxSize: number; } & BaseAppendErrorDetails)
+
+export interface AppendStreamFailure {
+  streamName: string;
+  details: AppendErrorDetails;
+}
+
+export interface BaseMultiAppendResult {
+  success: boolean;
+}
+
+export type MultiAppendResult =
+  | ({ success: true; output: AppendStreamSuccess[]; } & BaseMultiAppendResult)
+  | ({ success: false; output: AppendStreamFailure[]; } & BaseMultiAppendResult)
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
