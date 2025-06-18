@@ -544,10 +544,13 @@ export interface BaseAppendErrorDetails {
 }
 
 export type AppendErrorDetails =
+  | ({ type: "unknown"; } & BaseAppendErrorDetails)
   | ({ type: "access_denied"; reason: string; } & BaseAppendErrorDetails)
-  | ({ type: "stream_deleted"; reason: string; } & BaseAppendErrorDetails)
+  | ({ type: "stream_deleted"; } & BaseAppendErrorDetails)
   | ({ type: "wrong_expected_revision"; revision: bigint; } & BaseAppendErrorDetails)
   | ({ type: "transaction_max_size_exceeded"; maxSize: number; } & BaseAppendErrorDetails)
+
+export const UnknownErrorDetails: AppendErrorDetails = { type: "unknown" } as const;
 
 export interface AppendStreamFailure {
   streamName: string;

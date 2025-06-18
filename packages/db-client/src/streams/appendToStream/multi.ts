@@ -1,15 +1,14 @@
-import {AppendStreamRequest, MultiAppendResult} from "../../types";
+import {AppendStreamRequest, MultiAppendResult, AppendStreamSuccess, AppendStreamFailure, UnknownErrorDetails, BaseOptions} from "../../types";
 import grpc from "../../../generated/streams.v2_grpc_pb";
 import type {Client} from "../../Client";
 import protobuf from "../../../generated/streams.v2_pb";
 import dynamic from "../../../generated/dynamic-value_pb";
-import { backpressuredWrite, InternalOptions } from "../../utils";
-import type { AppendToStreamOptions } from ".";
+import {backpressuredWrite, convertToCommandError} from "../../utils";
 
 export const multiAppend = async function (
   this: Client,
   requests: AppendStreamRequest[],
-  {...baseOptions}: InternalOptions<AppendToStreamOptions>
+  baseOptions: BaseOptions,
 ): Promise<MultiAppendResult> {
 
   return this.execute(
@@ -18,7 +17,67 @@ export const multiAppend = async function (
     (client) =>
       new Promise<MultiAppendResult>(async (resolve, reject) => {
         const sink = client.multiStreamAppendSession(...this.callArguments(baseOptions),
-          (error, response) => {});
+          (error, response) => {
+            if (error != null) {
+              return reject(convertToCommandError(error));
+            }
+
+            if (response.getSuccess() != undefined) {
+              const successes: AppendStreamSuccess[] = [];
+              for (const success of response.getSuccess()!.getOutputList()) {
+                successes.push({
+                    streamName: success.getStream(),
+                    revision: BigInt(success.getStreamRevision()),
+                    position: BigInt(success.getPosition()),
+                });
+              }
+
+              return resolve({ success: true, output: successes});
+            }
+              const failures: AppendStreamFailure[] = [];
+
+              for (const failure of response.getFailure()!.getOutputList()) {
+                var value: AppendStreamFailure = {
+                  streamName: failure.getStream(),
+                  details: UnknownErrorDetails,
+                };
+
+                switch (failure.getErrorCase()) {
+                  case protobuf.AppendStreamFailure.ErrorCase.ACCESS_DENIED:
+                    value.details = {
+                      type: "access_denied",
+                      reason: failure.getAccessDenied()!.getReason(),
+                    };
+
+                    break;
+
+                  case protobuf.AppendStreamFailure.ErrorCase.STREAM_DELETED:
+                    value.details = {
+                      type: "stream_deleted",
+                    };
+
+                    break;
+
+                  case protobuf.AppendStreamFailure.ErrorCase.WRONG_EXPECTED_REVISION:
+                    value.details = {
+                      type: "wrong_expected_revision",
+                      revision: BigInt(failure.getWrongExpectedRevision()!.getStreamRevision()),
+                    };
+                    break;
+
+                  case protobuf.AppendStreamFailure.ErrorCase.TRANSACTION_MAX_SIZE_EXCEEDED:
+                    value.details = {
+                      type: "transaction_max_size_exceeded",
+                      maxSize: failure.getTransactionMaxSizeExceeded()!.getMaxSize(),
+                    };
+                    break;
+                }
+
+                failures.push(value);
+            }
+
+            return resolve({ success: false, output: failures });
+          });
 
         sink.on("error", (err) => reject(err));
 

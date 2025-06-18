@@ -8,10 +8,13 @@ import type {
   AppendStreamState,
   EventData,
   EventType,
+  MultiAppendResult,
+  AppendStreamRequest,
 } from "../../types";
 
 import { append } from "./append";
 import { batchAppend } from "./batchAppend";
+import { multiAppend } from "./multi";
 
 export interface AppendToStreamOptions extends BaseOptions {
   /**
@@ -39,6 +42,8 @@ declare module "../../Client" {
       events: EventData<KnownEventType> | EventData<KnownEventType>[],
       options?: AppendToStreamOptions
     ): Promise<AppendResult>;
+
+    multiAppend(requests: AppendStreamRequest[], options?: AppendToStreamOptions): Promise<MultiAppendResult>;
   }
 }
 
@@ -73,3 +78,10 @@ Client.prototype.appendToStream = async function <
     ...baseOptions,
   });
 };
+
+Client.prototype.multiAppend = async function(
+  this: Client,
+  requests: AppendStreamRequest[],
+  baseOptions: BaseOptions = {}): Promise<MultiAppendResult> {
+  return multiAppend.call(this, requests, baseOptions);
+}
