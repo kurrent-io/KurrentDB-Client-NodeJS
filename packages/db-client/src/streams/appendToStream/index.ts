@@ -43,7 +43,10 @@ declare module "../../Client" {
       options?: AppendToStreamOptions
     ): Promise<AppendResult>;
 
-    multiAppend(requests: AppendStreamRequest[], options?: AppendToStreamOptions): Promise<MultiAppendResult>;
+    multiAppend(
+      requests: AppendStreamRequest[],
+      options?: AppendToStreamOptions
+    ): Promise<MultiAppendResult>;
   }
 }
 
@@ -79,9 +82,10 @@ Client.prototype.appendToStream = async function <
   });
 };
 
-Client.prototype.multiAppend = async function(
+Client.prototype.multiAppend = async function (
   this: Client,
   requests: AppendStreamRequest[],
-  baseOptions: BaseOptions = {}): Promise<MultiAppendResult> {
+  baseOptions: BaseOptions = {}
+): Promise<MultiAppendResult> {
   return multiAppend.call(this, requests, baseOptions);
-}
+};

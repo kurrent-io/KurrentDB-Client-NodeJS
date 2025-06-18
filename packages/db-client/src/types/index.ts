@@ -13,7 +13,8 @@ import type {
   AllStreamResolvedEvent,
   EventType,
   PersistentSubscriptionToAllResolvedEvent,
-  PersistentSubscriptionToStreamResolvedEvent, EventData,
+  PersistentSubscriptionToStreamResolvedEvent,
+  EventData,
 } from "./events";
 
 import type * as constants from "../constants";
@@ -544,13 +545,21 @@ export interface BaseAppendErrorDetails {
 }
 
 export type AppendErrorDetails =
-  | ({ type: "unknown"; } & BaseAppendErrorDetails)
-  | ({ type: "access_denied"; reason: string; } & BaseAppendErrorDetails)
-  | ({ type: "stream_deleted"; } & BaseAppendErrorDetails)
-  | ({ type: "wrong_expected_revision"; revision: bigint; } & BaseAppendErrorDetails)
-  | ({ type: "transaction_max_size_exceeded"; maxSize: number; } & BaseAppendErrorDetails)
+  | ({ type: "unknown" } & BaseAppendErrorDetails)
+  | ({ type: "access_denied"; reason: string } & BaseAppendErrorDetails)
+  | ({ type: "stream_deleted" } & BaseAppendErrorDetails)
+  | ({
+      type: "wrong_expected_revision";
+      revision: bigint;
+    } & BaseAppendErrorDetails)
+  | ({
+      type: "transaction_max_size_exceeded";
+      maxSize: number;
+    } & BaseAppendErrorDetails);
 
-export const UnknownErrorDetails: AppendErrorDetails = { type: "unknown" } as const;
+export const UnknownErrorDetails: AppendErrorDetails = {
+  type: "unknown",
+} as const;
 
 export interface AppendStreamFailure {
   streamName: string;
@@ -562,8 +571,8 @@ export interface BaseMultiAppendResult {
 }
 
 export type MultiAppendResult =
-  | ({ success: true; output: AppendStreamSuccess[]; } & BaseMultiAppendResult)
-  | ({ success: false; output: AppendStreamFailure[]; } & BaseMultiAppendResult)
+  | ({ success: true; output: AppendStreamSuccess[] } & BaseMultiAppendResult)
+  | ({ success: false; output: AppendStreamFailure[] } & BaseMultiAppendResult);
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
