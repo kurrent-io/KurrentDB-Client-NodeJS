@@ -1,5 +1,5 @@
 import { StreamsService } from "../../../generated/streams_grpc_pb";
-import { StreamsServiceService} from "../../../generated/streams.v2_grpc_pb";
+import { StreamsServiceService } from "../../../generated/streams.v2_grpc_pb";
 import { Client } from "../../Client";
 import { ANY } from "../../constants";
 import type {
@@ -88,8 +88,12 @@ Client.prototype.multiAppend = async function (
   requests: AppendStreamRequest[],
   baseOptions: BaseOptions = {}
 ): Promise<MultiAppendResult> {
-
-  if (!(await this.supports(StreamsServiceService.multiStreamAppendSession, "all"))) {
+  if (
+    !(await this.supports(
+      StreamsServiceService.multiStreamAppendSession,
+      "all"
+    ))
+  ) {
     throw new UnsupportedError("multiStreamAppend", "25.10");
   }
   return multiAppend.call(this, requests, baseOptions);
