@@ -3,15 +3,26 @@ name: QA
 on:
   workflow_dispatch:
     inputs:
-      image:
-        description: 'Full image name'
+      tag:
         required: true
-        default: 'docker.kurrent.io/kurrent-staging/kurrentdb:ci'
         type: string
+        description: "The tag to use for the docker image"
+      image:
+        required: true
+        type: string
+        description: "The docker image to use"
+      registry:
+        required: false
+        type: string
+        default: "docker.kurrent.io/kurrent-staging"
+        description: "The docker registry to use"
 
 jobs:
   test:
     name: Test
     uses: ./.github/workflows/tests.yml
     with:
+      runtime: qa
+      registry: ${{ inputs.registry }}
       image: ${{ inputs.image }}
+      tag: ${{ inputs.tag }}

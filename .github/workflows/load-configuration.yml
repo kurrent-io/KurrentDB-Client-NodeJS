@@ -1,0 +1,66 @@
+name: Load KurrentDB Runtime Configuration
+on:
+  workflow_call:
+    inputs:
+      runtime:
+        description: "The runtime's name. Current options are: `ci`, `previous-lts`, `latest` and `qa`"
+        required: true
+        type: string
+
+      registry:
+        description: "When in QA mode, the Docker registry to use"
+        type: string
+        required: false
+
+      image:
+        description: "When in QA mode, the Docker image to use"
+        type: string
+        required: false
+
+      tag:
+        description: "When in QA mode, the Docker image tag to use"
+        type: string
+        required: false
+
+    outputs:
+      runtime:
+        description: The runtime's name
+        value: ${{ inputs.runtime }}
+
+      registry:
+        description: The Docker registry
+        value: ${{ jobs.load.outputs.registry }}
+
+      image:
+        description: The Docker image
+        value: ${{ jobs.load.outputs.image }}
+
+      tag:
+        description: The Docker image tag
+        value: ${{ jobs.load.outputs.tag }}
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.set.outputs.registry }}
+      image: ${{ steps.set.outputs.image }}
+      tag: ${{ steps.set.outputs.tag }}
+
+    steps:
+      - name: Set KurrentDB Runtime Configuration Properties
+        id: set
+        run: |
+          case ${{ inputs.runtime }} in
+            "qa")
+              echo "registry=${{ inputs.registry }}" >> $GITHUB_OUTPUT
+              echo "image=${{ inputs.image }}" >> $GITHUB_OUTPUT
+              echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+            ;;
+
+            *)
+              echo "registry=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].registry }}" >> $GITHUB_OUTPUT
+              echo "image=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].image }}" >> $GITHUB_OUTPUT
+              echo "tag=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].tag }}" >> $GITHUB_OUTPUT
+            ;;
+          esac

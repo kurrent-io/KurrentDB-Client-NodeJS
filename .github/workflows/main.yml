@@ -1,0 +1,76 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 3 * * 0" # Every sunday at 3am UTC.
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/files/.nvmrc
+
+      - name: NodeJS version
+        run: node -v
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Yarn version
+        run: yarn --version
+
+      - name: Install
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+  validation:
+    needs: build
+    name: Code quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Install
+        run: yarn
+
+      - name: Linting
+        run: yarn lint
+
+      - name: Build on Ubuntu
+        run: yarn build
+
+      - name: All generated code is commited
+        run: |
+          git update-index --refresh
+          git diff-index --exit-code --name-status HEAD --
+
+  tests:
+    needs: validation
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [previous-lts, lts, ci]
+
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+    with:
+      runtime: ${{ matrix.runtime }}
+    secrets: inherit
