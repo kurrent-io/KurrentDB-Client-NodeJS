@@ -7,10 +7,6 @@ on:
         required: true
         type: string
 
-      go_version:
-        required: true
-        type: string
-
       registry:
         description: "When in QA mode, the Docker registry to use"
         type: string
