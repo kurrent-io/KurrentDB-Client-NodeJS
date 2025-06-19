@@ -22,7 +22,7 @@ export const convertRustEvent = <T extends ResolvedEvent>(
   }
 
   if (rustClient.commitPosition != undefined) {
-    resolved.commitPosition = rustClient.commitPosition;
+    resolved.commitPosition = BigInt(rustClient.commitPosition);
   }
 
   return resolved as T;
