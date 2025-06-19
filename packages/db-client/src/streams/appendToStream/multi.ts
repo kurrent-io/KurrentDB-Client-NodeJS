@@ -148,6 +148,8 @@ export const multiAppend = async function (
 
           await backpressuredWrite(sink, message);
         }
+
+        sink.end();
       })
   );
 };
