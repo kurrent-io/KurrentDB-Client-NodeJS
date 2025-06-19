@@ -1,3 +1,5 @@
+/** @jest-environment ./src/utils/enableVersionCheck.ts */
+
 import {
   createTestNode,
   jsonTestEvents,
@@ -8,14 +10,13 @@ import {
 import {
   KurrentDBClient,
   ANY,
-  JSONEventType,
   AppendStreamRequest,
   UnsupportedError,
 } from "@kurrent/kurrentdb-client";
 
 import { v4 } from "uuid";
 
-describe("appendToStream", () => {
+describe("MultiAppendStream", () => {
   const supported = matchServerVersion`>=25.0`;
   const node = createTestNode();
   let client!: KurrentDBClient;
