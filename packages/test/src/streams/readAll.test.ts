@@ -168,6 +168,7 @@ describe("readAll", () => {
       // resolved event
       expect(doResolveEvent.event).toBeDefined();
       expect(doResolveEvent.event?.type).toBe("linky");
+      expect(typeof doResolveEvent.commitPosition).toBe("bigint");
 
       // link event
       expect(doResolveEvent.link).toBeDefined();
