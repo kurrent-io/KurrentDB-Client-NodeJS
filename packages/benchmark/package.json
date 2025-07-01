@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@eventstore/db-client": "^6.2.1",
-    "@kurrent/bridge": "^0.1.0",
+    "@kurrent/bridge": "^0.1.3",
     "tinybench": "^3.1.1"
   },
   "devDependencies": {
