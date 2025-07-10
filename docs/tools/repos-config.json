@@ -1,0 +1,201 @@
+[
+  {
+    "id": "cloud",
+    "group": "cloud",
+    "basePath": "cloud",
+    "docsRelativePath": ["docs", "cloud"],
+    "includeVersionInPath": false,
+    "currentBranch": "main",
+    "repo": "https://github.com/kurrent-io/cloud-docs",
+    "branches": [
+      {
+        "version": "main",
+        "name": "main"
+      }
+    ]
+  },
+
+  {
+    "id": "getting-started",
+    "group": "getting-started",
+    "basePath": "getting-started",
+    "docsRelativePath": ["docs"],
+    "includeVersionInPath": false,
+    "currentBranch": "main",
+    "repo": "https://github.com/kurrent-io/getting-started-docs",
+    "branches": [
+      {
+        "version": "main",
+        "name": "main"
+      }
+    ]
+  },
+  {
+    "id": "client",
+    "group": "client",
+    "basePath": "client",
+    "docsRelativePath": ["docs", "clients"],
+    "includeVersionInPath": false,
+    "currentBranch": "main",
+    "repo": "https://github.com/kurrent-io/client-docs",
+    "branches": [
+      {
+        "version": "main",
+        "name": "main"
+      }
+    ]
+  },
+  {
+    "id": "tutorials",
+    "group": "tutorials",
+    "basePath": "tutorials",
+    "docsRelativePath": ["docs","tutorials"],
+    "includeVersionInPath": false,
+    "currentBranch": "main",
+    "repo": "https://github.com/kurrent-io/tutorial-docs",
+    "branches": [
+      {
+        "version": "main",
+        "name": "main"
+      }
+    ]
+  },
+  {
+    "id": "server",
+    "group": "Server",
+    "basePath": "server",
+    "docsRelativePath": ["docs"],
+    "samplesRelativePath": ["samples", "server"],
+    "currentBranch": "master",
+    "repo": "https://github.com/kurrent-io/KurrentDB",
+    "branches": [
+      {
+        "version": "v25.0",
+        "name": "release/v25.0",
+        "relativePath": ["server"],
+        "startPage": "quick-start/"
+      },
+      {
+        "version": "v24.10",
+        "name": "release/v24.10",
+        "relativePath": ["server"],
+        "startPage": "quick-start/"
+      },
+      {
+        "version": "v24.6",
+        "name": "release/oss-v24.6",
+        "relativePath": ["server"],
+        "startPage": "quick-start/",
+        "deprecated": true,
+        "hide": false
+      },
+      {
+        "version": "v23.10",
+        "name": "release/oss-v23.10",
+        "relativePath": ["server"],
+        "startPage": "quick-start/"
+      },
+      {
+        "version": "v22.10",
+        "name": "release/oss-v22.10",
+        "relativePath": ["server"],
+        "startPage": "introduction.html"
+      },
+      {
+        "version": "v5",
+        "name": "release/oss-v5",
+        "relativePath": ["server"],
+        "startPage": "introduction.html",
+        "deprecated": true,
+        "hide": false
+      }
+    ]
+  },
+
+  {
+    "id": "dotnet-client",
+    "group": ".NET SDK",
+    "basePath": "clients/dotnet",
+    "samplesRelativePath": ["samples"],
+    "repo": "https://github.com/kurrent-io/KurrentDB-Client-Dotnet",
+    "branches": [
+      {
+        "version": "23.3.8",
+        "name": "release/v23"
+      }
+    ]
+  },
+  {
+    "id": "java-client",
+    "group": "Java SDK",
+    "basePath": "clients/java",
+    "samplesRelativePath": [
+      "src",
+      "test",
+      "java",
+      "io",
+      "kurrent",
+      "dbclient",
+      "samples"
+    ],
+    "repo": "https://github.com/kurrent-io/KurrentDB-Client-Java",
+    "branches": [
+      {
+        "version": "5.4.5",
+        "name": "trunk"
+      }
+    ]
+  },
+  {
+    "id": "rust-client",
+    "group": "Rust SDK",
+    "basePath": "clients/rust",
+    "samplesRelativePath": ["examples"],
+    "repo": "https://github.com/kurrent-io/KurrentDB-Client-Rust",
+    "branches": [
+      {
+        "version": "4.0.1",
+        "name": "master"
+      }
+    ]
+  },
+  {
+    "id": "node-client",
+    "group": "NodeJS SDK",
+    "basePath": "clients/node",
+    "samplesRelativePath": ["packages", "test", "src", "samples"],
+    "repo": "https://github.com/kurrent-io/KurrentDB-Client-NodeJS",
+    "branches": [
+      {
+        "version": "6.2.1",
+        "name": "master"
+      }
+    ]
+  },
+  {
+    "id": "go-client",
+    "group": "Go SDK",
+    "basePath": "clients/go",
+    "samplesRelativePath": ["samples"],
+    "repo": "https://github.com/kurrent-io/KurrentDB-Client-Go",
+    "branches": [
+      {
+        "version": "1.0.0",
+        "name": "main"
+      }
+    ]
+  },
+  {
+    "id": "python-client",
+    "group": "Python SDK",
+    "basePath": "clients/python",
+    "samplesRelativePath": ["samples"],
+    "repo": "https://github.com/pyeventsourcing/kurrentdbclient",
+    "branches": [
+      {
+        "version": "1.0.17",
+        "name": "1.0"
+      }
+    ]
+  }
+]

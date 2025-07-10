@@ -1,0 +1,31 @@
+@font-face {
+    font-family: "Solina";
+    src:
+        url("./Solina-Light.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Solina";
+    src:
+        url("./Solina-Regular.woff2") format("woff2");
+    font-weight: 450;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Solina";
+    src:
+        url("./Solina-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Solina";
+    src:
+        url("./Solina-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+}

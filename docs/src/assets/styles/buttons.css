@@ -1,0 +1,30 @@
+.sl-link-button {
+	@apply flex items-center justify-center rounded-xl px-5 py-2.5 font-medium tracking-tight transition-(--button-transition-properties) duration-300;
+	@apply focus:outline-none;
+	@apply disabled:pointer-events-none;
+}
+
+.sl-link-button.primary {
+	@apply border-primary-600 from-primary-700 to-primary-700 relative border bg-gradient-to-t text-white;
+	@apply before:bg-primary-500 before:absolute before:-inset-0.5 before:-z-10 before:rounded-full before:opacity-0 before:blur-sm before:transition before:duration-300;
+	@apply dark:hover:border-primary-300 hover:before:opacity-100;
+	@apply focus-visible:ring-primary-300 focus-visible:ring-4;
+}
+
+.sl-link-button.secondary {
+	@apply border-base-300 bg-base-50 text-base-800 border;
+	@apply hover:bg-base-100;
+	@apply focus-visible:ring-primary-500 focus-visible:ring-4;
+}
+
+.button--outline {
+	@apply border-base-400 text-base-900 dark:border-base-600 dark:text-base-100 border bg-transparent;
+	@apply hover:bg-base-800 dark:hover:border-base-100 dark:hover:bg-base-100 dark:hover:text-base-900 hover:text-white;
+	@apply focus-visible:ring-primary-500 focus-visible:ring-4;
+}
+
+.sl-link-button.minimal {
+	@apply text-foreground/80 bg-transparent;
+	@apply hover:bg-base-200 hover:text-foreground dark:hover:bg-base-900;
+	@apply focus-visible:ring-primary-500 focus-visible:ring-4;
+}

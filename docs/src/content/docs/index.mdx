@@ -1,0 +1,30 @@
+---
+title: Kurrent docs
+description: Get started building your docs site with Starlight.
+template: splash
+hero:
+  tagline: This is the small engine for the NodeJS docs on Astro Starlight.
+  image:
+    file: ../../assets/img/logo-black.svg
+  actions:
+    - text: Start here
+      link: /client/grpc/
+      icon: right-arrow
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+
+## Next steps
+
+<CardGrid stagger>
+	<Card title="Add new content" icon="add-document">
+		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	</Card>
+	<Card title="Configure your sidebar" icon="setting">
+		Edit the `sidebar` in `sidebar.json`.
+	</Card>
+	<Card title="Read the docs" icon="open-book">
+		Learn more in [the Starlight Docs](https://starlight.astro.build/). Or ask in the `#documentation` channel.
+	</Card>
+</CardGrid>
