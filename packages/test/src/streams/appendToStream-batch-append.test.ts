@@ -8,7 +8,7 @@ import {
   optionalDescribe,
 } from "@test-utils";
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
-import { StreamsClient } from "@kurrent/kurrentdb-client/generated/streams_grpc_pb";
+import { StreamsClient } from "@kurrent/kurrentdb-client/generated/kurrentdb/protocols/v1/streams_grpc_pb";
 
 describe("appendToStream - batch append", () => {
   const supported = matchServerVersion`>=21.10`;

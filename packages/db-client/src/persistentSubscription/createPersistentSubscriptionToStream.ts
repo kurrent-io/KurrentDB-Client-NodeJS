@@ -1,5 +1,5 @@
-import { CreateReq } from "../../generated/persistent_pb";
-import { PersistentSubscriptionsClient } from "../../generated/persistent_grpc_pb";
+import { CreateReq } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
+import { PersistentSubscriptionsClient } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_grpc_pb";
 
 import type { BaseOptions } from "../types";
 import { debug, convertToCommandError, createStreamIdentifier } from "../utils";

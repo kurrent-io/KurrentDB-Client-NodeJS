@@ -1,4 +1,7 @@
-import { CreateReq, UpdateReq } from "../../../generated/persistent_pb";
+import {
+  CreateReq,
+  UpdateReq,
+} from "../../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 
 import {
   DISPATCH_TO_SINGLE,

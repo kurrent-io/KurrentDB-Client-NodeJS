@@ -2,8 +2,8 @@ syntax = "proto3";
 package event_store.client.streams;
 option java_package = "com.eventstore.dbclient.proto.streams";
 
-import "shared.proto";
-import "status.proto";
+import "kurrentdb/protocols/v1/shared.proto";
+import "kurrentdb/protocols/v1/status.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";

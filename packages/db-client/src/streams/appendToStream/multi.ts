@@ -6,10 +6,10 @@ import {
   UnknownErrorDetails,
   BaseOptions,
 } from "../../types";
-import grpc from "../../../generated/streams.v2_grpc_pb";
 import type { Client } from "../../Client";
-import protobuf from "../../../generated/streams.v2_pb";
-import dynamic from "../../../generated/dynamic-value_pb";
+import grpc from "../../../generated/kurrentdb/protocols/v2/streams/streams_grpc_pb";
+import protobuf from "../../../generated/kurrentdb/protocols/v2/streams/streams_pb";
+import dynamic from "../../../generated/kurrentdb/protocols/v2/core_pb";
 import { backpressuredWrite, convertToCommandError } from "../../utils";
 
 export const multiAppend = async function (
@@ -54,7 +54,7 @@ export const multiAppend = async function (
                 case protobuf.AppendStreamFailure.ErrorCase.ACCESS_DENIED:
                   value.details = {
                     type: "access_denied",
-                    reason: failure.getAccessDenied()!.getReason(),
+                    reason: failure.getAccessDenied()?.toString() ?? "",
                   };
 
                   break;
@@ -67,11 +67,11 @@ export const multiAppend = async function (
                   break;
 
                 case protobuf.AppendStreamFailure.ErrorCase
-                  .WRONG_EXPECTED_REVISION:
+                  .STREAM_REVISION_CONFLICT:
                   value.details = {
                     type: "wrong_expected_revision",
                     revision: BigInt(
-                      failure.getWrongExpectedRevision()!.getStreamRevision()
+                      failure.getStreamRevisionConflict()!.getStreamRevision()
                     ),
                   };
                   break;

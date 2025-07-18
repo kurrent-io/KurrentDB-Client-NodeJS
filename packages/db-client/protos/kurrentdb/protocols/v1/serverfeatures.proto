@@ -1,7 +1,7 @@
 syntax = "proto3";
 package event_store.client.server_features;
 option java_package = "com.eventstore.dbclient.proto.serverfeatures";
-import "shared.proto";
+import "kurrentdb/protocols/v1/shared.proto";
 
 service ServerFeatures {
 	rpc GetSupportedMethods (event_store.client.Empty) returns (SupportedMethods);

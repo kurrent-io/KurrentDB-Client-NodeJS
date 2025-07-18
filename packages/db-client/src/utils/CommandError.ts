@@ -5,7 +5,7 @@
 import { status as StatusCode, ServiceError, Metadata } from "@grpc/grpc-js";
 import { isClientCancellationError } from ".";
 
-import type { WrongExpectedVersion } from "../../generated/shared_pb";
+import type { WrongExpectedVersion } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 import type { CurrentStreamState, EndPoint, AppendStreamState } from "../types";
 
 export enum ErrorType {

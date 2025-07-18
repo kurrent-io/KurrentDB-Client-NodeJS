@@ -2,7 +2,7 @@ syntax = "proto3";
 package event_store.client.operations;
 option java_package = "com.eventstore.dbclient.proto.operations";
 
-import "shared.proto";
+import "kurrentdb/protocols/v1/shared.proto";
 
 service Operations {
 	rpc StartScavenge (StartScavengeReq) returns (ScavengeResp);

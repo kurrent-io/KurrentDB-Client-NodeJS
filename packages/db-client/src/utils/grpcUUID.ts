@@ -1,5 +1,5 @@
 import { stringify, v4 } from "uuid";
-import { UUID } from "../../generated/shared_pb";
+import { UUID } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 
 export const createUUID = (id: string = v4()): UUID => {
   const uuid = new UUID();

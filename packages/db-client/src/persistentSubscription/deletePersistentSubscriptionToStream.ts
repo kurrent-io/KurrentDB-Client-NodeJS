@@ -1,5 +1,5 @@
-import { DeleteReq } from "../../generated/persistent_pb";
-import { PersistentSubscriptionsClient } from "../../generated/persistent_grpc_pb";
+import { DeleteReq } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
+import { PersistentSubscriptionsClient } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_grpc_pb";
 
 import { convertToCommandError, createStreamIdentifier, debug } from "../utils";
 import type { BaseOptions } from "../types";

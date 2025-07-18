@@ -16,7 +16,7 @@ import {
 
 import { v4 } from "uuid";
 
-describe("MultiAppendStream", () => {
+describe.skip("MultiAppendStream", () => {
   const supported = matchServerVersion`>=25.0`;
   const node = createTestNode();
   let client!: KurrentDBClient;

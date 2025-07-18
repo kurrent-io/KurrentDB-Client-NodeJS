@@ -1,5 +1,5 @@
-import { StreamsService } from "../../../generated/streams_grpc_pb";
-import { StreamsServiceService } from "../../../generated/streams.v2_grpc_pb";
+import { StreamsService } from "../../../generated/kurrentdb/protocols/v1/streams_grpc_pb";
+import { StreamsServiceService } from "../../../generated/kurrentdb/protocols/v2/streams/streams_grpc_pb";
 import { Client } from "../../Client";
 import { ANY } from "../../constants";
 import type {

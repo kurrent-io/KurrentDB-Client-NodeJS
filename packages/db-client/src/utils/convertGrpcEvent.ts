@@ -1,5 +1,5 @@
-import type { ReadResp as StreamsReadResp } from "../../generated/streams_pb";
-import type { ReadResp as PersistentReadResp } from "../../generated/persistent_pb";
+import type { ReadResp as StreamsReadResp } from "../../generated/kurrentdb/protocols/v1/streams_pb";
+import type { ReadResp as PersistentReadResp } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 
 import { debug } from "./debug";
 import type {

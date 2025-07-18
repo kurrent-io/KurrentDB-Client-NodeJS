@@ -1,8 +1,8 @@
 import type { MethodDefinition, ServiceError } from "@grpc/grpc-js";
 
-import { Empty } from "../../generated/shared_pb";
-import { ServerFeaturesClient } from "../../generated/serverfeatures_grpc_pb";
-import type { SupportedMethods } from "../../generated/serverfeatures_pb";
+import { Empty } from "../../generated/kurrentdb/protocols/v1/shared_pb";
+import { ServerFeaturesClient } from "../../generated/kurrentdb/protocols/v1/serverfeatures_grpc_pb";
+import type { SupportedMethods } from "../../generated/kurrentdb/protocols/v1/serverfeatures_pb";
 
 import { debug } from "../utils";
 import type { GRPCClientConstructor } from "../types";

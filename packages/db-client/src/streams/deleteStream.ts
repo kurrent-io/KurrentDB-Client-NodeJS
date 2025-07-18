@@ -1,6 +1,6 @@
-import { DeleteReq } from "../../generated/streams_pb";
-import { Empty } from "../../generated/shared_pb";
-import { StreamsClient } from "../../generated/streams_grpc_pb";
+import { DeleteReq } from "../../generated/kurrentdb/protocols/v1/streams_pb";
+import { Empty } from "../../generated/kurrentdb/protocols/v1/shared_pb";
+import { StreamsClient } from "../../generated/kurrentdb/protocols/v1/streams_grpc_pb";
 
 import { Client } from "../Client";
 import type { BaseOptions, DeleteResult, StreamState } from "../types";

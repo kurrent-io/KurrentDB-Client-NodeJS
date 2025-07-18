@@ -1,9 +1,15 @@
 import { v4 as uuid } from "uuid";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 
-import { StreamsClient } from "../../../generated/streams_grpc_pb";
-import { BatchAppendReq, BatchAppendResp } from "../../../generated/streams_pb";
-import { Empty, UUID } from "../../../generated/shared_pb";
+import { StreamsClient } from "../../../generated/kurrentdb/protocols/v1/streams_grpc_pb";
+import {
+  BatchAppendReq,
+  BatchAppendResp,
+} from "../../../generated/kurrentdb/protocols/v1/streams_pb";
+import {
+  Empty,
+  UUID,
+} from "../../../generated/kurrentdb/protocols/v1/shared_pb";
 
 import type { Client } from "../../Client";
 import type { AppendResult, EventData } from "../../types";

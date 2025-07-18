@@ -1,8 +1,8 @@
 import {
   ProjectionsClient,
   ProjectionsService,
-} from "../../generated/projections_grpc_pb";
-import { CreateReq } from "../../generated/projections_pb";
+} from "../../generated/kurrentdb/protocols/v1/projectionmanagement_grpc_pb";
+import { CreateReq } from "../../generated/kurrentdb/protocols/v1/projectionmanagement_pb";
 
 import { Client } from "../Client";
 import type { BaseOptions } from "../types";

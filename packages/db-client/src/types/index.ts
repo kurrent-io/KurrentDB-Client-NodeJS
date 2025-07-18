@@ -5,7 +5,7 @@ import type {
   ChannelCredentials,
 } from "@grpc/grpc-js";
 
-import { MemberInfo as GrpcMemberInfo } from "../../generated/gossip_pb";
+import { MemberInfo as GrpcMemberInfo } from "../../generated/kurrentdb/protocols/v1/gossip_pb";
 import VNodeState = GrpcMemberInfo.VNodeState;
 
 import type {
