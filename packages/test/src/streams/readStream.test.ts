@@ -295,6 +295,7 @@ describe("readStream", () => {
         expect(resolvedEvent.event?.position?.prepare).toBe(
           appendResult.position?.prepare
         );
+        expect(typeof resolvedEvent.commitPosition).toBe("bigint");
       });
     });
   });
