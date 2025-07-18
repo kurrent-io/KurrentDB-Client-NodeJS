@@ -1,0 +1,371 @@
+syntax = "proto3";
+package event_store.client.persistent_subscriptions;
+option java_package = "com.eventstore.dbclient.proto.persistentsubscriptions";
+
+import "shared.proto";
+
+service PersistentSubscriptions {
+	rpc Create (CreateReq) returns (CreateResp);
+	rpc Update (UpdateReq) returns (UpdateResp);
+	rpc Delete (DeleteReq) returns (DeleteResp);
+	rpc Read (stream ReadReq) returns (stream ReadResp);
+	rpc GetInfo (GetInfoReq) returns (GetInfoResp);
+	rpc ReplayParked (ReplayParkedReq) returns (ReplayParkedResp);
+	rpc List (ListReq) returns (ListResp);
+	rpc RestartSubsystem (event_store.client.Empty) returns (event_store.client.Empty);
+}
+
+message ReadReq {
+	oneof content {
+		Options options = 1;
+		Ack ack = 2;
+		Nack nack = 3;
+	}
+
+	message Options {
+		oneof stream_option {
+			event_store.client.StreamIdentifier stream_identifier = 1;
+			event_store.client.Empty all = 5;
+		}
+
+		string group_name = 2;
+		int32 buffer_size = 3;
+		UUIDOption uuid_option = 4;
+
+		message UUIDOption {
+			oneof content {
+				event_store.client.Empty structured = 1;
+				event_store.client.Empty string = 2;
+			}
+		}
+	}
+
+	message Ack {
+		bytes id = 1;
+		repeated event_store.client.UUID ids = 2;
+	}
+
+	message Nack {
+		bytes id = 1;
+		repeated event_store.client.UUID ids = 2;
+		Action action = 3;
+		string reason = 4;
+
+		enum Action {
+			Unknown = 0;
+			Park = 1;
+			Retry = 2;
+			Skip = 3;
+			Stop = 4;
+		}
+	}
+}
+
+message ReadResp {
+	oneof content {
+		ReadEvent event = 1;
+		SubscriptionConfirmation subscription_confirmation = 2;
+	}
+	message ReadEvent {
+		RecordedEvent event = 1;
+		RecordedEvent link = 2;
+		oneof position {
+			uint64 commit_position = 3 [jstype = JS_STRING];
+			event_store.client.Empty no_position = 4;
+		}
+		oneof count {
+			int32 retry_count = 5;
+			event_store.client.Empty no_retry_count = 6;
+		}
+		message RecordedEvent {
+			event_store.client.UUID id = 1;
+			event_store.client.StreamIdentifier stream_identifier = 2;
+			uint64 stream_revision = 3 [jstype = JS_STRING];
+			uint64 prepare_position = 4 [jstype = JS_STRING];
+			uint64 commit_position = 5 [jstype = JS_STRING];
+			map<string, string> metadata = 6;
+			bytes custom_metadata = 7;
+			bytes data = 8;
+		}
+	}
+	message SubscriptionConfirmation {
+		string subscription_id = 1;
+	}
+}
+
+message CreateReq {
+	Options options = 1;
+
+	message Options {
+		oneof stream_option {
+			StreamOptions stream = 4 [deprecated = true];
+			AllOptions all = 5;
+		}
+		event_store.client.StreamIdentifier stream_identifier = 1;
+		string group_name = 2;
+		Settings settings = 3;
+	}
+
+	message StreamOptions {
+    option deprecated = true;
+		event_store.client.StreamIdentifier stream_identifier = 1;
+		oneof revision_option {
+			uint64 revision = 2 [jstype = JS_STRING];
+			event_store.client.Empty start = 3;
+			event_store.client.Empty end = 4;
+		}
+	}
+
+	message AllOptions {
+		oneof all_option {
+			Position position = 1;
+			event_store.client.Empty start = 2;
+			event_store.client.Empty end = 3;
+		}
+		oneof filter_option {
+			FilterOptions filter = 4;
+			event_store.client.Empty no_filter = 5;
+		}
+		message FilterOptions {
+			oneof filter {
+				Expression stream_identifier = 1;
+				Expression event_type = 2;
+			}
+			oneof window {
+				uint32 max = 3;
+				event_store.client.Empty count = 4;
+			}
+			uint32 checkpointIntervalMultiplier = 5;
+
+			message Expression {
+				string regex = 1;
+				repeated string prefix = 2;
+			}
+		}
+	}
+
+	message Position {
+		uint64 commit_position = 1 [jstype = JS_STRING];
+		uint64 prepare_position = 2 [jstype = JS_STRING];
+	}
+
+	message Settings {
+		bool resolve_links = 1;
+		uint64 revision = 2 [deprecated = true, jstype = JS_STRING];
+		bool extra_statistics = 3;
+		int32 max_retry_count = 5;
+		int32 min_checkpoint_count = 7;
+		int32 max_checkpoint_count = 8;
+		int32 max_subscriber_count = 9;
+		int32 live_buffer_size = 10;
+		int32 read_batch_size = 11;
+		int32 history_buffer_size = 12;
+		ConsumerStrategy named_consumer_strategy = 13 [deprecated = true];
+		oneof message_timeout {
+			int64 message_timeout_ticks = 4 [jstype = JS_STRING, deprecated = true];
+			int32 message_timeout_ms = 14;
+		}
+		oneof checkpoint_after {
+			int64 checkpoint_after_ticks = 6 [jstype = JS_STRING, deprecated = true];
+			int32 checkpoint_after_ms = 15;
+		}
+		string consumer_strategy = 16;
+	}
+
+	enum ConsumerStrategy {
+		DispatchToSingle = 0;
+		RoundRobin = 1;
+		Pinned = 2;
+	}
+}
+
+message CreateResp {
+}
+
+message UpdateReq {
+	Options options = 1;
+
+	message Options {
+		oneof stream_option {
+			StreamOptions stream = 4 [deprecated = true];
+			AllOptions all = 5;
+		}
+		event_store.client.StreamIdentifier stream_identifier = 1 [deprecated = true];
+		string group_name = 2;
+		Settings settings = 3;
+	}
+
+	message StreamOptions {
+		event_store.client.StreamIdentifier stream_identifier = 1;
+		oneof revision_option {
+			uint64 revision = 2 [jstype = JS_STRING];
+			event_store.client.Empty start = 3;
+			event_store.client.Empty end = 4;
+		}
+	}
+
+	message AllOptions {
+		oneof all_option {
+			Position position = 1;
+			event_store.client.Empty start = 2;
+			event_store.client.Empty end = 3;
+		}
+	}
+
+	message Position {
+		uint64 commit_position = 1 [jstype = JS_STRING];
+		uint64 prepare_position = 2 [jstype = JS_STRING];
+	}
+
+	message Settings {
+		bool resolve_links = 1;
+		uint64 revision = 2 [deprecated = true, jstype = JS_STRING];
+		bool extra_statistics = 3;
+		int32 max_retry_count = 5;
+		int32 min_checkpoint_count = 7;
+		int32 max_checkpoint_count = 8;
+		int32 max_subscriber_count = 9;
+		int32 live_buffer_size = 10;
+		int32 read_batch_size = 11;
+		int32 history_buffer_size = 12;
+		ConsumerStrategy named_consumer_strategy = 13;
+		oneof message_timeout {
+			int64 message_timeout_ticks = 4 [jstype = JS_STRING, deprecated = true];
+			int32 message_timeout_ms = 14;
+		}
+		oneof checkpoint_after {
+			int64 checkpoint_after_ticks = 6 [jstype = JS_STRING, deprecated = true];
+			int32 checkpoint_after_ms = 15;
+		}
+	}
+
+	enum ConsumerStrategy {
+		DispatchToSingle = 0;
+		RoundRobin = 1;
+		Pinned = 2;
+	}
+}
+
+message UpdateResp {
+}
+
+message DeleteReq {
+	Options options = 1;
+
+	message Options {
+		oneof stream_option {
+			event_store.client.StreamIdentifier stream_identifier = 1;
+			event_store.client.Empty all = 3;
+		}
+
+		string group_name = 2;
+	}
+}
+
+message DeleteResp {
+}
+
+message GetInfoReq {
+	Options options = 1;
+
+	message Options {
+		oneof stream_option {
+			event_store.client.StreamIdentifier stream_identifier = 1;
+			event_store.client.Empty all = 2;
+		}
+
+		string group_name = 3;
+	}
+}
+
+message GetInfoResp {
+	SubscriptionInfo subscription_info = 1;
+}
+
+message SubscriptionInfo {
+	string event_source = 1;
+	string group_name = 2;
+	string status = 3;
+	repeated ConnectionInfo connections = 4;
+	int32 average_per_second = 5;
+	int64 total_items = 6 [jstype = JS_STRING];
+	int64 count_since_last_measurement = 7 [jstype = JS_STRING];
+	string last_checkpointed_event_position = 8;
+	string last_known_event_position = 9;
+	bool resolve_link_tos = 10;
+	string start_from = 11;
+	int32 message_timeout_milliseconds = 12;
+	bool extra_statistics = 13;
+	int32 max_retry_count = 14;
+	int32 live_buffer_size = 15;
+	int32 buffer_size = 16;
+	int32 read_batch_size = 17;
+	int32 check_point_after_milliseconds = 18;
+	int32 min_check_point_count = 19;
+	int32 max_check_point_count = 20;
+	int32 read_buffer_count = 21;
+	int64 live_buffer_count = 22 [jstype = JS_STRING];
+	int32 retry_buffer_count = 23;
+	int32 total_in_flight_messages = 24;
+	int32 outstanding_messages_count = 25;
+	string named_consumer_strategy = 26;
+	int32 max_subscriber_count = 27;
+	int64 parked_message_count = 28 [jstype = JS_STRING];
+
+	message ConnectionInfo {
+		string from = 1;
+		string username = 2;
+		int32 average_items_per_second = 3;
+		int64 total_items = 4 [jstype = JS_STRING];
+		int64 count_since_last_measurement = 5 [jstype = JS_STRING];
+		repeated Measurement observed_measurements = 6;
+		int32 available_slots = 7;
+		int32 in_flight_messages = 8;
+		string connection_name = 9;
+	}
+
+	message Measurement {
+		string key = 1;
+		int64 value = 2 [jstype = JS_STRING];
+	}
+}
+
+message ReplayParkedReq {
+	Options options = 1;
+
+	message Options {
+		string group_name = 1;
+		oneof stream_option {
+			event_store.client.StreamIdentifier stream_identifier = 2;
+			event_store.client.Empty all = 3;
+		}
+		oneof stop_at_option {
+			int64 stop_at = 4 [jstype = JS_STRING];
+			event_store.client.Empty no_limit = 5;
+		}
+	}
+}
+
+message ReplayParkedResp {
+}
+
+message ListReq {
+	Options options = 1;
+
+	message Options {
+		oneof list_option {
+			event_store.client.Empty list_all_subscriptions = 1;
+			StreamOption list_for_stream = 2;
+		}
+	}
+	message StreamOption {
+		oneof stream_option {
+			event_store.client.StreamIdentifier stream = 1;
+			event_store.client.Empty all = 2;
+		}
+	}
+}
+
+message ListResp {
+	repeated SubscriptionInfo subscriptions = 1;
+}
