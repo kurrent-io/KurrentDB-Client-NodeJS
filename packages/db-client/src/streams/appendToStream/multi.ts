@@ -10,7 +10,7 @@ import type { Client } from "../../Client";
 import grpc from "../../../generated/kurrentdb/protocols/v2/streams/streams_grpc_pb";
 import protobuf from "../../../generated/kurrentdb/protocols/v2/streams/streams_pb";
 import dynamic from "../../../generated/kurrentdb/protocols/v2/core_pb";
-import { backpressuredWrite, convertToCommandError } from "../../utils";
+import { backpressuredWrite, convertToCommandError, convertToSchemaDataFormat } from "../../utils";
 
 export const multiAppend = async function (
   this: Client,
@@ -125,8 +125,8 @@ export const multiAppend = async function (
             const schemaName = new dynamic.DynamicValue();
             record.setRecordId(event.id);
 
-            dataFormat.setBytesValue(event.contentType);
-            schemaName.setBytesValue(event.type);
+            dataFormat.setStringValue(convertToSchemaDataFormat(event.contentType));
+            schemaName.setStringValue(event.type);
             record.getPropertiesMap().set("$schema.data-format", dataFormat);
             record.getPropertiesMap().set("$schema.name", schemaName);
 
