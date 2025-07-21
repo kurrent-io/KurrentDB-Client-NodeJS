@@ -1,9 +1,9 @@
 import {
   PersistentSubscriptionsClient,
   PersistentSubscriptionsService,
-} from "../../generated/persistent_grpc_pb";
-import { ListReq } from "../../generated/persistent_pb";
-import { Empty } from "../../generated/shared_pb";
+} from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_grpc_pb";
+import { ListReq } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
+import { Empty } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 
 import type { BaseOptions } from "../types";
 import { debug, convertToCommandError, UnsupportedError } from "../utils";

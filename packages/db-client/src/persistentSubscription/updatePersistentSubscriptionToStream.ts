@@ -1,5 +1,5 @@
-import { UpdateReq } from "../../generated/persistent_pb";
-import { PersistentSubscriptionsClient } from "../../generated/persistent_grpc_pb";
+import { UpdateReq } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
+import { PersistentSubscriptionsClient } from "../../generated/kurrentdb/protocols/v1/persistentsubscriptions_grpc_pb";
 
 import { debug, convertToCommandError, createStreamIdentifier } from "../utils";
 import { END, START } from "../constants";

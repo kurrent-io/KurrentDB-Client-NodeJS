@@ -2,7 +2,7 @@ import { Transform, TransformCallback, TransformOptions } from "stream";
 
 import type { ClientReadableStream, ServiceError } from "@grpc/grpc-js";
 
-import type { ReadResp } from "../../../generated/streams_pb";
+import type { ReadResp } from "../../../generated/kurrentdb/protocols/v1/streams_pb";
 
 import type { StreamingRead } from "../../types";
 import {

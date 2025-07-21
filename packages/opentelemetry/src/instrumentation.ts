@@ -30,8 +30,8 @@ import type {
   SubscribeToPersistentSubscriptionToStreamOptions,
   SubscribeToStreamOptions,
 } from "@kurrent/kurrentdb-client";
-import type { ReadResp as StreamsReadResp } from "@kurrent/kurrentdb-client/generated/streams_pb";
-import type { ReadResp as PersistentReadResp } from "@kurrent/kurrentdb-client/generated/persistent_pb";
+import type { ReadResp as StreamsReadResp } from "@kurrent/kurrentdb-client/generated/kurrentdb/protocols/v1/streams_pb";
+import type { ReadResp as PersistentReadResp } from "@kurrent/kurrentdb-client/generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 import { KurrentAttributes } from "./attributes";
 import type { PersistentSubscriptionImpl } from "@kurrent/kurrentdb-client/src/persistentSubscription/utils/PersistentSubscriptionImpl";
 import type { Subscription } from "@kurrent/kurrentdb-client/src/streams/utils/Subscription";

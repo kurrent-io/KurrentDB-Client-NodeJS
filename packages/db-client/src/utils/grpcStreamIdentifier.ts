@@ -1,4 +1,4 @@
-import { StreamIdentifier } from "../../generated/shared_pb";
+import { StreamIdentifier } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 
 export const createStreamIdentifier = (
   streamName: string

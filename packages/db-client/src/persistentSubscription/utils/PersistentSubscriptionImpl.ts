@@ -2,7 +2,10 @@ import { Transform, TransformCallback, TransformOptions } from "stream";
 
 import type { ClientDuplexStream, ServiceError } from "@grpc/grpc-js";
 
-import { ReadReq, ReadResp } from "../../../generated/persistent_pb";
+import {
+  ReadReq,
+  ReadResp,
+} from "../../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 
 import {
   convertToCommandError,

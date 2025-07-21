@@ -1,0 +1,125 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 3 * * 0" # Every sunday at 3am UTC.
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/files/.nvmrc
+
+      - name: NodeJS version
+        run: node -v
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Yarn version
+        run: yarn --version
+
+      - name: Install
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+  validation:
+    needs: build
+    name: Code quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Install
+        run: yarn
+
+      - name: Linting
+        run: yarn lint
+
+      - name: Build on Ubuntu
+        run: yarn build
+
+      - name: All generated code is commited
+        run: |
+          git update-index --refresh
+          git diff-index --exit-code --name-status HEAD --
+
+  tests:
+    needs: validation
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [previous-lts, lts, ci]
+
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+    with:
+      runtime: ${{ matrix.runtime }}
+    secrets: inherit
+
+  plugins:
+    needs: tests
+    if: false
+    name: "${{ matrix.group.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - name: plugins
+            path: ./src/plugins
+    env:
+      # GitHub only passes secrets to the main repo, so we need to skip some things if they are unavailable
+      SECRETS_AVAILABLE: ${{ secrets.EVENTSTORE_CLOUD_ID != null }}
+      KURRENT_VERSION: "24.2.0-jammy"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/files/.nvmrc
+
+      - name: NodeJS version
+        run: node -v
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Login to Cloudsmith
+        uses: docker/login-action@v3
+        with:
+          registry: docker.eventstore.com
+          username: ${{ secrets.CLOUDSMITH_CICD_USER }}
+          password: ${{ secrets.CLOUDSMITH_CICD_TOKEN }}
+
+      - name: Install
+        run: yarn
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Build
+        run: yarn build
+
+      - name: Run Tests
+        run: yarn test ${{ matrix.group.path }} --ci --run-in-band --forceExit
+        env:
+          KURRENT_IMAGE: "docker.eventstore.com/eventstore-ee/eventstoredb-commercial:${{ env.KURRENT_VERSION }}"

@@ -1,5 +1,5 @@
-import { StreamsService } from "../../../generated/streams_grpc_pb";
-
+import { StreamsService } from "../../../generated/kurrentdb/protocols/v1/streams_grpc_pb";
+import { StreamsServiceService } from "../../../generated/kurrentdb/protocols/v2/streams/streams_grpc_pb";
 import { Client } from "../../Client";
 import { ANY } from "../../constants";
 import type {
@@ -8,10 +8,14 @@ import type {
   AppendStreamState,
   EventData,
   EventType,
+  MultiAppendResult,
+  AppendStreamRequest,
 } from "../../types";
+import { UnsupportedError } from "../../utils";
 
 import { append } from "./append";
 import { batchAppend } from "./batchAppend";
+import { multiAppend } from "./multi";
 
 export interface AppendToStreamOptions extends BaseOptions {
   /**
@@ -39,6 +43,11 @@ declare module "../../Client" {
       events: EventData<KnownEventType> | EventData<KnownEventType>[],
       options?: AppendToStreamOptions
     ): Promise<AppendResult>;
+
+    multiAppend(
+      requests: AppendStreamRequest[],
+      options?: AppendToStreamOptions
+    ): Promise<MultiAppendResult>;
   }
 }
 
@@ -72,4 +81,15 @@ Client.prototype.appendToStream = async function <
     batchAppendSize,
     ...baseOptions,
   });
+};
+
+Client.prototype.multiAppend = async function (
+  this: Client,
+  requests: AppendStreamRequest[],
+  baseOptions: BaseOptions = {}
+): Promise<MultiAppendResult> {
+  if (!(await this.supports(StreamsServiceService.multiStreamAppendSession))) {
+    throw new UnsupportedError("multiStreamAppend", "25.10");
+  }
+  return multiAppend.call(this, requests, baseOptions);
 };

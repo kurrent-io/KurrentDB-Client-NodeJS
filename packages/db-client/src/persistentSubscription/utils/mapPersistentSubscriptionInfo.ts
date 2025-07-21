@@ -1,4 +1,4 @@
-import type { SubscriptionInfo } from "../../../generated/persistent_pb";
+import type { SubscriptionInfo } from "../../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 
 import { END, START, UNBOUNDED } from "../../constants";
 import type { Position } from "../../types";

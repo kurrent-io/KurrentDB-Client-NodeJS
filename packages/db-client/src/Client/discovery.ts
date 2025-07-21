@@ -1,7 +1,7 @@
 import { ChannelCredentials, Metadata } from "@grpc/grpc-js";
 
-import { GossipClient } from "../../generated/gossip_grpc_pb";
-import { Empty } from "../../generated/shared_pb";
+import { GossipClient } from "../../generated/kurrentdb/protocols/v1/gossip_grpc_pb";
+import { Empty } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 
 import { EndPoint, NodePreference, VNodeState } from "../types";
 import { FOLLOWER, LEADER, READ_ONLY_REPLICA } from "../constants";

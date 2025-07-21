@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+/**
+ * KurrentDB Server Features Protocol
+ *
+ * This protocol defines services and messages for discovering server features
+ * in a KurrentDB environment. It enables clients to adapt their behavior based
+ * on server features, their enablement status, and requirements.
+ */
+package kurrentdb.protocol.v2;
+
+option csharp_namespace    = "KurrentDB.Protocol.Features.V2";
+option java_package        = "io.kurrentdb.protocol.features.v2";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "kurrentdb/protocols/v2/core.proto";
+
+/**
+ * Service for retrieving information about the server, including features
+ * and metadata.
+ */
+service ServerInfoService {
+  // Retrieves server information and available features
+  rpc GetServerInfo(ServerInfoRequest) returns (ServerInfoResponse) {}
+}
+
+/**
+ * Contains server version information, build details, and compatibility requirements.
+ */
+message ServerMetadata {
+  // Semantic version of the server software
+  string version = 1;
+
+  // Build identifier or hash
+  string build = 2;
+
+  // Minimum client version required for compatibility
+  string min_compatible_client_version = 3;
+
+  // Unique identifier for this server node
+  string node_id = 4;
+}
+
+/**
+ * Request message for retrieving server information.
+ */
+message ServerInfoRequest {
+  // Client version making the request
+  string client_version = 1;
+
+  // Unique client identifier
+  string client_id = 2;
+}
+
+/**
+ * Response containing server information.
+ */
+message ServerInfoResponse {
+  // Server information and features
+  ServerInfo info = 1;
+}
+
+/**
+ * Top-level server information container including metadata
+ * and available features.
+ */
+message ServerInfo {
+  // Server metadata (version, build info, etc.)
+  ServerMetadata metadata = 1;
+
+  // Features organized by namespace
+  map<string, FeaturesList> features = 2;
+}
+
+/**
+ * Container for features within a specific namespace.
+ */
+message FeaturesList {
+  // Features in this namespace
+  repeated Feature features = 1;
+}
+
+/**
+ * Defines a specific server feature with its enablement status,
+ * requirements, and metadata.
+ */
+message Feature {
+  // Unique identifier for this feature
+  string name = 1;
+
+  // Human-readable description of the feature
+  optional string description = 2;
+
+  // Whether this feature is currently enabled
+  bool enabled = 3;
+
+  // Whether this feature is deprecated and may be removed in future versions
+  bool deprecated = 4;
+
+  // Requirements associated with this feature that clients must satisfy
+  repeated FeatureRequirement requirements = 5;
+
+  // Whether clients can request changes to this feature's enabled status
+  bool client_configurable = 6;
+
+  // For temporary features, indicates when the feature will no longer be available
+  optional google.protobuf.Timestamp available_until = 7;
+}
+
+/**
+ * Defines a requirement that must be satisfied to use a feature.
+ * Requirements can be optional, required, or prohibited.
+ */
+message FeatureRequirement {
+  // Unique identifier for this requirement
+  string name = 1;
+
+  // The value of this requirement, which can contain various data types
+  DynamicValue value = 2;
+
+  // Enforcement level for this requirement
+  PolicyStatus policy_status = 3;
+
+  // Human-readable description of the requirement
+  optional string description = 4;
+
+  // Message shown when the requirement is violated
+  optional string violation_message = 5;
+}
+
+/**
+ * Defines how requirements are enforced.
+ */
+enum PolicyStatus {
+  // Feature is optional with no warnings
+  OPTIONAL = 0;
+
+  // Feature must be enabled; operations rejected if disabled
+  REQUIRED = 3;
+
+  // Feature must be disabled; operations rejected if enabled
+  PROHIBITED = 4;
+}
