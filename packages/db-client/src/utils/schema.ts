@@ -13,7 +13,9 @@ export enum SchemaDataFormat {
  * @param format - The content type to convert.
  * @returns The corresponding SchemaDataFormat.
  */
-export const convertToSchemaDataFormat = (format: "application/json" | "application/octet-stream"): SchemaDataFormat => {
+export const convertToSchemaDataFormat = (
+  format: "application/json" | "application/octet-stream"
+): SchemaDataFormat => {
   switch (format) {
     case "application/json":
       return SchemaDataFormat.JSON;
@@ -22,4 +24,4 @@ export const convertToSchemaDataFormat = (format: "application/json" | "applicat
     default:
       throw new Error(`Unsupported data format: ${format}`);
   }
-}
+};
