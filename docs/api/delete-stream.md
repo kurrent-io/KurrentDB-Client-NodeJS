@@ -1,9 +1,5 @@
 ---
 order: 9
-head:
-  - - title
-    - {}
-    - Deleting Events | NodeJS | Clients | Kurrent Docs
 ---
 
 # Deleting Events
