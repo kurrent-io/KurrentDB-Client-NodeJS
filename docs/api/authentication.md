@@ -36,6 +36,6 @@ The client supports the following parameters:
 To authenticate, include these two parameters in your connection string or constructor when initializing the client:
 
 ```ts
-const connectionString = `esdb://admin:changeit@{endpoint}?tls=true&userCertFile={pathToCaFile}&userKeyFile={pathToKeyFile}`;
-const client = EventStoreDBClient.connectionString(connectionString);
+const connectionString = `kurrentdb://admin:changeit@{endpoint}?tls=true&userCertFile={pathToCaFile}&userKeyFile={pathToKeyFile}`;
+const client = KurrentDBClient.connectionString(connectionString);
 ```

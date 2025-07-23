@@ -17,7 +17,7 @@ store operations with distributed tracing support.
 You'll need to add OpenTelemetry dependencies to your project:
 
 ```bash
-npm install --save @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/instrumentation @eventstore/opentelemetry
+npm install --save @opentelemetry/api @opentelemetry/sdk-trace-node @opentelemetry/instrumentation @kurrent/opentelemetry
 ```
 
 For exporters, you might also want to install:
@@ -38,14 +38,14 @@ exporters. Here's a minimal setup:
 ```ts
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { registerInstrumentations } = require('@opentelemetry/instrumentation');
-const { EventStoreDBInstrumentation } = require('@eventstore/opentelemetry');
+const { KurrentDBInstrumentation } = require('@eventstore/opentelemetry');
 
 const provider = new NodeTracerProvider();
 provider.register();
 
 registerInstrumentations({
   instrumentations: [
-    new EventStoreDBInstrumentation(),
+    new KurrentDBInstrumentation(),
   ],
 });
 ```
@@ -79,23 +79,23 @@ For detailed configuration options, refer to the
 ### What Gets Traced
 
 The Node.js client automatically creates traces for append and subscription
-operations when the EventStoreDB instrumentation is registered.
+operations when the KurrentDB instrumentation is registered.
 
 ### Trace Attributes
 
 Each trace includes metadata to help with debugging and monitoring:
 
-| Attribute                         | Description                            | Example                               |
-| --------------------------------- | -------------------------------------- | ------------------------------------- |
-| `db.user`                         | Database user name                     | `admin`                               |
-| `db.system`                       | Database system identifier             | `eventstoredb`                        |
-| `db.operation`                    | Type of operation performed            | `streams.append`, `streams.subscribe` |
-| `db.eventstoredb.stream`          | Stream name or identifier              | `user-events-123`                     |
-| `db.eventstoredb.subscription.id` | Subscription identifier                | `user-events-123-sub`                 |
-| `db.eventstoredb.event.id`        | Event identifier                       | `event-456`                           |
-| `db.eventstoredb.event.type`      | Event type identifier                  | `user.created`                        |
-| `server.address`                  | EventStoreDB server address            | `localhost`                           |
-| `server.port`                     | EventStoreDB server port               | `2113`                                |
-| `exception.type`                  | Exception type if an error occurred    |                                       |
-| `exception.message`               | Exception message if an error occurred |                                       |
-| `exception.stacktrace`            | Stack trace
+| Attribute                      | Description                            | Example                               |
+| ------------------------------ | -------------------------------------- | ------------------------------------- |
+| `db.user`                      | Database user name                     | `admin`                               |
+| `db.system`                    | Database system identifier             | `kurrentdb`                           |
+| `db.operation`                 | Type of operation performed            | `streams.append`, `streams.subscribe` |
+| `db.kurrentdb.stream`          | Stream name or identifier              | `user-events-123`                     |
+| `db.kurrentdb.subscription.id` | Subscription identifier                | `user-events-123-sub`                 |
+| `db.kurrentdb.event.id`        | Event identifier                       | `event-456`                           |
+| `db.kurrentdb.event.type`      | Event type identifier                  | `user.created`                        |
+| `server.address`               | KurrentDB server address               | `localhost`                           |
+| `server.port`                  | KurrentDB server port                  | `2113`                                |
+| `exception.type`               | Exception type if an error occurred    |                                       |
+| `exception.message`            | Exception message if an error occurred |                                       |
+| `exception.stacktrace`         | Stack trace                            |                                       |
