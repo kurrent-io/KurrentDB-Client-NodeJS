@@ -2,6 +2,9 @@ name: "LTS"
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
   push:
     branches:
       - master

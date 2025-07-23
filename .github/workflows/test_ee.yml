@@ -2,6 +2,9 @@ name: "EE"
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
   push:
     branches:
       - master
