@@ -117,4 +117,7 @@ package-lock.json
 
 .vscode
 
+.temp
+.cache
+
 .nx/

@@ -1,0 +1,15 @@
+User-agent: *
+
+Disallow: /.algolia/
+Disallow: /.github/
+Disallow: /.vscode/
+Disallow: /import/
+Disallow: /.gitattributes
+Disallow: /.gitignore
+Disallow: /.node-version
+Disallow: /codeql-analysis.yml
+Disallow: /package.json
+Disallow: /serve.js
+Disallow: /yarn.lock
+
+Sitemap: https://docs.kurrent.io/sitemap.xml
