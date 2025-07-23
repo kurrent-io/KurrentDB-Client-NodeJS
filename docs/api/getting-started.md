@@ -1,9 +1,5 @@
 ---
 order: 1
-head:
-  - - title
-    - {}
-    - Getting Started | NodeJS | Clients | EventStoreDB Docs
 ---
 
 # Getting started
@@ -153,20 +149,20 @@ const event = jsonEvent({
 
 Each event in the database has its own unique identifier (UUID). The database uses it to ensure idempotent writes, but it only works if you specify the stream revision when appending events to the stream.
 
-In the snippet below, we append the event to the stream `orders`.
+In the snippet below, we append the event to the stream `order-123`.
 
 ```ts
-await client.appendToStream("orders", event);
+await client.appendToStream("order-123", event);
 ```
 
 Here we are appending events without checking if the stream exists or if the stream version matches the expected event version. See more advanced scenarios in [appending events documentation](./appending-events.md).
 
 ## Reading events
 
-Finally, we can read events back from the `orders` stream.
+Finally, we can read events back from the `order-123` stream.
 
 ```ts
-const events = client.readStream("orders", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: START,
   maxCount: 10,

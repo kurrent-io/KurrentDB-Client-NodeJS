@@ -1,9 +1,5 @@
 ---
 order: 4
-head:
-  - - title
-    - {}
-    - Catch-up Subscriptions | NodeJS | Clients | Kurrent Docs
 ---
 
 # Catch-up Subscriptions

@@ -1,9 +1,5 @@
 ---
 order: 5
-head:
-  - - title
-    - {}
-    - Persistent Subscriptions | NodeJS | Clients | Kurrent Docs
 ---
 
 # Persistent Subscriptions

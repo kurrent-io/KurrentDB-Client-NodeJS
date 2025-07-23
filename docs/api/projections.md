@@ -1,10 +1,6 @@
 ﻿---
 order: 6
 title: Projections
-head:
-  - - title
-    - {}
-    - Projections | NodeJS | Clients | Kurrent Docs
 ---
 
 # Projection management

@@ -1,9 +1,5 @@
 ---
 order: 3
-head:
-  - - title
-    - {}
-    - Reading Events | NodeJS | Clients | Kurrent Docs
 ---
 
 # Reading Events
