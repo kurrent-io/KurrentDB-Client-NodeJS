@@ -109,3 +109,6 @@ dist
 package-lock.json
 
 .vscode
+
+.temp
+.cache
