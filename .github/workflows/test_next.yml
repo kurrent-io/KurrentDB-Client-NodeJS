@@ -2,6 +2,9 @@ name: "Next feature version"
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
   push:
     branches:
       - master
