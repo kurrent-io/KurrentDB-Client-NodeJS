@@ -9,7 +9,7 @@ head:
 
 # Projection management
 
-The client provides a way to manage projections in EventStoreDB. 
+The client provides a way to manage projections in KurrentDB. 
 
 For a detailed explanation of projections, see the [server documentation](@server/features/projections/README.md).
 

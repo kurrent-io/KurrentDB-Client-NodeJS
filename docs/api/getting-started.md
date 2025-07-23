@@ -3,13 +3,13 @@ order: 1
 head:
   - - title
     - {}
-    - Getting Started | NodeJS | Clients | EventStoreDB Docs
+    - Getting Started | NodeJS | Clients | KurrentDB Docs
 ---
 
 # Getting started
 
-This guide will help you get started with EventStoreDB in your Java application.
-It covers the basic steps to connect to EventStoreDB, create events, append them
+This guide will help you get started with KurrentDB in your Java application.
+It covers the basic steps to connect to KurrentDB, create events, append them
 to streams, and read them back.
 
 ## Required packages
@@ -27,34 +27,34 @@ yarn add @eventstore/db-client@~6.2
 ```
 :::
 
-## Connecting to EventStoreDB
+## Connecting to KurrentDB
 
-To connect your application to EventStoreDB, you need to configure and create a client instance.
+To connect your application to KurrentDB, you need to configure and create a client instance.
 
 ::: tip Insecure clusters
-The recommended way to connect to EventStoreDB is using secure mode (which is
-the default). However, if your EventStoreDB instance is running in insecure
+The recommended way to connect to KurrentDB is using secure mode (which is
+the default). However, if your KurrentDB instance is running in insecure
 mode, you must explicitly set `tls=false` in your connection string or client configuration.
 :::
 
-EventStoreDB uses connection strings to configure the client connection. The connection string supports two protocols:
+KurrentDB uses connection strings to configure the client connection. The connection string supports two protocols:
 
-- **`esdb://`** - for connecting directly to specific node endpoints (single node or multi-node cluster with explicit endpoints)
-- **`esdb+discover://`** - for connecting using cluster discovery via DNS or gossip endpoints
+- **`kurrentdb://`** - for connecting directly to specific node endpoints (single node or multi-node cluster with explicit endpoints)
+- **`kurrentdb+discover://`** - for connecting using cluster discovery via DNS or gossip endpoints
 
-When using `esdb://`, you specify the exact endpoints to connect to. The client will connect directly to these endpoints. For multi-node clusters, you can specify multiple endpoints separated by commas, and the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference.
+When using `kurrentdb://`, you specify the exact endpoints to connect to. The client will connect directly to these endpoints. For multi-node clusters, you can specify multiple endpoints separated by commas, and the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference.
 
-With `esdb+discover://`, the client uses cluster discovery to find available nodes. This is particularly useful when you have a DNS A record pointing to cluster nodes or when you want the client to automatically discover the cluster topology.
+With `kurrentdb+discover://`, the client uses cluster discovery to find available nodes. This is particularly useful when you have a DNS A record pointing to cluster nodes or when you want the client to automatically discover the cluster topology.
 
 ::: info Gossip support
-Since version 22.10, esdb supports gossip on single-node deployments, so
-`esdb+discover://` can be used for any topology, including single-node setups.
+Since version 22.10, kurrentdb supports gossip on single-node deployments, so
+`kurrentdb+discover://` can be used for any topology, including single-node setups.
 :::
 
 For cluster connections using discovery, use the following format:
 
 ```
-esdb+discover://admin:changeit@cluster.dns.name:2113
+kurrentdb+discover://admin:changeit@cluster.dns.name:2113
 ```
 
 Where `cluster.dns.name` is a DNS `A` record that points to all cluster nodes.
@@ -62,13 +62,13 @@ Where `cluster.dns.name` is a DNS `A` record that points to all cluster nodes.
 For direct connections to specific endpoints, you can specify individual nodes:
 
 ```
-esdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
+kurrentdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
 ```
 
 Or for a single node:
 
 ```
-esdb://admin:changeit@localhost:2113
+kurrentdb://admin:changeit@localhost:2113
 ```
 
 There are a number of query parameters that can be used in the connection string to instruct the cluster how and where the connection should be established. All query parameters are optional.
@@ -89,21 +89,21 @@ There are a number of query parameters that can be used in the connection string
 | `userCertFile`        | String, file path                                 | None     | User certificate file for X.509 authentication.                                                                                                |
 | `userKeyFile`         | String, file path                                 | None     | Key file for the user certificate used for X.509 authentication.                                                                               |
 
-When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `esdb://localhost:2113?tls=false`. Note that usernames and passwords aren't provided there because insecure deployments don't support authentication and authorisation.
+When connecting to an insecure instance, specify `tls=false` parameter. For example, for a node running locally use `kurrentdb://localhost:2113?tls=false`. Note that usernames and passwords aren't provided there because insecure deployments don't support authentication and authorisation.
 
 ## Creating a client
 
 First, create a client and get it connected to the database.
 
 ```ts
-const client = EventStoreDBClient.connectionString`esdb://localhost:2113?tls=false`;
+const client = KurrentDBClient.connectionString`kurrentdb://localhost:2113?tls=false`;
 ```
 
 The client instance can be used as a singleton across the whole application. It doesn't need to open or close the connection.
 
 ## Creating an event
 
-You can write anything to EventStoreDB as events. The client needs a byte array as the event payload. Normally, you'd use a serialized object, and it's up to you to choose the serialization method.
+You can write anything to KurrentDB as events. The client needs a byte array as the event payload. Normally, you'd use a serialized object, and it's up to you to choose the serialization method.
 
 The code snippet below creates an event object instance, serializes it, and adds it as a payload to the `EventData` structure, which the client can then write to the database.
 
