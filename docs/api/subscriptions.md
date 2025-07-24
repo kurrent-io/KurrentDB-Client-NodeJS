@@ -140,7 +140,7 @@ need to store the current position of the subscription somewhere, and then use
 it to restore the subscription from the point where it dropped off:
 
 ```ts{7,14-16}
-import { ReadRevision, START } from "@eventstore/db-client";
+import { ReadRevision, START } from "@kurrent/kurrentdb-client";
 
 let checkpoint: ReadRevision = START;
 
@@ -163,7 +163,7 @@ stream. As mentioned previously, the `$all` stream position consists of two big
 integers (prepare and commit positions), not one:
 
 ```ts{6,13-15}
-import { ReadRevision, START } from "@eventstore/db-client";
+import { ReadRevision, START } from "@kurrent/kurrentdb-client";
 
 let checkpoint: ReadRevision = START;
 

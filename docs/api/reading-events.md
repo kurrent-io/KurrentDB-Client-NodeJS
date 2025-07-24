@@ -41,7 +41,7 @@ direction, and revision from which to start. The revision can be specified in se
 - Use `fromRevision` with a specific revision number (64-bit signed integer)
 
 ```ts{2-3}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: START,
   maxCount: 10,
@@ -51,7 +51,7 @@ const events = client.readStream("some-stream", {
 You can also start reading from a specific revision in the stream:
 
 ```ts{3}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: 10,
   maxCount: 10,
@@ -73,7 +73,7 @@ There are a number of additional arguments you can provide when reading a stream
 Passing in the max count allows you to limit the number of events that returned.
 
 ```ts{4}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: START,
   maxCount: 10,
@@ -85,7 +85,7 @@ const events = client.readStream("some-stream", {
 When using projections to create new events you can set whether the generated events are pointers to existing events. Setting this value to true will tell KurrentDB to return the event as well as the event linking to it.
 
 ```ts{4}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: BACKWARDS,
   fromPosition: END,
   resolveLinkTos: true,
@@ -98,7 +98,7 @@ const events = client.readStream("some-stream", {
 The credentials used to read the data can be used by the subscription as follows. This will override the default credentials set on the connection.
 
 ```ts{4-7}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: START,
   credentials: {
@@ -114,7 +114,7 @@ const events = client.readStream("some-stream", {
 In addition to reading a stream forwards, streams can be read backwards. To read all the events backwards, set the `fromRevision` to `END`:
 
 ```ts{2-3}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: BACKWARDS,
   fromRevision: END,
   maxCount: 10,
@@ -138,7 +138,7 @@ It is important to handle this exception when attempting to iterate a stream tha
 For example:
 
 ```ts{12-14}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: 10,
   maxCount: 20,
@@ -228,7 +228,7 @@ const events = client.readAll({
 The credentials used to read the data can be used by the subscription as follows. This will override the default credentials set on the connection.
 
 ```ts{4-7}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: FORWARDS,
   fromRevision: START,
   credentials: {
@@ -245,7 +245,7 @@ In addition to reading the `$all` stream forwards, it can be read backwards. To
 read all the events backwards, set the _direction_ to `BACKWARDS`:
 
 ```ts{2-3}
-const events = client.readStream("some-stream", {
+const events = client.readStream("order-123", {
   direction: BACKWARDS,
   fromRevision: END,
   maxCount: 10,

@@ -34,7 +34,7 @@ stream, which includes all events.
 ### Subscribing to a Specific Stream
 
 ```ts
-import { persistentSubscriptionToStreamSettingsFromDefaults } from "@eventstore/db-client";
+import { persistentSubscriptionToStreamSettingsFromDefaults } from "@kurrent/kurrentdb-client";
 
 await client.createPersistentSubscriptionToStream(
   "stream-name",
@@ -46,7 +46,7 @@ await client.createPersistentSubscriptionToStream(
 ### Subscribing to `$all`
 
 ```ts
-import { persistentSubscriptionToAllSettingsFromDefaults, streamNameFilter } from "@eventstore/db-client";
+import { persistentSubscriptionToAllSettingsFromDefaults, streamNameFilter } from "@kurrent/kurrentdb-client";
 
 await client.createPersistentSubscriptionToAll(
   "group-name",
@@ -82,7 +82,7 @@ speed of your processing.
 The code below shows how to connect to an existing subscription group for a specific stream:
 
 ```ts
-import { PARK } from "@eventstore/db-client";
+import { PARK } from "@kurrent/kurrentdb-client";
 
 const subscription = client.subscribeToPersistentSubscriptionToStream("stream-name", "group-name");
 
@@ -135,7 +135,7 @@ reason, then you can Nack (not acknowledge) the message and tell the server how
 to handle the failure.
 
 ```ts
-import { PARK } from "@eventstore/db-client";
+import { PARK } from "@kurrent/kurrentdb-client";
 
 const subscription = client.subscribeToPersistentSubscriptionToStream("stream-name", "group-name");
 
@@ -212,7 +212,7 @@ having them reconnect. You must have admin permissions to update a persistent
 subscription group.
 
 ```ts
-import { persistentSubscriptionToStreamSettingsFromDefaults } from "@eventstore/db-client";
+import { persistentSubscriptionToStreamSettingsFromDefaults } from "@kurrent/kurrentdb-client";
 
 await client.updatePersistentSubscriptionToStream(
   "stream-name",
