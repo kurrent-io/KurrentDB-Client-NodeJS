@@ -10,16 +10,16 @@ to streams, and read them back.
 
 ## Required packages
 
-Add the `@eventstore/db-client` dependency to your project:
+Add the `@kurrent/kurrentdb-client` dependency to your project:
 
 ::: tabs
 @tab NPM
 ```bash
-npm install --save @eventstore/db-client@~6.2
+npm install --save @kurrent/kurrentdb-client@~1.0
 ```
 @tab Yarn
 ```bash
-yarn add @eventstore/db-client@~6.2
+yarn add @kurrent/kurrentdb-client@~1.0
 ```
 :::
 
