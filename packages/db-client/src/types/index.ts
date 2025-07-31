@@ -528,9 +528,11 @@ export interface FellBehind {
   position?: Position;
 }
 
-export interface AppendStreamRequest {
+export interface AppendStreamRequest<
+  KnownEventType extends EventType = EventType
+> {
   streamName: string;
-  events: EventData[];
+  events: EventData<KnownEventType>[];
   expectedState: AppendStreamState;
 }
 
@@ -570,9 +572,10 @@ export interface BaseMultiAppendResult {
   success: boolean;
 }
 
-export type MultiAppendResult =
-  | ({ success: true; output: AppendStreamSuccess[] } & BaseMultiAppendResult)
-  | ({ success: false; output: AppendStreamFailure[] } & BaseMultiAppendResult);
+export type MultiAppendResult = {
+  success: boolean;
+  output: AppendStreamSuccess[] | AppendStreamFailure[];
+} & BaseMultiAppendResult;
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {

@@ -15,7 +15,7 @@ import { UnsupportedError } from "../../utils";
 
 import { append } from "./append";
 import { batchAppend } from "./batchAppend";
-import { multiAppend } from "./multi";
+import { multiStreamAppend } from "./multiStreamAppend";
 
 export interface AppendToStreamOptions extends BaseOptions {
   /**
@@ -44,9 +44,8 @@ declare module "../../Client" {
       options?: AppendToStreamOptions
     ): Promise<AppendResult>;
 
-    multiAppend(
-      requests: AppendStreamRequest[],
-      options?: AppendToStreamOptions
+    multiStreamAppend<KnownEventType extends EventType = EventType>(
+      requests: AppendStreamRequest<KnownEventType>[]
     ): Promise<MultiAppendResult>;
   }
 }
@@ -83,13 +82,12 @@ Client.prototype.appendToStream = async function <
   });
 };
 
-Client.prototype.multiAppend = async function (
+Client.prototype.multiStreamAppend = async function (
   this: Client,
-  requests: AppendStreamRequest[],
-  baseOptions: BaseOptions = {}
+  requests: AppendStreamRequest[]
 ): Promise<MultiAppendResult> {
   if (!(await this.supports(StreamsServiceService.multiStreamAppendSession))) {
     throw new UnsupportedError("multiStreamAppend", "25.10");
   }
-  return multiAppend.call(this, requests, baseOptions);
+  return multiStreamAppend.call(this, requests);
 };

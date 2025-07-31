@@ -5,7 +5,11 @@ export interface TestEventData {
   index: number;
 }
 
-export const jsonTestEvents = (count = 4, type = "test"): EventData[] =>
+export const jsonTestEvents = (
+  count = 4,
+  type = "test",
+  metadata?: Record<string, unknown>
+): EventData[] =>
   Array.from({ length: count }, (_, i) =>
     jsonEvent({
       type,
@@ -13,6 +17,7 @@ export const jsonTestEvents = (count = 4, type = "test"): EventData[] =>
         message: "test",
         index: i,
       },
+      ...(metadata && { metadata }),
     })
   );
 
