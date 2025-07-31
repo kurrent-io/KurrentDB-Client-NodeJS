@@ -1,10 +1,9 @@
 import {
-  AppendStreamRequest,
   MultiAppendResult,
   AppendStreamSuccess,
   AppendStreamFailure,
   UnknownErrorDetails,
-  BaseOptions,
+  AppendStreamRequest,
 } from "../../types";
 import type { Client } from "../../Client";
 import grpc from "../../../generated/kurrentdb/protocols/v2/streams/streams_grpc_pb";
@@ -14,21 +13,33 @@ import {
   backpressuredWrite,
   convertToCommandError,
   convertToSchemaDataFormat,
+  mapObjectToDynamicValueMap,
 } from "../../utils";
 
-export const multiAppend = async function (
+export const multiStreamAppend = async function (
   this: Client,
-  requests: AppendStreamRequest[],
-  baseOptions: BaseOptions
+  requests: AppendStreamRequest[]
 ): Promise<MultiAppendResult> {
+  if (
+    requests.some((request) =>
+      request.events.some(
+        (event) => event.metadata && event.metadata.constructor === Uint8Array
+      )
+    )
+  )
+    throw new Error(
+      "multiStreamAppend requires all event metadata to be in JSON format."
+    );
+
   return this.execute(
     grpc.StreamsServiceClient,
     "multiStreamAppend",
     (client) =>
       new Promise<MultiAppendResult>(async (resolve, reject) => {
-        baseOptions.requiresLeader = false;
         const sink = client.multiStreamAppendSession(
-          ...this.callArguments(baseOptions),
+          ...this.callArguments({
+            requiresLeader: false,
+          }),
           (error, response) => {
             if (error != null) {
               return reject(convertToCommandError(error));
@@ -135,6 +146,15 @@ export const multiAppend = async function (
             schemaName.setStringValue(event.type);
             record.getPropertiesMap().set("$schema.data-format", dataFormat);
             record.getPropertiesMap().set("$schema.name", schemaName);
+
+            if (event.metadata) {
+              const metadataMap = mapObjectToDynamicValueMap(
+                event.metadata as Record<string, unknown>
+              );
+              for (const [key, value] of metadataMap) {
+                record.getPropertiesMap().set(key, value);
+              }
+            }
 
             switch (event.contentType) {
               case "application/json": {
