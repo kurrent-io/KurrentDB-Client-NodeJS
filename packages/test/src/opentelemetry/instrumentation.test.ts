@@ -1,4 +1,11 @@
-import { createTestNode, Defer, delay, jsonTestEvents } from "@test-utils";
+import {
+  createTestNode,
+  Defer,
+  delay,
+  jsonTestEvents,
+  matchServerVersion,
+  optionalDescribe,
+} from "@test-utils";
 import {
   NodeTracerProvider,
   InMemorySpanExporter,
@@ -166,8 +173,8 @@ describe("instrumentation", () => {
     });
   });
 
-  describe("multiStreamAppend", () => {
-    test.only("should create a span for multiStreamAppend operation", async () => {
+  optionalDescribe(matchServerVersion`>=25.0`)("multistream append", () => {
+    test("should create a span for multiStreamAppend operation", async () => {
       const { KurrentDBClient, jsonEvent } = await import(
         "@kurrent/kurrentdb-client"
       );
@@ -238,7 +245,7 @@ describe("instrumentation", () => {
       expect(span.attributes).toStrictEqual(expectedAttributes);
     });
 
-    test.only("span contains error when multiStreamAppend fails", async () => {
+    test("span contains error when multiStreamAppend fails", async () => {
       const { KurrentDBClient, jsonEvent } = await import(
         "@kurrent/kurrentdb-client"
       );
