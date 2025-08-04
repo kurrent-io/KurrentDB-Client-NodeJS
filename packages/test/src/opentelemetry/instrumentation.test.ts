@@ -1,3 +1,5 @@
+/** @jest-environment ./src/utils/enableVersionCheck.ts */
+
 import {
   createTestNode,
   Defer,
