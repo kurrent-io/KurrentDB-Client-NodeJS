@@ -183,7 +183,7 @@ describe("instrumentation", () => {
       });
 
       const event2 = jsonEvent({
-        type: "TestEvent2", 
+        type: "TestEvent2",
         data: { message: "test data 2" },
       });
 
@@ -259,11 +259,11 @@ describe("instrumentation", () => {
         ];
 
         const result = await client.multiStreamAppend(requests);
-        
+
         if (!result.success) {
           const spans = memoryExporter.getFinishedSpans();
-          expect(spans.length).toBe(2); 
-          
+          expect(spans.length).toBe(2);
+
           const failedSpan = spans[1];
           expect(failedSpan.name).toBe(KurrentAttributes.STREAM_MULTI_APPEND);
         } else {

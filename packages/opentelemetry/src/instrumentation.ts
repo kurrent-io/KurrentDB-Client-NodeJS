@@ -113,7 +113,10 @@ export class Instrumentation extends InstrumentationBase {
       this._diag.debug("un-patching");
 
       this._unwrap(moduleExports.KurrentDBClient.prototype, "appendToStream");
-      this._unwrap(moduleExports.KurrentDBClient.prototype, "multiStreamAppend");
+      this._unwrap(
+        moduleExports.KurrentDBClient.prototype,
+        "multiStreamAppend"
+      );
       this._unwrap(
         moduleExports.KurrentDBClient.prototype,
         "subscribeToStream"
@@ -224,7 +227,9 @@ export class Instrumentation extends InstrumentationBase {
         const uri = await this.resolveUri();
         const { hostname, port } = Instrumentation.getServerAddress(uri);
 
-        const streamNames = requests.map(request => request.streamName).join(", ");
+        const streamNames = requests
+          .map((request) => request.streamName)
+          .join(", ");
 
         const attributes: Attributes = {
           [KurrentAttributes.KURRENT_DB_STREAM]: streamNames,
