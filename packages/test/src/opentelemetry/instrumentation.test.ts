@@ -166,6 +166,132 @@ describe("instrumentation", () => {
     });
   });
 
+  describe("multiStreamAppend", () => {
+    test.only("should create a span for multiStreamAppend operation", async () => {
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
+
+      const STREAM_1 = v4();
+      const STREAM_2 = v4();
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const event1 = jsonEvent({
+        type: "TestEvent1",
+        data: { message: "test data 1" },
+      });
+
+      const event2 = jsonEvent({
+        type: "TestEvent2", 
+        data: { message: "test data 2" },
+      });
+
+      const requests = [
+        {
+          streamName: STREAM_1,
+          events: [event1],
+          expectedState: "any" as const,
+        },
+        {
+          streamName: STREAM_2,
+          events: [event2],
+          expectedState: "any" as const,
+        },
+      ];
+
+      await client.multiStreamAppend(requests);
+
+      const spans = memoryExporter.getFinishedSpans();
+      const span = spans[0];
+
+      const stream1Events = await collect(client.readStream(STREAM_1));
+      const stream2Events = await collect(client.readStream(STREAM_2));
+
+      expect(stream1Events.length).toBe(1);
+      expect(stream2Events.length).toBe(1);
+
+      expect(stream1Events[0].event?.metadata).toStrictEqual({
+        $traceId: expect.any(String),
+        $spanId: expect.any(String),
+        "$schema.data-format": "Json",
+        "$schema.name": "TestEvent1",
+      });
+
+      expect(stream2Events[0].event?.metadata).toStrictEqual({
+        $traceId: expect.any(String),
+        $spanId: expect.any(String),
+        "$schema.data-format": "Json",
+        "$schema.name": "TestEvent2",
+      });
+
+      const expectedAttributes = {
+        [KurrentAttributes.KURRENT_DB_STREAM]: `${STREAM_1}, ${STREAM_2}`,
+        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
+        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
+        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
+        [KurrentAttributes.DATABASE_OPERATION]: "multiStreamAppend",
+      };
+
+      expect(spans.length).toBe(1);
+      expect(span.name).toBe(KurrentAttributes.STREAM_MULTI_APPEND);
+      expect(span.attributes).toStrictEqual(expectedAttributes);
+    });
+
+    test.only("span contains error when multiStreamAppend fails", async () => {
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const STREAM_NAME = v4();
+
+      await client.appendToStream(STREAM_NAME, jsonTestEvents());
+
+      try {
+        const requests = [
+          {
+            streamName: STREAM_NAME,
+            events: [jsonEvent({ type: "TestEvent", data: { test: "data" } })],
+            expectedState: "no_stream" as const,
+          },
+        ];
+
+        const result = await client.multiStreamAppend(requests);
+        
+        if (!result.success) {
+          const spans = memoryExporter.getFinishedSpans();
+          expect(spans.length).toBe(2); 
+          
+          const failedSpan = spans[1];
+          expect(failedSpan.name).toBe(KurrentAttributes.STREAM_MULTI_APPEND);
+        } else {
+          expect(result).toBe("unreachable - should have failed");
+        }
+      } catch (error) {
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans.length).toBe(2);
+
+        const failedSpan = spans[1];
+        const failedEvents = failedSpan.events;
+
+        expect(failedEvents.length).toBe(1);
+        const failedEvent = failedEvents[0];
+
+        expect(failedEvent).toEqual(
+          expect.objectContaining({
+            name: "exception",
+            attributes: {
+              [ATTR_EXCEPTION_TYPE]: "Error",
+              [ATTR_EXCEPTION_STACKTRACE]: error.stack,
+            },
+          })
+        );
+      }
+    });
+  });
+
   describe("catch up subscriptions", () => {
     test("should create child span in subscription to stream", async () => {
       const defer = new Defer();
