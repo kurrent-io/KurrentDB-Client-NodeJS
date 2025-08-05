@@ -14,7 +14,7 @@ import {
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { KurrentDBInstrumentation } from "@kurrent/opentelemetry";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
@@ -35,7 +35,7 @@ const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); //
 const consoleExporter = new ConsoleSpanExporter();
 
 const provider = new NodeTracerProvider({
-  resource: new Resource({
+  resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: "kurrentdb",
     [ATTR_SERVICE_VERSION]: "1.0.0",
   }),
