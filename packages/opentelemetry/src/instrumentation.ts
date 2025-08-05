@@ -8,6 +8,7 @@ import {
   Span,
   SpanKind,
   SpanStatusCode,
+  TimeInput,
   trace,
   TraceFlags,
   Tracer,
@@ -24,6 +25,7 @@ import type {
   EventData,
   EventType,
   JSONEventType,
+  MultiAppendResult,
   ResolvedEvent,
   SubscribeToAllOptions,
   SubscribeToPersistentSubscriptionToAllOptions,
@@ -38,6 +40,7 @@ import type { Subscription } from "@kurrent/kurrentdb-client/src/streams/utils/S
 import { INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION } from "./version";
 import type {
   AppendToStreamParams,
+  MultiStreamAppendParams,
   PersistentSubscribeParameters,
   SubscribeParameters,
 } from "./types";
@@ -66,6 +69,11 @@ export class Instrumentation extends InstrumentationBase {
         moduleExports.KurrentDBClient.prototype,
         "appendToStream",
         this._patchAppendToStream()
+      );
+      this.wrap(
+        moduleExports.KurrentDBClient.prototype,
+        "multiStreamAppend",
+        this._patchMultiStreamAppend()
       );
       this.wrap(
         moduleExports.KurrentDBClient.prototype,
@@ -106,6 +114,10 @@ export class Instrumentation extends InstrumentationBase {
       this._diag.debug("un-patching");
 
       this._unwrap(moduleExports.KurrentDBClient.prototype, "appendToStream");
+      this._unwrap(
+        moduleExports.KurrentDBClient.prototype,
+        "multiStreamAppend"
+      );
       this._unwrap(
         moduleExports.KurrentDBClient.prototype,
         "subscribeToStream"
@@ -191,6 +203,107 @@ export class Instrumentation extends InstrumentationBase {
           throw Instrumentation.handleError(error, span);
         } finally {
           span.end();
+        }
+      };
+    };
+  }
+
+  private _patchMultiStreamAppend(): (
+    original: Function,
+    operation: keyof kurrentdb.KurrentDBClient
+  ) => (...args: MultiStreamAppendParams) => Promise<MultiAppendResult> {
+    const instrumentation = this;
+    const tracer = instrumentation.tracer;
+
+    return function multiStreamAppend(
+      original: Function,
+      operation: keyof kurrentdb.KurrentDBClient
+    ) {
+      return async function (
+        this: kurrentdb.KurrentDBClient,
+        ...args: MultiStreamAppendParams
+      ): Promise<MultiAppendResult> {
+        const [requests] = [...args];
+
+        const uri = await this.resolveUri();
+        const { hostname, port } = Instrumentation.getServerAddress(uri);
+
+        const requestStartTime: TimeInput = Date.now();
+
+        const requestSpans: Span[] = [];
+
+        requests.forEach((request) => {
+          const requestSpan = tracer.startSpan(
+            KurrentAttributes.STREAM_APPEND,
+            {
+              kind: SpanKind.CLIENT,
+              startTime: requestStartTime,
+              attributes: {
+                [KurrentAttributes.KURRENT_DB_STREAM]: request.streamName,
+                [KurrentAttributes.SERVER_ADDRESS]: hostname,
+                [KurrentAttributes.SERVER_PORT]: port,
+                [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
+                [KurrentAttributes.DATABASE_OPERATION]:
+                  KurrentAttributes.STREAM_APPEND,
+              },
+            }
+          );
+
+          requestSpans.push(requestSpan);
+
+          const traceId = requestSpan.spanContext().traceId;
+          const spanId = requestSpan.spanContext().spanId;
+
+          request.events.forEach((event) => {
+            const metadata = (event.metadata = event.metadata || {});
+            if (isJSONEventData(event) && typeof metadata === "object") {
+              event.metadata = {
+                ...metadata,
+                [TRACE_ID]: traceId,
+                [SPAN_ID]: spanId,
+              };
+            }
+          });
+        });
+
+        try {
+          const result = await original.apply(this, [requests]);
+
+          const requestEndTime: TimeInput = Date.now();
+
+          if (result.success) {
+            requestSpans.forEach((span) => span.end(requestEndTime));
+          } else {
+            const failures: kurrentdb.AppendStreamFailure[] = result.output;
+            const failedStreamNames = new Set(
+              failures.map((f) => f.streamName)
+            );
+
+            requestSpans.forEach((span, index) => {
+              const request = requests[index];
+              let errorMessage = "";
+
+              if (failedStreamNames.has(request.streamName)) {
+                const details = failures.find(
+                  (f) => f.streamName === request.streamName
+                )!.details;
+                errorMessage = details.type;
+              }
+
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: errorMessage,
+              });
+              span.end(requestEndTime);
+            });
+          }
+
+          return result;
+        } catch (error) {
+          requestSpans.forEach((span) => {
+            Instrumentation.handleError(error, span);
+          });
+          throw error;
         }
       };
     };
