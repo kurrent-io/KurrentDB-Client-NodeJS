@@ -29,6 +29,7 @@ import {
 import * as kurrentdb from "@kurrent/kurrentdb-client";
 import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
 import { v4 } from "uuid";
+import { SpanStatusCode } from "@opentelemetry/api";
 
 const memoryExporter = new InMemorySpanExporter();
 const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
@@ -211,8 +212,79 @@ describe("[sample] opentelemetry", () => {
         [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
         [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
         [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
-        [KurrentAttributes.DATABASE_OPERATION]: "multiStreamAppend",
+        [KurrentAttributes.DATABASE_OPERATION]: KurrentAttributes.STREAM_APPEND,
       });
+    });
+
+    test("does not trace if result contains failures", async () => {
+      // Arrange
+      const defer = new Defer();
+
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const firstOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { id: v4() },
+          }),
+          jsonEvent({
+            type: "PaymentProcessed",
+            data: { id: v4() },
+          }),
+        ],
+        expectedState: kurrentdb.ANY,
+      };
+
+      const secondOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { customerId: "cust-456" },
+          }),
+        ],
+        expectedState: kurrentdb.STREAM_EXISTS,
+      };
+
+      // Act
+      const appendResponse = await client.multiStreamAppend([
+        firstOrderReq,
+        secondOrderReq,
+      ]);
+
+      expect(appendResponse.success).toBeFalsy();
+
+      // Assert
+      const firstOrderAppendSpans = getSpans(
+        KurrentAttributes.STREAM_APPEND,
+        firstOrderReq.streamName
+      );
+      const secondOrderAppendSpans = getSpans(
+        KurrentAttributes.STREAM_APPEND,
+        secondOrderReq.streamName
+      );
+
+      expect(firstOrderAppendSpans).toHaveLength(1);
+      expect(secondOrderAppendSpans).toHaveLength(1);
+
+      expect(firstOrderAppendSpans[0].attributes).toMatchObject({
+        [KurrentAttributes.KURRENT_DB_STREAM]: firstOrderReq.streamName,
+        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
+        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
+        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
+        [KurrentAttributes.DATABASE_OPERATION]: KurrentAttributes.STREAM_APPEND,
+      });
+
+      expect(secondOrderAppendSpans[0].status.code).toBe(SpanStatusCode.ERROR);
+      expect(secondOrderAppendSpans[0].status.message).toBe(
+        "wrong_expected_revision"
+      );
     });
   });
 });

@@ -243,7 +243,8 @@ export class Instrumentation extends InstrumentationBase {
                 [KurrentAttributes.SERVER_ADDRESS]: hostname,
                 [KurrentAttributes.SERVER_PORT]: port,
                 [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
-                [KurrentAttributes.DATABASE_OPERATION]: operation,
+                [KurrentAttributes.DATABASE_OPERATION]:
+                  KurrentAttributes.STREAM_APPEND,
               },
             }
           );
@@ -267,15 +268,42 @@ export class Instrumentation extends InstrumentationBase {
 
         try {
           const result = await original.apply(this, [requests]);
+
+          const requestEndTime: TimeInput = Date.now();
+
+          if (result.success) {
+            requestSpans.forEach((span) => span.end(requestEndTime));
+          } else {
+            const failures: kurrentdb.AppendStreamFailure[] = result.output;
+            const failedStreamNames = new Set(
+              failures.map((f) => f.streamName)
+            );
+
+            requestSpans.forEach((span, index) => {
+              const request = requests[index];
+              let errorMessage = "";
+
+              if (failedStreamNames.has(request.streamName)) {
+                const details = failures.find(
+                  (f) => f.streamName === request.streamName
+                )!.details;
+                errorMessage = details.type;
+              }
+
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: errorMessage,
+              });
+              span.end(requestEndTime);
+            });
+          }
+
           return result;
         } catch (error) {
           requestSpans.forEach((span) => {
             Instrumentation.handleError(error, span);
           });
           throw error;
-        } finally {
-          const requestEndTime: TimeInput = Date.now();
-          requestSpans.forEach((span) => span.end(requestEndTime));
         }
       };
     };
