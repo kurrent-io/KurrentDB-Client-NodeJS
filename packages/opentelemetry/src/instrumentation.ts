@@ -8,6 +8,7 @@ import {
   Span,
   SpanKind,
   SpanStatusCode,
+  TimeInput,
   trace,
   TraceFlags,
   Tracer,
@@ -227,27 +228,33 @@ export class Instrumentation extends InstrumentationBase {
         const uri = await this.resolveUri();
         const { hostname, port } = Instrumentation.getServerAddress(uri);
 
-        const streamNames = requests
-          .map((request) => request.streamName)
-          .join(", ");
+        const requestStartTime: TimeInput = Date.now();
 
-        const attributes: Attributes = {
-          [KurrentAttributes.KURRENT_DB_STREAM]: streamNames,
-          [KurrentAttributes.SERVER_ADDRESS]: hostname,
-          [KurrentAttributes.SERVER_PORT]: port,
-          [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
-          [KurrentAttributes.DATABASE_OPERATION]: operation,
-        };
-
-        const span = tracer.startSpan(KurrentAttributes.STREAM_MULTI_APPEND, {
-          kind: SpanKind.CLIENT,
-          attributes,
-        });
-
-        const traceId = span.spanContext().traceId;
-        const spanId = span.spanContext().spanId;
+        const requestSpans: Span[] = [];
+        const streamSpanMap = new Map<string, Span>();
 
         requests.forEach((request) => {
+          const requestSpan = tracer.startSpan(
+            KurrentAttributes.STREAM_APPEND,
+            {
+              kind: SpanKind.CLIENT,
+              startTime: requestStartTime,
+              attributes: {
+                [KurrentAttributes.KURRENT_DB_STREAM]: request.streamName,
+                [KurrentAttributes.SERVER_ADDRESS]: hostname,
+                [KurrentAttributes.SERVER_PORT]: port,
+                [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
+                [KurrentAttributes.DATABASE_OPERATION]: operation,
+              },
+            }
+          );
+
+          requestSpans.push(requestSpan);
+          streamSpanMap.set(request.streamName, requestSpan);
+
+          const traceId = requestSpan.spanContext().traceId;
+          const spanId = requestSpan.spanContext().spanId;
+
           request.events.forEach((event) => {
             const metadata = (event.metadata = event.metadata || {});
             if (isJSONEventData(event) && typeof metadata === "object") {
@@ -260,13 +267,20 @@ export class Instrumentation extends InstrumentationBase {
           });
         });
 
+        let requestEndTime: TimeInput;
         try {
           const result = await original.apply(this, [requests]);
+          requestEndTime = Date.now();
+
           return result;
         } catch (error) {
-          throw Instrumentation.handleError(error, span);
+          requestEndTime = Date.now();
+          requestSpans.forEach((span) => {
+            Instrumentation.handleError(error, span);
+          });
+          throw error;
         } finally {
-          span.end();
+          requestSpans.forEach((span) => span.end(requestEndTime));
         }
       };
     };
