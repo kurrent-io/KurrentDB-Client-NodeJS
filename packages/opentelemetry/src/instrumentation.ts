@@ -231,7 +231,6 @@ export class Instrumentation extends InstrumentationBase {
         const requestStartTime: TimeInput = Date.now();
 
         const requestSpans: Span[] = [];
-        const streamSpanMap = new Map<string, Span>();
 
         requests.forEach((request) => {
           const requestSpan = tracer.startSpan(
@@ -250,7 +249,6 @@ export class Instrumentation extends InstrumentationBase {
           );
 
           requestSpans.push(requestSpan);
-          streamSpanMap.set(request.streamName, requestSpan);
 
           const traceId = requestSpan.spanContext().traceId;
           const spanId = requestSpan.spanContext().spanId;
@@ -267,19 +265,16 @@ export class Instrumentation extends InstrumentationBase {
           });
         });
 
-        let requestEndTime: TimeInput;
         try {
           const result = await original.apply(this, [requests]);
-          requestEndTime = Date.now();
-
           return result;
         } catch (error) {
-          requestEndTime = Date.now();
           requestSpans.forEach((span) => {
             Instrumentation.handleError(error, span);
           });
           throw error;
         } finally {
+          const requestEndTime: TimeInput = Date.now();
           requestSpans.forEach((span) => span.end(requestEndTime));
         }
       };

@@ -27,7 +27,7 @@ import {
 } from "@test-utils";
 
 import * as kurrentdb from "@kurrent/kurrentdb-client";
-import { KurrentAttributes as Attributes } from "@kurrent/opentelemetry/src/attributes";
+import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
 import { v4 } from "uuid";
 
 const memoryExporter = new InMemorySpanExporter();
@@ -61,12 +61,13 @@ const getSpans = (spanName: string, streamName: string) => {
     .filter(
       (span) =>
         span.name === spanName &&
-        span.attributes[Attributes.KURRENT_DB_STREAM] === streamName
+        span.attributes[KurrentAttributes.KURRENT_DB_STREAM] === streamName
     );
 };
 
 describe("[sample] opentelemetry", () => {
   const node = createTestNode();
+  const moduleName = "@kurrent/opentelemetry";
 
   // @ts-expect-error the moduleExports property is private. This is needed to make the test work with auto-mocking
   instrumentation._modules[0].moduleExports = kurrentdb;
@@ -174,19 +175,19 @@ describe("[sample] opentelemetry", () => {
       expect(handleCaughtUp).toHaveBeenCalled();
 
       const firstOrderAppendSpans = getSpans(
-        Attributes.STREAM_APPEND,
+        KurrentAttributes.STREAM_APPEND,
         firstOrderReq.streamName
       );
       const secondOrderAppendSpans = getSpans(
-        Attributes.STREAM_APPEND,
+        KurrentAttributes.STREAM_APPEND,
         secondOrderReq.streamName
       );
       const firstOrderSubscribeSpans = getSpans(
-        Attributes.STREAM_SUBSCRIBE,
+        KurrentAttributes.STREAM_SUBSCRIBE,
         firstOrderReq.streamName
       );
       const secondOrderSubscribeSpans = getSpans(
-        Attributes.STREAM_SUBSCRIBE,
+        KurrentAttributes.STREAM_SUBSCRIBE,
         secondOrderReq.streamName
       );
 
@@ -204,6 +205,14 @@ describe("[sample] opentelemetry", () => {
       expect(secondOrderSubscribeSpans[0].parentSpanId).toBe(
         secondOrderAppendSpans[0].spanContext().spanId
       );
+
+      expect(firstOrderAppendSpans[0].attributes).toMatchObject({
+        [KurrentAttributes.KURRENT_DB_STREAM]: firstOrderReq.streamName,
+        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
+        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
+        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
+        [KurrentAttributes.DATABASE_OPERATION]: "multiStreamAppend",
+      });
     });
   });
 });
