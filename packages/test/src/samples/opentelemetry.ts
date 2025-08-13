@@ -286,7 +286,7 @@ describe("[sample] opentelemetry", () => {
       expect(secondOrderAppendSpans[0].events[0].name).toBe("exception");
       expect(secondOrderAppendSpans[0].events[0].attributes).toMatchObject({
         "exception.type": "wrong_expected_revision",
-        revision: secondOrderReq.expectedState.toLocaleString(),
+        "exception.revision": "-1",
       });
     });
   });

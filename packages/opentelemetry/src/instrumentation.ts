@@ -277,21 +277,22 @@ export class Instrumentation extends InstrumentationBase {
 
               span.setStatus({
                 code: SpanStatusCode.ERROR,
-              })
+              });
 
               failures.forEach((failure) => {
                 switch (failure.details.type) {
                   case "wrong_expected_revision":
                     span.addEvent("exception", {
                       "exception.type": "wrong_expected_revision",
-                      "exception.revision": failure.details.revision.toLocaleString()
+                      "exception.revision":
+                        failure.details.revision.toLocaleString(),
                     });
                     break;
 
                   case "access_denied":
                     span.addEvent("exception", {
                       "exception.type": failure.details.type,
-                      "exception.message": failure.details.reason
+                      "exception.message": failure.details.reason,
                     });
                     break;
 
@@ -304,13 +305,14 @@ export class Instrumentation extends InstrumentationBase {
                   case "transaction_max_size_exceeded":
                     span.addEvent("exception", {
                       "exception.type": failure.details.type,
-                      "exception.max_size": failure.details.maxSize.toLocaleString()
+                      "exception.max_size":
+                        failure.details.maxSize.toLocaleString(),
                     });
                     break;
 
                   case "unknown":
                     span.addEvent("exception", {
-                      "exception.type": "unknown"
+                      "exception.type": "unknown",
                     });
                     break;
                 }
