@@ -1,3 +1,5 @@
+/** @jest-environment ./src/utils/enableVersionCheck.ts */
+
 import { createTestNode, Defer, delay, jsonTestEvents } from "@test-utils";
 import {
   NodeTracerProvider,

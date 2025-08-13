@@ -23,3 +23,7 @@ export type PersistentSubscribeParameters =
 export type AppendToStreamParams = Parameters<
   kdb.KurrentDBClient["appendToStream"]
 >;
+
+export type MultiStreamAppendParams = Parameters<
+  kdb.KurrentDBClient["multiStreamAppend"]
+>;
