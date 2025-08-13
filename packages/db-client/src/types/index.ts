@@ -568,14 +568,15 @@ export interface AppendStreamFailure {
   details: AppendErrorDetails;
 }
 
-export interface BaseMultiAppendResult {
-  success: boolean;
-}
-
-export type MultiAppendResult = {
-  success: boolean;
-  output: AppendStreamSuccess[] | AppendStreamFailure[];
-} & BaseMultiAppendResult;
+export type MultiAppendResult =
+  | {
+      success: true;
+      output: AppendStreamSuccess[];
+    }
+  | {
+      success: false;
+      output: AppendStreamFailure[];
+    };
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
