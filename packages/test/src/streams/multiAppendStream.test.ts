@@ -50,7 +50,7 @@ describe("multiAppend", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toBe(
-        "multiStreamAppend requires server version 25.10 or higher."
+        "multiStreamAppend requires server version 25.1 or higher."
       );
     }
   });
