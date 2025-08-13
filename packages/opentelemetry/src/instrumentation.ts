@@ -271,32 +271,54 @@ export class Instrumentation extends InstrumentationBase {
 
           const requestEndTime: TimeInput = Date.now();
 
-          if (result.success) {
-            requestSpans.forEach((span) => span.end(requestEndTime));
-          } else {
-            const failures: kurrentdb.AppendStreamFailure[] = result.output;
-            const failedStreamNames = new Set(
-              failures.map((f) => f.streamName)
-            );
-
-            requestSpans.forEach((span, index) => {
-              const request = requests[index];
-              let errorMessage = "";
-
-              if (failedStreamNames.has(request.streamName)) {
-                const details = failures.find(
-                  (f) => f.streamName === request.streamName
-                )!.details;
-                errorMessage = details.type;
-              }
+          requestSpans.forEach((span) => {
+            if (!result.success) {
+              const failures: kurrentdb.AppendStreamFailure[] = result.output;
 
               span.setStatus({
                 code: SpanStatusCode.ERROR,
-                message: errorMessage,
+              })
+
+              failures.forEach((failure) => {
+                switch (failure.details.type) {
+                  case "wrong_expected_revision":
+                    span.addEvent("exception", {
+                      "exception.type": "wrong_expected_revision",
+                      "exception.revision": failure.details.revision.toLocaleString()
+                    });
+                    break;
+
+                  case "access_denied":
+                    span.addEvent("exception", {
+                      "exception.type": failure.details.type,
+                      "exception.message": failure.details.reason
+                    });
+                    break;
+
+                  case "stream_deleted":
+                    span.addEvent("exception", {
+                      "exception.type": failure.details.type,
+                    });
+                    break;
+
+                  case "transaction_max_size_exceeded":
+                    span.addEvent("exception", {
+                      "exception.type": failure.details.type,
+                      "exception.max_size": failure.details.maxSize.toLocaleString()
+                    });
+                    break;
+
+                  case "unknown":
+                    span.addEvent("exception", {
+                      "exception.type": "unknown"
+                    });
+                    break;
+                }
               });
-              span.end(requestEndTime);
-            });
-          }
+            }
+
+            span.end(requestEndTime);
+          });
 
           return result;
         } catch (error) {

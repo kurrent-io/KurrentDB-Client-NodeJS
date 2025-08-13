@@ -216,7 +216,7 @@ describe("[sample] opentelemetry", () => {
       });
     });
 
-    test("does not trace if result contains failures", async () => {
+    test("append with failures", async () => {
       // Arrange
       const defer = new Defer();
 
@@ -282,9 +282,12 @@ describe("[sample] opentelemetry", () => {
       });
 
       expect(secondOrderAppendSpans[0].status.code).toBe(SpanStatusCode.ERROR);
-      expect(secondOrderAppendSpans[0].status.message).toBe(
-        "wrong_expected_revision"
-      );
+      expect(secondOrderAppendSpans[0].events.length).toBe(1);
+      expect(secondOrderAppendSpans[0].events[0].name).toBe("exception");
+      expect(secondOrderAppendSpans[0].events[0].attributes).toMatchObject({
+        "exception.type": "wrong_expected_revision",
+        revision: secondOrderReq.expectedState.toLocaleString(),
+      });
     });
   });
 });
