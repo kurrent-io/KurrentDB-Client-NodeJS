@@ -247,7 +247,8 @@ export interface DeleteResult {
 export type ConsumerStrategy =
   | typeof constants.DISPATCH_TO_SINGLE
   | typeof constants.ROUND_ROBIN
-  | typeof constants.PINNED;
+  | typeof constants.PINNED
+  | typeof constants.PINNED_BY_CORRELATION;
 
 export type PersistentAction =
   | typeof constants.PARK

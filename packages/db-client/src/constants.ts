@@ -21,6 +21,7 @@ export const READ_ONLY_REPLICA = "read_only_replica";
 export const DISPATCH_TO_SINGLE = "DispatchToSingle";
 export const ROUND_ROBIN = "RoundRobin";
 export const PINNED = "Pinned";
+export const PINNED_BY_CORRELATION = "PinnedByCorrelation";
 
 // persistent action
 export const PARK = "park";
