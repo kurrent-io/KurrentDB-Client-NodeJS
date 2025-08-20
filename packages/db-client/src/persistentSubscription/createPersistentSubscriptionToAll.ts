@@ -44,20 +44,22 @@ Client.prototype.createPersistentSubscriptionToAll = async function (
   this: Client,
   groupName: string,
   settings: PersistentSubscriptionToAllSettings,
-  {
-    filter,
-
-    ...baseOptions
-  }: CreatePersistentSubscriptionToAllOptions = {}
+  { filter, ...baseOptions }: CreatePersistentSubscriptionToAllOptions = {}
 ): Promise<void> {
-  if (!(await this.supports(PersistentSubscriptionsService.create, "all"))) {
+  const capabilities = await this.capabilities;
+
+  if (!capabilities.supports(PersistentSubscriptionsService.create, "all")) {
     throw new UnsupportedError("createPersistentSubscriptionToAll", "21.10");
   }
 
   const req = new CreateReq();
   const options = new CreateReq.Options();
   const allOptions = new CreateReq.AllOptions();
-  const reqSettings = settingsToGRPC(settings, CreateReq.Settings);
+  const reqSettings = settingsToGRPC(
+    settings,
+    CreateReq.Settings,
+    capabilities
+  );
 
   switch (settings.startFrom) {
     case START: {
