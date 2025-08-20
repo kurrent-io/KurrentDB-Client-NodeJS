@@ -1130,12 +1130,14 @@ __metadata:
     "@types/debug": "npm:^4.1.12"
     "@types/google-protobuf": "npm:^3.15.12"
     "@types/node": "npm:^22.10.2"
+    "@types/semver": "npm:^7.7.0"
     "@types/uuid": "npm:^10.0.0"
     debug: "npm:^4.4.0"
     google-protobuf: "npm:^3.21.4"
     grpc-tools: "npm:^1.12.4"
     grpc_tools_node_protoc_ts: "npm:^5.3.3"
     nx: "npm:20.1.3"
+    semver: "npm:^7.7.2"
     shx: "npm:^0.3.4"
     uuid: "npm:11.0.3"
   languageName: unknown
@@ -1936,6 +1938,13 @@ __metadata:
   version: 2.4.34
   resolution: "@types/seedrandom@npm:2.4.34"
   checksum: 10c0/de045c55f07270ee300c4f33de0724b69cea9f3597047b53b039b43d4b21c4a40d5f13fe29f2b69a857f124048c4b58bf92ab5faf5816c21c5b2eb4e803cfae6
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.7.0":
+  version: 7.7.0
+  resolution: "@types/semver@npm:7.7.0"
+  checksum: 10c0/6b5f65f647474338abbd6ee91a6bbab434662ddb8fe39464edcbcfc96484d388baad9eb506dff217b6fc1727a88894930eb1f308617161ac0f376fe06be4e1ee
   languageName: node
   linkType: hard
 
@@ -7169,6 +7178,7 @@ __metadata:
   dependencies:
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/node": "npm:18.19.76"
+    "@types/semver": "npm:^7.7.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.10.0"
     "@typescript-eslint/parser": "npm:^8.10.0"
     cross-env: "npm:^7.0.3"
@@ -7176,7 +7186,7 @@ __metadata:
     eslint-plugin-tsdoc: "npm:^0.2.17"
     nx: "npm:20.1.3"
     prettier: "npm:^2.8.8"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.2"
     typescript: "npm:^5.6.3"
   languageName: unknown
   linkType: soft
@@ -9574,6 +9584,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 10c0/fd603a6fb9c399c6054015433051bdbe7b99a940a8fb44b85c2b524c4004b023d7928d47cb22154f8d054ea7ee8597f586605e05b52047f048278e4ac56ae958
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.7.2":
+  version: 7.7.2
+  resolution: "semver@npm:7.7.2"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/aca305edfbf2383c22571cb7714f48cadc7ac95371b4b52362fb8eeffdfbc0de0669368b82b2b15978f8848f01d7114da65697e56cd8c37b0dab8c58e543f9ea
   languageName: node
   linkType: hard
 

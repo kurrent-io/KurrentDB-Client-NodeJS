@@ -37,10 +37,16 @@ Client.prototype.createPersistentSubscriptionToStream = async function (
   settings: PersistentSubscriptionToStreamSettings,
   baseOptions: BaseOptions = {}
 ): Promise<void> {
+  const capabilities = await this.capabilities;
+
   const req = new CreateReq();
   const options = new CreateReq.Options();
   const identifier = createStreamIdentifier(streamName);
-  const reqSettings = settingsToGRPC(settings, CreateReq.Settings);
+  const reqSettings = settingsToGRPC(
+    settings,
+    CreateReq.Settings,
+    capabilities
+  );
 
   // Add deprecated revision option for pre-21.10 support
   switch (settings.startFrom) {
