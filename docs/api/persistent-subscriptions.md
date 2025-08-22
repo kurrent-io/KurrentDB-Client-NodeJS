@@ -203,6 +203,27 @@ The main aim of this strategy is to decrease the likelihood of concurrency and
 ordering issues while maintaining load balancing. This is **not a guarantee**,
 and you should handle the usual ordering and concurrency issues.
 
+### PinnedByCorrelation
+
+The PinnedByCorrelation strategy is a consumer strategy available for persistent subscriptions
+It ensures that events with the same correlation id are consistently delivered to the same
+consumer within a subscription group.
+
+:::note
+This strategy requires database version 21.10.1 or later. You can only create a persistent subscription
+with this strategy. To change the strategy, you must delete the existing subscription and create a
+new one with the desired settings.
+:::
+
+## Updating a subscription group
+
+You can edit the settings of an existing subscription group while it is running,
+you don't need to delete and recreate it to change settings. When you update the
+subscription group, it resets itself internally, dropping the connections and
+having them reconnect. You must have admin permissions to update a persistent
+subscription group.
+
+
 ## Updating a subscription group
 
 You can edit the settings of an existing subscription group while it is running,

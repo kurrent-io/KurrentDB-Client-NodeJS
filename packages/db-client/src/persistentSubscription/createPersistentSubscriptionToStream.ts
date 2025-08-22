@@ -4,7 +4,8 @@ import { PersistentSubscriptionsClient } from "../../generated/kurrentdb/protoco
 import type { BaseOptions } from "../types";
 import { debug, convertToCommandError, createStreamIdentifier } from "../utils";
 import { Client } from "../Client";
-import { END, START } from "../constants";
+import { END, PINNED_BY_CORRELATION, ROUND_ROBIN, START } from "../constants";
+import semver from "semver";
 
 import { settingsToGRPC } from "./utils/settingsToGRPC";
 import type { PersistentSubscriptionToStreamSettings } from "./utils/persistentSubscriptionSettings";
@@ -37,16 +38,22 @@ Client.prototype.createPersistentSubscriptionToStream = async function (
   settings: PersistentSubscriptionToStreamSettings,
   baseOptions: BaseOptions = {}
 ): Promise<void> {
-  const capabilities = await this.capabilities;
+  const { serverVersion } = await this.capabilities;
+
+  if (
+    semver.lt(serverVersion, "21.10.1") &&
+    settings.consumerStrategyName === PINNED_BY_CORRELATION
+  ) {
+    console.warn(
+      `Consumer strategy "${PINNED_BY_CORRELATION}" requires server version ${serverVersion} or higher. "${ROUND_ROBIN}" will be used instead.`
+    );
+    settings.consumerStrategyName = ROUND_ROBIN;
+  }
 
   const req = new CreateReq();
   const options = new CreateReq.Options();
   const identifier = createStreamIdentifier(streamName);
-  const reqSettings = settingsToGRPC(
-    settings,
-    CreateReq.Settings,
-    capabilities
-  );
+  const reqSettings = settingsToGRPC(settings, CreateReq.Settings);
 
   // Add deprecated revision option for pre-21.10 support
   switch (settings.startFrom) {

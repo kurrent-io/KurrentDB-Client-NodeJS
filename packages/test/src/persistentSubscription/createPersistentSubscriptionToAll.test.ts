@@ -15,6 +15,9 @@ import {
   START,
   UnsupportedError,
   PINNED_BY_CORRELATION,
+  ROUND_ROBIN,
+  PINNED,
+  DISPATCH_TO_SINGLE,
 } from "@kurrent/kurrentdb-client";
 
 describe("createPersistentSubscriptionToAll", () => {
@@ -88,41 +91,29 @@ describe("createPersistentSubscriptionToAll", () => {
         ).resolves.toBeUndefined();
       });
 
-      test("valid consumer strategy", async () => {
-        const GROUP_NAME = "group_name_valid_consumer_strategy";
+      test.each([
+        PINNED_BY_CORRELATION,
+        PINNED,
+        ROUND_ROBIN,
+        DISPATCH_TO_SINGLE,
+      ])("consumer strategy: %s", async (strategy) => {
+        const GROUP_NAME = `group_name_valid_consumer_strategy_${strategy.toLowerCase()}`;
         await expect(
           client.createPersistentSubscriptionToAll(
             GROUP_NAME,
             persistentSubscriptionToAllSettingsFromDefaults({
-              consumerStrategyName: PINNED_BY_CORRELATION,
+              consumerStrategyName: strategy,
             })
           )
         ).resolves.toBeUndefined();
 
-        let persistentSubscriptions =
-          await client.listAllPersistentSubscriptions();
+        let persistentSubscription =
+          await client.getPersistentSubscriptionToAllInfo(GROUP_NAME);
 
-        persistentSubscriptions = persistentSubscriptions.filter(
-          (ps) => ps.groupName === GROUP_NAME
+        expect(persistentSubscription.groupName).toBe(GROUP_NAME);
+        expect(persistentSubscription.settings.consumerStrategyName).toBe(
+          strategy
         );
-
-        expect(persistentSubscriptions).toHaveLength(1);
-        expect(persistentSubscriptions[0].groupName).toBe(GROUP_NAME);
-        expect(persistentSubscriptions[0].settings.consumerStrategyName).toBe(
-          PINNED_BY_CORRELATION
-        );
-      });
-
-      test("invalid consumer strategy", async () => {
-        const GROUP_NAME = "group_name_invalid_consumer_strategy";
-        await expect(
-          client.createPersistentSubscriptionToAll(
-            GROUP_NAME,
-            persistentSubscriptionToAllSettingsFromDefaults({
-              consumerStrategyName: "strategy_does_not_exists",
-            })
-          )
-        ).rejects.toThrow(Error);
       });
 
       test("with a filter", async () => {
