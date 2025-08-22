@@ -2,8 +2,6 @@ import {
   CreateReq,
   UpdateReq,
 } from "../../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
-import { ServerFeatures } from "../../Client/ServerFeatures";
-import semver from "semver";
 
 import {
   DISPATCH_TO_SINGLE,
@@ -17,7 +15,6 @@ import type {
   PersistentSubscriptionToStreamSettings,
   PersistentSubscriptionToAllSettings,
 } from "./persistentSubscriptionSettings";
-import { UnsupportedError } from "../../utils";
 
 type GRPCSettings = typeof CreateReq.Settings | typeof UpdateReq.Settings;
 
@@ -25,8 +22,7 @@ export const settingsToGRPC = <T extends GRPCSettings>(
   settings:
     | PersistentSubscriptionToStreamSettings
     | PersistentSubscriptionToAllSettings,
-  ReqSettings: T,
-  capabilities?: ServerFeatures
+  ReqSettings: T
 ): InstanceType<T> => {
   const reqSettings = new ReqSettings() as InstanceType<T>;
 
@@ -53,39 +49,36 @@ export const settingsToGRPC = <T extends GRPCSettings>(
   reqSettings.setReadBatchSize(settings.readBatchSize);
   reqSettings.setHistoryBufferSize(settings.historyBufferSize);
 
-  if (
-    capabilities &&
-    semver.satisfies(capabilities.serverVersion, ">=21.10.1") &&
-    reqSettings instanceof CreateReq.Settings
-  ) {
-    reqSettings.setConsumerStrategy(settings.consumerStrategyName);
-  } else {
-    switch (settings.consumerStrategyName) {
-      case DISPATCH_TO_SINGLE: {
-        reqSettings.setNamedConsumerStrategy(
-          CreateReq.ConsumerStrategy.DISPATCHTOSINGLE
-        );
+  switch (settings.consumerStrategyName) {
+    case DISPATCH_TO_SINGLE: {
+      reqSettings.setNamedConsumerStrategy(
+        CreateReq.ConsumerStrategy.DISPATCHTOSINGLE
+      );
+      break;
+    }
+    case PINNED: {
+      reqSettings.setNamedConsumerStrategy(CreateReq.ConsumerStrategy.PINNED);
+      break;
+    }
+    case ROUND_ROBIN: {
+      reqSettings.setNamedConsumerStrategy(
+        CreateReq.ConsumerStrategy.ROUNDROBIN
+      );
+      break;
+    }
+    case PINNED_BY_CORRELATION: {
+      if (reqSettings instanceof CreateReq.Settings) {
+        reqSettings.setConsumerStrategy(settings.consumerStrategyName);
         break;
+      } else {
+        throw new Error("'PinnedByCorrelation' is not supported for updates.");
       }
-      case PINNED: {
-        reqSettings.setNamedConsumerStrategy(CreateReq.ConsumerStrategy.PINNED);
-        break;
-      }
-      case ROUND_ROBIN: {
-        reqSettings.setNamedConsumerStrategy(
-          CreateReq.ConsumerStrategy.ROUNDROBIN
-        );
-        break;
-      }
-      case PINNED_BY_CORRELATION: {
-        throw new UnsupportedError(PINNED_BY_CORRELATION, "21.10.1");
-      }
-      default: {
-        console.warn(
-          `Unknown consumerStrategyName ${settings.consumerStrategyName}.`
-        );
-        break;
-      }
+    }
+    default: {
+      console.warn(
+        `Unknown consumerStrategyName ${settings.consumerStrategyName}.`
+      );
+      break;
     }
   }
 
