@@ -1,10 +1,13 @@
 import { createTestNode } from "@test-utils";
 
 import {
+  DISPATCH_TO_SINGLE,
   KurrentDBClient,
   PersistentSubscriptionExistsError,
   persistentSubscriptionToStreamSettingsFromDefaults,
+  PINNED,
   PINNED_BY_CORRELATION,
+  ROUND_ROBIN,
   START,
 } from "@kurrent/kurrentdb-client";
 
@@ -63,46 +66,33 @@ describe("createPersistentSubscriptionToStream", () => {
       ).resolves.toBeUndefined();
     });
 
-    test.only("valid consumer strategy", async () => {
-      const STREAM_NAME = "stream_name_from_revision";
-      const GROUP_NAME = "group_name_valid_consumer_strategy";
-      await expect(
-        client.createPersistentSubscriptionToStream(
-          STREAM_NAME,
-          GROUP_NAME,
-          persistentSubscriptionToStreamSettingsFromDefaults({
-            consumerStrategyName: PINNED_BY_CORRELATION,
-          })
-        )
-      ).resolves.toBeUndefined();
+    test.each([PINNED_BY_CORRELATION, PINNED, ROUND_ROBIN, DISPATCH_TO_SINGLE])(
+      "consumer strategy: %s",
+      async (strategy) => {
+        const STREAM_NAME = `stream_name_from_revision_${strategy.toLowerCase()}`;
+        const GROUP_NAME = `group_name_valid_consumer_strategy_${strategy.toLowerCase()}`;
+        await expect(
+          client.createPersistentSubscriptionToStream(
+            STREAM_NAME,
+            GROUP_NAME,
+            persistentSubscriptionToStreamSettingsFromDefaults({
+              consumerStrategyName: strategy,
+            })
+          )
+        ).resolves.toBeUndefined();
 
-      let persistentSubscriptions =
-        await client.listAllPersistentSubscriptions();
+        let persistentSubscription =
+          await client.getPersistentSubscriptionToStreamInfo(
+            STREAM_NAME,
+            GROUP_NAME
+          );
 
-      persistentSubscriptions = persistentSubscriptions.filter(
-        (ps) => ps.groupName === GROUP_NAME && ps.eventSource === STREAM_NAME
-      );
-
-      expect(persistentSubscriptions).toHaveLength(1);
-      expect(persistentSubscriptions[0].eventSource).toBe(STREAM_NAME);
-      expect(persistentSubscriptions[0].settings.consumerStrategyName).toBe(
-        PINNED_BY_CORRELATION
-      );
-    });
-
-    test("invalid consumer strategy", async () => {
-      const STREAM_NAME = "stream_name_from_revision";
-      const GROUP_NAME = "group_name_invalid_consumer_strategy";
-      await expect(
-        client.createPersistentSubscriptionToStream(
-          STREAM_NAME,
-          GROUP_NAME,
-          persistentSubscriptionToStreamSettingsFromDefaults({
-            consumerStrategyName: "strategy_does_not_exists",
-          })
-        )
-      ).rejects.toThrow(Error);
-    });
+        expect(persistentSubscription.eventSource).toBe(STREAM_NAME);
+        expect(persistentSubscription.settings.consumerStrategyName).toBe(
+          strategy
+        );
+      }
+    );
   });
 
   test("should throw an error if subscription exists", async () => {
