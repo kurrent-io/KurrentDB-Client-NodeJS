@@ -12,6 +12,7 @@ export const KurrentAttributes = {
   SERVER_PORT: `${server}.port`,
 
   STREAM_APPEND: `${streams}.append`,
+  STREAM_MULTI_APPEND: `${streams}.multi-append`,
   STREAM_SUBSCRIBE: `${streams}.subscribe`,
 
   KURRENT_DB_STREAM: `${kurrentdb}.stream`,

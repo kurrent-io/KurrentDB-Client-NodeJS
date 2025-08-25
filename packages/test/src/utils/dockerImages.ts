@@ -1,7 +1,7 @@
 const kdbImage = ((): string => {
   const image =
     process.env.KURRENT_IMAGE ??
-    "docker.kurrent.io/eventstore/eventstoredb-ee:lts";
+    "docker.cloudsmith.io/eventstore/kurrent-staging/kurrentdb:ci";
 
   return image;
 })();
