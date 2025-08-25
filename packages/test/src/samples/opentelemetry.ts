@@ -30,6 +30,7 @@ import * as kurrentdb from "@kurrent/kurrentdb-client";
 import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
 import { v4 } from "uuid";
 import { SpanStatusCode } from "@opentelemetry/api";
+import { multiStreamAppend } from "@kurrent/kurrentdb-client/src/streams/appendToStream/multiStreamAppend";
 
 const memoryExporter = new InMemorySpanExporter();
 const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
@@ -42,7 +43,7 @@ const provider = new NodeTracerProvider({
   }),
   spanProcessors: [
     new SimpleSpanProcessor(memoryExporter),
-    new SimpleSpanProcessor(consoleExporter),
+    // new SimpleSpanProcessor(consoleExporter),
     new SimpleSpanProcessor(otlpExporter),
   ],
 });
@@ -56,14 +57,8 @@ registerInstrumentations({
 
 instrumentation.disable();
 
-const getSpans = (spanName: string, streamName: string) => {
-  return memoryExporter
-    .getFinishedSpans()
-    .filter(
-      (span) =>
-        span.name === spanName &&
-        span.attributes[KurrentAttributes.KURRENT_DB_STREAM] === streamName
-    );
+const getSpans = (name: string) => {
+  return memoryExporter.getFinishedSpans().filter((span) => span.name === name);
 };
 
 describe("[sample] opentelemetry", () => {
@@ -175,44 +170,24 @@ describe("[sample] opentelemetry", () => {
       expect(handleEvent).toHaveBeenCalledTimes(3);
       expect(handleCaughtUp).toHaveBeenCalled();
 
-      const firstOrderAppendSpans = getSpans(
-        KurrentAttributes.STREAM_APPEND,
-        firstOrderReq.streamName
+      const appendSpans = getSpans(KurrentAttributes.STREAM_MULTI_APPEND);
+      const subscribeSpans = getSpans(KurrentAttributes.STREAM_SUBSCRIBE);
+
+      expect(appendSpans).toHaveLength(1);
+      expect(subscribeSpans).toHaveLength(3);
+
+      expect(subscribeSpans[0].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
       );
-      const secondOrderAppendSpans = getSpans(
-        KurrentAttributes.STREAM_APPEND,
-        secondOrderReq.streamName
-      );
-      const firstOrderSubscribeSpans = getSpans(
-        KurrentAttributes.STREAM_SUBSCRIBE,
-        firstOrderReq.streamName
-      );
-      const secondOrderSubscribeSpans = getSpans(
-        KurrentAttributes.STREAM_SUBSCRIBE,
-        secondOrderReq.streamName
+      expect(subscribeSpans[1].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
       );
 
-      expect(firstOrderAppendSpans).toHaveLength(1);
-      expect(secondOrderAppendSpans).toHaveLength(1);
-      expect(firstOrderSubscribeSpans).toHaveLength(2);
-      expect(secondOrderSubscribeSpans).toHaveLength(1);
-
-      expect(firstOrderSubscribeSpans[0].parentSpanId).toBe(
-        firstOrderAppendSpans[0].spanContext().spanId
-      );
-      expect(firstOrderSubscribeSpans[1].parentSpanId).toBe(
-        firstOrderAppendSpans[0].spanContext().spanId
-      );
-      expect(secondOrderSubscribeSpans[0].parentSpanId).toBe(
-        secondOrderAppendSpans[0].spanContext().spanId
-      );
-
-      expect(firstOrderAppendSpans[0].attributes).toMatchObject({
-        [KurrentAttributes.KURRENT_DB_STREAM]: firstOrderReq.streamName,
+      expect(appendSpans[0].attributes).toMatchObject({
         [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
         [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
         [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
-        [KurrentAttributes.DATABASE_OPERATION]: KurrentAttributes.STREAM_APPEND,
+        [KurrentAttributes.DATABASE_OPERATION]: multiStreamAppend.name,
       });
     });
 
@@ -261,30 +236,21 @@ describe("[sample] opentelemetry", () => {
       expect(appendResponse.success).toBeFalsy();
 
       // Assert
-      const firstOrderAppendSpans = getSpans(
-        KurrentAttributes.STREAM_APPEND,
-        firstOrderReq.streamName
-      );
-      const secondOrderAppendSpans = getSpans(
-        KurrentAttributes.STREAM_APPEND,
-        secondOrderReq.streamName
-      );
+      const appendSpans = getSpans(KurrentAttributes.STREAM_MULTI_APPEND);
 
-      expect(firstOrderAppendSpans).toHaveLength(1);
-      expect(secondOrderAppendSpans).toHaveLength(1);
+      expect(appendSpans).toHaveLength(1);
 
-      expect(firstOrderAppendSpans[0].attributes).toMatchObject({
-        [KurrentAttributes.KURRENT_DB_STREAM]: firstOrderReq.streamName,
+      expect(appendSpans[0].attributes).toMatchObject({
         [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
         [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
         [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
-        [KurrentAttributes.DATABASE_OPERATION]: KurrentAttributes.STREAM_APPEND,
+        [KurrentAttributes.DATABASE_OPERATION]: multiStreamAppend.name,
       });
 
-      expect(secondOrderAppendSpans[0].status.code).toBe(SpanStatusCode.ERROR);
-      expect(secondOrderAppendSpans[0].events.length).toBe(1);
-      expect(secondOrderAppendSpans[0].events[0].name).toBe("exception");
-      expect(secondOrderAppendSpans[0].events[0].attributes).toMatchObject({
+      expect(appendSpans[0].status.code).toBe(SpanStatusCode.ERROR);
+      expect(appendSpans[0].events.length).toBe(1);
+      expect(appendSpans[0].events[0].name).toBe("exception");
+      expect(appendSpans[0].events[0].attributes).toMatchObject({
         "exception.type": "wrong_expected_revision",
         "exception.revision": "-1",
       });

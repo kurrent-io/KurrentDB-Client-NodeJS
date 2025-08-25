@@ -230,29 +230,20 @@ export class Instrumentation extends InstrumentationBase {
 
         const requestStartTime: TimeInput = Date.now();
 
-        const requestSpans: Span[] = [];
+        const span = tracer.startSpan(KurrentAttributes.STREAM_MULTI_APPEND, {
+          kind: SpanKind.CLIENT,
+          startTime: requestStartTime,
+          attributes: {
+            [KurrentAttributes.SERVER_ADDRESS]: hostname,
+            [KurrentAttributes.SERVER_PORT]: port,
+            [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
+            [KurrentAttributes.DATABASE_OPERATION]: operation,
+          },
+        });
 
         requests.forEach((request) => {
-          const requestSpan = tracer.startSpan(
-            KurrentAttributes.STREAM_APPEND,
-            {
-              kind: SpanKind.CLIENT,
-              startTime: requestStartTime,
-              attributes: {
-                [KurrentAttributes.KURRENT_DB_STREAM]: request.streamName,
-                [KurrentAttributes.SERVER_ADDRESS]: hostname,
-                [KurrentAttributes.SERVER_PORT]: port,
-                [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
-                [KurrentAttributes.DATABASE_OPERATION]:
-                  KurrentAttributes.STREAM_APPEND,
-              },
-            }
-          );
-
-          requestSpans.push(requestSpan);
-
-          const traceId = requestSpan.spanContext().traceId;
-          const spanId = requestSpan.spanContext().spanId;
+          const traceId = span.spanContext().traceId;
+          const spanId = span.spanContext().spanId;
 
           request.events.forEach((event) => {
             const metadata = (event.metadata = event.metadata || {});
@@ -271,62 +262,58 @@ export class Instrumentation extends InstrumentationBase {
 
           const requestEndTime: TimeInput = Date.now();
 
-          requestSpans.forEach((span) => {
-            if (!result.success) {
-              const failures: kurrentdb.AppendStreamFailure[] = result.output;
+          if (!result.success) {
+            const failures: kurrentdb.AppendStreamFailure[] = result.output;
 
-              span.setStatus({
-                code: SpanStatusCode.ERROR,
-              });
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+            });
 
-              failures.forEach((failure) => {
-                switch (failure.details.type) {
-                  case "wrong_expected_revision":
-                    span.addEvent("exception", {
-                      "exception.type": "wrong_expected_revision",
-                      "exception.revision":
-                        failure.details.revision.toLocaleString(),
-                    });
-                    break;
+            failures.forEach((failure) => {
+              switch (failure.details.type) {
+                case "wrong_expected_revision":
+                  span.addEvent("exception", {
+                    "exception.type": "wrong_expected_revision",
+                    "exception.revision":
+                      failure.details.revision.toLocaleString(),
+                  });
+                  break;
 
-                  case "access_denied":
-                    span.addEvent("exception", {
-                      "exception.type": failure.details.type,
-                      "exception.message": failure.details.reason,
-                    });
-                    break;
+                case "access_denied":
+                  span.addEvent("exception", {
+                    "exception.type": failure.details.type,
+                    "exception.message": failure.details.reason,
+                  });
+                  break;
 
-                  case "stream_deleted":
-                    span.addEvent("exception", {
-                      "exception.type": failure.details.type,
-                    });
-                    break;
+                case "stream_deleted":
+                  span.addEvent("exception", {
+                    "exception.type": failure.details.type,
+                  });
+                  break;
 
-                  case "transaction_max_size_exceeded":
-                    span.addEvent("exception", {
-                      "exception.type": failure.details.type,
-                      "exception.max_size":
-                        failure.details.maxSize.toLocaleString(),
-                    });
-                    break;
+                case "transaction_max_size_exceeded":
+                  span.addEvent("exception", {
+                    "exception.type": failure.details.type,
+                    "exception.max_size":
+                      failure.details.maxSize.toLocaleString(),
+                  });
+                  break;
 
-                  case "unknown":
-                    span.addEvent("exception", {
-                      "exception.type": "unknown",
-                    });
-                    break;
-                }
-              });
-            }
+                case "unknown":
+                  span.addEvent("exception", {
+                    "exception.type": "unknown",
+                  });
+                  break;
+              }
+            });
+          }
 
-            span.end(requestEndTime);
-          });
+          span.end(requestEndTime);
 
           return result;
         } catch (error) {
-          requestSpans.forEach((span) => {
-            Instrumentation.handleError(error, span);
-          });
+          Instrumentation.handleError(error, span);
           throw error;
         }
       };
