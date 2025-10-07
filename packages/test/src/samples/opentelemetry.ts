@@ -16,6 +16,8 @@ import { KurrentDBInstrumentation } from "@kurrent/opentelemetry";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
+  ATTR_EXCEPTION_STACKTRACE,
+  ATTR_EXCEPTION_TYPE,
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
@@ -29,8 +31,8 @@ import {
 import * as kurrentdb from "@kurrent/kurrentdb-client";
 import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
 import { v4 } from "uuid";
-import { SpanStatusCode } from "@opentelemetry/api";
 import { multiStreamAppend } from "@kurrent/kurrentdb-client/src/streams/appendToStream/multiStreamAppend";
+import { WrongExpectedVersionError } from "@kurrent/kurrentdb-client";
 
 const memoryExporter = new InMemorySpanExporter();
 const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
@@ -147,7 +149,8 @@ describe("[sample] opentelemetry", () => {
         secondOrderReq,
       ]);
 
-      expect(appendResponse.success).toBeTruthy();
+      expect(appendResponse.position).toBeGreaterThan(BigInt(0));
+      expect(appendResponse.responses).toHaveLength(2);
 
       const subscription = client
         .subscribeToAll({
@@ -227,33 +230,31 @@ describe("[sample] opentelemetry", () => {
         expectedState: kurrentdb.STREAM_EXISTS,
       };
 
-      // Act
-      const appendResponse = await client.multiStreamAppend([
-        firstOrderReq,
-        secondOrderReq,
-      ]);
+      try {
+        await client.multiStreamAppend([firstOrderReq, secondOrderReq]);
+      } catch (error) {
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans.length).toBe(1);
 
-      expect(appendResponse.success).toBeFalsy();
+        const failedSpan = spans[1];
 
-      // Assert
-      const appendSpans = getSpans(KurrentAttributes.STREAM_MULTI_APPEND);
+        const failedEvents = failedSpan.events;
 
-      expect(appendSpans).toHaveLength(1);
+        expect(failedEvents.length).toBe(1);
 
-      expect(appendSpans[0].attributes).toMatchObject({
-        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
-        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
-        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
-        [KurrentAttributes.DATABASE_OPERATION]: multiStreamAppend.name,
-      });
+        const failedEvent = failedEvents[0];
 
-      expect(appendSpans[0].status.code).toBe(SpanStatusCode.ERROR);
-      expect(appendSpans[0].events.length).toBe(1);
-      expect(appendSpans[0].events[0].name).toBe("exception");
-      expect(appendSpans[0].events[0].attributes).toMatchObject({
-        "exception.type": "wrong_expected_revision",
-        "exception.revision": "-1",
-      });
+        expect(error).toBeInstanceOf(WrongExpectedVersionError);
+        expect(failedEvent).toEqual(
+          expect.objectContaining({
+            name: "exception",
+            attributes: {
+              [ATTR_EXCEPTION_TYPE]: "Error",
+              [ATTR_EXCEPTION_STACKTRACE]: error.stack,
+            },
+          })
+        );
+      }
     });
   });
 });

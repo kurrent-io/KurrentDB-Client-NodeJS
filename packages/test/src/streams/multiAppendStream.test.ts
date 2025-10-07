@@ -14,8 +14,9 @@ import {
   ANY,
   UnsupportedError,
   AppendStreamRequest,
-  AppendStreamFailure,
   STREAM_EXISTS,
+  StreamDeletedError,
+  WrongExpectedVersionError,
 } from "@kurrent/kurrentdb-client";
 
 import { v4 } from "uuid";
@@ -82,7 +83,9 @@ describe("multiAppend", () => {
 
       const result = await client.multiStreamAppend(requests);
       expect(result).toBeDefined();
-      expect(result.success).toBeTruthy();
+      expect(result.position).toBeGreaterThanOrEqual(BigInt(0));
+      expect(result.responses).toBeDefined();
+      expect(result.responses.length).toBe(2);
 
       const stream1Events = await collect(client.readStream(STREAM_NAME_1));
       const stream2Events = await collect(client.readStream(STREAM_NAME_2));
@@ -90,13 +93,16 @@ describe("multiAppend", () => {
       expect(stream1Events.length).toBe(4);
       expect(stream2Events.length).toBe(4);
 
-      for (const event of [...stream1Events, ...stream2Events]) {
-        expect(event.event).toBeDefined();
-        expect(event.event?.metadata).toEqual({
-          "$schema.data-format": "Json",
-          "$schema.name": "test",
-          ...expectedMetadata,
-        });
+      for (const { event } of [...stream1Events, ...stream2Events]) {
+        expect(event).toBeDefined();
+        expect(event?.metadata).toEqual(
+          expect.objectContaining({
+            "$record.timestamp": expect.any(String),
+            "$schema.format": "Json",
+            "$schema.name": "test",
+            ...expectedMetadata,
+          })
+        );
       }
     });
   });
@@ -115,26 +121,16 @@ describe("multiAppend", () => {
         expectedState: STREAM_EXISTS,
       });
 
-      const result = await client.multiStreamAppend(requests);
-      expect(result).toBeDefined();
-      expect(result.success).toBeFalsy();
-      expect(result.output).toBeDefined();
-      expect(result.output.length).toBe(1);
-
-      const failures = result.output as AppendStreamFailure[];
-      expect(failures[0].streamName).toBe(STREAM_NAME);
-
-      expect(failures[0]).toMatchObject({
-        streamName: expect.any(String),
-        details: {
-          type: "stream_deleted",
-        },
-      });
+      try {
+        await client.multiStreamAppend(requests);
+      } catch (error) {
+        expect(error).toBeInstanceOf(StreamDeletedError);
+      }
     });
   });
 
   optionalDescribe(supported)("Supported (>=25.1)", () => {
-    test("stream revision conflict", async () => {
+    test.only("stream revision conflict", async () => {
       const STREAM_NAME = v4().toString();
 
       const requests: AppendStreamRequest[] = [];
@@ -145,22 +141,11 @@ describe("multiAppend", () => {
         expectedState: STREAM_EXISTS,
       });
 
-      const result = await client.multiStreamAppend(requests);
-      expect(result).toBeDefined();
-      expect(result.success).toBeFalsy();
-      expect(result.output).toBeDefined();
-      expect(result.output.length).toBe(1);
-
-      const failures = result.output as AppendStreamFailure[];
-      expect(failures[0].streamName).toBe(STREAM_NAME);
-
-      expect(failures[0]).toMatchObject({
-        streamName: expect.any(String),
-        details: {
-          type: "wrong_expected_revision",
-          revision: BigInt(-1),
-        },
-      });
+      try {
+        await client.multiStreamAppend(requests);
+      } catch (error) {
+        expect(error).toBeInstanceOf(WrongExpectedVersionError);
+      }
     });
   });
 

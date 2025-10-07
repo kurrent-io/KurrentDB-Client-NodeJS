@@ -1,91 +1,33 @@
+// ******************************************************************************************
+// This protocol is UNSTABLE in the sense of being subject to change.
+// ******************************************************************************************
+
 syntax = "proto3";
 
-package kurrentdb.protocol.v2;
+package kurrentdb.protocol.v2.streams;
 
-option csharp_namespace    = "KurrentDB.Protocol.Streams.V2";
-option java_package        = "io.kurrentdb.protocol.streams.v2";
-option java_multiple_files = true;
+option csharp_namespace = "KurrentDB.Protocol.V2.Streams";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/descriptor.proto";
-
-import "kurrentdb/protocols/v2/streams/shared.proto";
-import "kurrentdb/protocols/v2/core.proto";
+import "google/protobuf/struct.proto";
 
 service StreamsService {
   // Executes an atomic operation to append records to multiple streams.
   // This transactional method ensures that all appends either succeed
-  // completely, or are entirely rolled back, thereby maintaining strict data
-  // consistency across all involved streams.
-  rpc MultiStreamAppend(MultiStreamAppendRequest) returns (MultiStreamAppendResponse);
+  // completely, or are entirely rolled back, thereby maintaining strict
+  // data consistency across all involved streams.
+  rpc Append(AppendRequest) returns (AppendResponse);
 
-  // Streaming version of MultiStreamAppend that allows clients to send multiple
-  // append requests over a single connection. When the stream completes, all
-  // records are appended transactionally (all succeed or fail together).
+  // Streaming version of Append that allows clients to send multiple
+  // append requests continuously. Once completed, all records are
+  // appended transactionally (all succeed or fail together).
   // Provides improved efficiency for high-throughput scenarios while
   // maintaining the same transactional guarantees.
-  rpc MultiStreamAppendSession(stream AppendStreamRequest) returns (MultiStreamAppendResponse);
-
-//  // Appends records to a specific stream.
-//  rpc AppendStream(AppendStreamRequest) returns (AppendStreamResponse);
-
-//  // Append batches of records to a stream continuously, while guaranteeing pipelined
-//  // requests are processed in order. If any request fails, the session is terminated.
-//  rpc AppendStreamSession(stream AppendStreamRequest) returns (stream AppendStreamResponse);
-
-//  // Retrieve a batch of records
-//  rpc ReadStream(ReadRequest) returns (ReadResponse);
-
-  // Retrieve batches of records continuously.
-  rpc ReadSession(ReadRequest) returns (stream ReadResponse);
+  rpc AppendSession(stream AppendRequest) returns (AppendSessionResponse);
 }
 
-//===================================================================
-// Append Operations
-//===================================================================
-
-// Record to be appended to a stream.
-message AppendRecord {
-  // Universally Unique identifier for the record.
-  // If not provided, the server will generate a new one.
-  optional string record_id = 1;
-
-//  // The name of the stream to append the record to.
-//  optional string stream = 6;
-//
-//  // The name of the schema in the registry that defines the structure of the record.
-//  string schema_name = 4;
-//
-//  // The format of the data in the record.
-//  SchemaDataFormat data_format = 5;
-
-  // A collection of properties providing additional information about the
-  // record. This can include user-defined metadata or system properties.
-  // System properties are prefixed with "$." to avoid conflicts with user-defined properties.
-  // For example, "$schema.name" or "$schema.data-format".
-  map<string, DynamicValue> properties = 2;
-
-  // The actual data payload of the record, stored as bytes.
-  bytes data = 3;
-}
-
-// Constants that match the expected state of a stream during an
-// append operation. It can be used to specify whether the stream should exist,
-// not exist, or can be in any state.
-enum ExpectedRevisionConstants {
-  // The stream should exist and the expected revision should match the current
-  EXPECTED_REVISION_CONSTANTS_SINGLE_EVENT = 0;
-  // It is not important whether the stream exists or not.
-  EXPECTED_REVISION_CONSTANTS_ANY = -2;
-  // The stream should not exist. If it does, the append will fail.
-  EXPECTED_REVISION_CONSTANTS_NO_STREAM = -1;
-  // The stream should exist
-  EXPECTED_REVISION_CONSTANTS_EXISTS = -4;
-}
 
 // Represents the input for appending records to a specific stream.
-message AppendStreamRequest {
+message AppendRequest {
   // The name of the stream to append records to.
   string stream = 1;
   // The records to append to the stream.
@@ -98,384 +40,75 @@ message AppendStreamRequest {
   optional sint64 expected_revision = 3 [jstype = JS_STRING];
 }
 
-// Success represents the successful outcome of an append operation.
-message AppendStreamSuccess {
+// Represents the outcome of an append operation.
+message AppendResponse {
   // The name of the stream to which records were appended.
   string stream = 1;
-  // The position of the last appended record in the stream.
-  int64 position = 2 [jstype = JS_STRING];
   // The expected revision of the stream after the append operation.
-  int64 stream_revision = 3 [jstype = JS_STRING];
+  int64 stream_revision = 2 [jstype = JS_STRING];
+  // The position of the last appended record in the stream.
+  optional int64 position = 4 [jstype = JS_STRING];
 }
 
-// Failure represents the detailed error information when an append operation fails.
-message AppendStreamFailure {
-  // The name of the stream to which records were appended.
-  string stream = 1;
-
-  // The error details
-  oneof error {
-    // Failed because the actual stream revision didn't match the expected revision.
-    ErrorDetails.StreamRevisionConflict stream_revision_conflict = 2;
-    // Failed because the client lacks sufficient permissions.
-    ErrorDetails.AccessDenied access_denied = 3;
-    // Failed because the target stream has been deleted.
-    ErrorDetails.StreamDeleted stream_deleted = 4;
-    // Failed because the stream was not found.
-    ErrorDetails.StreamNotFound stream_not_found = 5;
-    // Failed because the transaction exceeded the maximum size allowed
-    ErrorDetails.TransactionMaxSizeExceeded transaction_max_size_exceeded = 6;
-  }
-}
-
-// AppendStreamResponse represents the output of appending records to a specific
-// stream.
-message AppendStreamResponse {
-  // The result of the append operation.
-  oneof result {
-    // Success represents the successful outcome of an append operation.
-    AppendStreamSuccess success = 1;
-    // Failure represents the details of a failed append operation.
-    AppendStreamFailure failure = 2;
-  }
-}
-
-// MultiStreamAppendRequest represents a request to append records to multiple streams.
-message MultiStreamAppendRequest {
-  // A list of AppendStreamInput messages, each representing a stream to which records should be appended.
-  repeated AppendStreamRequest input = 1;
-}
-
-// Response from the MultiStreamAppend operation.
-message MultiStreamAppendResponse {
-  oneof result {
-    // Success represents the successful outcome of a multi-stream append operation.
-    Success success = 1;
-    // Failure represents the details of a failed multi-stream append operation.
-    Failure failure = 2;
-  }
-
-  message Success {
-    repeated AppendStreamSuccess output = 1;
-  }
-
-  message Failure {
-    repeated AppendStreamFailure output = 1;
-  }
-}
-
-//===================================================================
-// Read Operations
-//===================================================================
-
-// The scope of the read filter determines where the filter will be applied.
-enum ReadFilterScope {
-  READ_FILTER_SCOPE_UNSPECIFIED = 0;
-  // The filter will be applied to the record stream name
-  READ_FILTER_SCOPE_STREAM = 1;
-  // The filter will be applied to the record schema name
-  READ_FILTER_SCOPE_SCHEMA_NAME = 2;
-  // The filter will be applied to the properties of the record
-  READ_FILTER_SCOPE_PROPERTIES = 3;
-  // The filter will be applied to all the record properties
-  // including the stream and schema name
-  READ_FILTER_SCOPE_RECORD = 4;
-}
-
-// The filter to apply when reading records from the database
-// The combination of stream scope and literal expression indicates a direct stream name match,
-// while a regex expression indicates a pattern match across multiple streams.
-message ReadFilter {
-  // The scope of the filter.
-  ReadFilterScope scope = 1;
-  // The expression can be a regular expression or a literal value.
-  // If it starts with "~" it will be considered a regex.
-  string expression = 2;
-
-  //	// The optional name of the record property to filter on.
-  //	optional string property_name = 3;
-
-  // The optional property names to filter on.
-  repeated string property_names = 4;
-}
-
-// Record retrieved from the database.
-message Record {
-  // The unique identifier of the record in the database.
-  string record_id = 1;
-  // The position of the record in the database.
-  int64 position = 5 [jstype = JS_STRING];
-  // The actual data payload of the record, stored as bytes.
-  bytes data = 2;
-  // Additional information about the record.
-  map<string, DynamicValue> properties = 3;
-  // When the record was created.
-  google.protobuf.Timestamp timestamp = 4;
-  // The stream to which the record belongs.
-  optional string stream = 6;
-  // The revision of the stream created when the record was appended.
-  optional int64 stream_revision = 7 [jstype = JS_STRING];
-}
-
-// The direction in which to read records from the database (forwards or backwards).
-enum ReadDirection {
-  READ_DIRECTION_FORWARDS  = 0;
-  READ_DIRECTION_BACKWARDS = 1;
-}
-
-// The position from which to start reading records.
-// This can be either the earliest or latest position in the stream.
-enum ReadPositionConstants {
-  READ_POSITION_CONSTANTS_UNSPECIFIED = 0;
-  READ_POSITION_CONSTANTS_EARLIEST = 1;
-  READ_POSITION_CONSTANTS_LATEST = 2;
-}
-
-// Represents the successful outcome of a read operation.
-message ReadSuccess {
-  repeated Record records = 1;
-}
-
-// Represents the detailed error information when a read operation fails.
-message ReadFailure {
-  // The error details
-  oneof error {
-    // Failed because the client lacks sufficient permissions.
-    ErrorDetails.AccessDenied access_denied = 1;
-    // Failed because the target stream has been deleted.
-    ErrorDetails.StreamDeleted stream_deleted = 2;
-    // Failed because the expected stream revision did not match the actual revision.
-    ErrorDetails.StreamNotFound stream_not_found = 3;
-  }
-}
-
-message ReadRequest {
-  // The filter to apply when reading records.
-  optional ReadFilter filter = 1;
-  // The starting position of the log from which to read records.
-  optional int64 start_position = 2 [jstype = JS_STRING];
-  // Limit how many records can be returned.
-  // This will get capped at the default limit,
-  // which is up to 1000 records.
-  optional int64 limit = 3 [jstype = JS_STRING];
-  // The direction in which to read the stream (forwards or backwards).
-  ReadDirection direction = 4;
-  // Heartbeats can be enabled to monitor end-to-end session health.
-  HeartbeatOptions heartbeats = 5;
-  // The number of records to read in a single batch.
-  int32 batch_size = 6;
-}
-
-//message SubscriptionConfirmed {
-//	// The subscription ID that was confirmed.
-//	string subscription_id = 1;
-//	// The position of the last record read by the server.
-//	optional int64 position = 2 [jstype = JS_STRING];
-//	// When the subscription was confirmed.
-//	google.protobuf.Timestamp timestamp = 3;
-//}
-
-// Read session response.
-message ReadResponse {
-  oneof result {
-    // Success represents the successful outcome of an read operation.
-    ReadSuccess success = 1;
-    // Failure represents the details of a failed read operation.
-    ReadFailure failure = 2;
-    // Heartbeat represents the health check of the read operation when
-    // the server has not found any records matching the filter for the specified
-    // period of time or records threshold.
-    // A heartbeat will be sent when the initial switch to real-time tailing happens.
-    Heartbeat heartbeat = 3;
-  }
-}
-
-// A health check will be sent when the server has not found any records
-// matching the filter for the specified period of time or records threshold. A
-// heartbeat will be sent when the initial switch to real-time tailing happens.
-message HeartbeatOptions {
-  bool enable = 1;
-  optional google.protobuf.Duration period = 2; // 30 seconds
-  optional int32 records_threshold = 3; // 500
-}
-
-enum HeartbeatType {
-  HEARTBEAT_TYPE_UNSPECIFIED = 0;
-  HEARTBEAT_TYPE_CHECKPOINT  = 1;
-  HEARTBEAT_TYPE_CAUGHT_UP   = 2;
-  HEARTBEAT_TYPE_FELL_BEHIND = 3;
-}
-
-message Heartbeat {
-  // This indicates whether the subscription is caught up, fell behind, or
-  // the filter has not been satisfied after a period of time or records threshold.
-  HeartbeatType type = 1;
-  // Checkpoint for resuming reads.
-  // It will always be populated unless the database is empty.
+message AppendSessionResponse {
+  // The results of each append request in the session.
+  repeated AppendResponse output = 1;
+  // The position of the last appended record in the session.
   int64 position = 2 [jstype = JS_STRING];
-  // When the heartbeat was sent.
-  google.protobuf.Timestamp timestamp = 3;
 }
 
-////===================================================================
-//// Read Operations
-////===================================================================
-//
-//enum ConsumeFilterScope {
-//  CONSUME_FILTER_SCOPE_UNSPECIFIED = 0;
-//  // The filter will be applied to the stream name
-//  CONSUME_FILTER_SCOPE_STREAM = 1;
-//  // The filter will be applied to the record schema name
-//  CONSUME_FILTER_SCOPE_RECORD = 2;
-//  // The filter will be applied to the properties of record
-//  CONSUME_FILTER_SCOPE_PROPERTIES = 3;
-//  // The filter will be applied to the record data
-//  CONSUME_FILTER_SCOPE_DATA = 4;
-//}
-//
-//// The filter to apply when reading records from the database
-//// It applies to a stream or a record
-//message ConsumeFilter {
-//  // The scope of the filter.
-//  ConsumeFilterScope scope = 1;
-//  // The expression can be a regular expression, a jsonpath expression, or a literal value.
-//  // if it starts with "~" it will be considered a regex and if it starts with "$" it will be considered a jsonpath filter, else its a literal.
-//  string expression = 2;
-//  // The name of the record property to filter on.
-//  optional string property_name = 3;
-//}
-//
-//// Record retrieved from the database.
-//message Record {
-//  // The unique identifier of the record in the database.
-//  string record_id = 1;
-//  // The position of the record in the database.
-//  int64 position = 5 [jstype = JS_STRING];
-//  // The actual data payload of the record, stored as bytes.
-//  bytes data = 2;
-//  // Additional information about the record.
-//  map<string, DynamicValue> properties = 3;
-//  // When the record was created.
-//  google.protobuf.Timestamp timestamp = 4;
-//  // The stream to which the record belongs.
-//  optional string stream = 6;
-//  // The revision of the stream created when the record was appended.
-//  optional int64 stream_revision = 7 [jstype = JS_STRING];
-//}
-//
-////// A batch of records.
-////message RecordBatch {
-////  repeated Record records = 1;
-////}
-//
-//// The direction in which to read records from the database (forwards or backwards).
-//enum ReadDirection {
-//  READ_DIRECTION_FORWARDS  = 0;
-//  READ_DIRECTION_BACKWARDS = 1;
-//}
-//
-//// The position from which to start reading records.
-//// This can be either the earliest or latest position in the stream.
-//enum ReadPositionConstants {
-//  READ_POSITION_CONSTANTS_UNSPECIFIED = 0;
-//  READ_POSITION_CONSTANTS_EARLIEST = 1;
-//  READ_POSITION_CONSTANTS_LATEST = 2;
-//}
-//
-//message ReadStreamRequest {
-//  // The filter to apply when reading records.
-//  optional ConsumeFilter filter = 1;
-//  // The starting position of the log from which to read records.
-//  optional int64 start_position = 2 [jstype = JS_STRING];
-//  // Limit how many records can be returned.
-//  // This will get capped at the default limit,
-//  // which is up to 1000 records.
-//  optional int64 limit = 3 [jstype = JS_STRING];
-//  // The direction in which to read the stream (forwards or backwards).
-//  ReadDirection direction = 4;
-//}
-//
-//message ReadStreamSuccess {
-//  repeated Record records = 1;
-//}
-//
-//// Represents the detailed error information when a read operation fails.
-//message ReadStreamFailure {
-//  // The error details
-//  oneof error {
-//    // Failed because the client lacks sufficient permissions.
-//    ErrorDetails.AccessDenied access_denied = 3;
-//    // Failed because the target stream has been deleted.
-//    ErrorDetails.StreamDeleted stream_deleted = 4;
-//  }
-//}
-//message ReadStreamResponse {
-//  // The result of the read operation.
-//  oneof result {
-//    // Success represents the successful outcome of an read operation.
-//    ReadStreamSuccess success = 1;
-//    // Failure represents the details of a failed read operation.
-//    ReadStreamFailure failure = 2;
-//    // Heartbeat represents the health check of the read operation when
-//    // the server has not found any records matching the filter for the specified
-//    // period of time or records threshold.
-//    // A heartbeat will be sent when the initial switch to real-time tailing happens.
-//    Heartbeat heartbeat = 3;
-//  }
-//}
-//
-//message ReadSessionRequest {
-//  // The filter to apply when reading records.
-//  optional ConsumeFilter filter = 1;
-//  // The starting position of the log from which to read records.
-//  optional int64 start_position = 2 [jstype = JS_STRING];
-//  // Limit how many records can be returned.
-//  // This will get capped at the default limit,
-//  // which is up to 1000 records.
-//  optional int64 limit = 3 [jstype = JS_STRING];
-//  // The direction in which to read the stream (forwards or backwards).
-//  ReadDirection direction = 4;
-//  // Heartbeats can be enabled to monitor end-to-end session health.
-//  HeartbeatOptions heartbeats = 5;
-//}
-//
-//// Read session response.
-//message ReadSessionResponse {
-//  oneof result {
-//    // Success represents the successful outcome of an read operation.
-//    ReadStreamSuccess success = 1;
-//    // Failure represents the details of a failed read operation.
-//    ReadStreamFailure failure = 2;
-//    // Heartbeat represents the health check of the read operation when
-//    // the server has not found any records matching the filter for the specified
-//    // period of time or records threshold.
-//    // A heartbeat will be sent when the initial switch to real-time tailing happens.
-//    Heartbeat heartbeat = 3;
-//  }
-//}
-//
-//// A health check will be sent when the server has not found any records
-//// matching the filter for the specified period of time or records threshold. A
-//// heartbeat will be sent when the initial switch to real-time tailing happens.
-//message HeartbeatOptions {
-//  bool enable = 1;
-//  //optional google.protobuf.Duration period = 2;
-//  optional int32 records_threshold = 3; // 1000
-//}
-//
-//enum HeartbeatType {
-//  HEARTBEAT_TYPE_UNSPECIFIED = 0;
-//  HEARTBEAT_TYPE_CHECKPOINT  = 1;
-//  HEARTBEAT_TYPE_CAUGHT_UP   = 2;
-//}
-//
-//message Heartbeat {
-//  // This indicates whether the subscription is caught up, fell behind, or
-//  // the filter has not been satisfied after a period of time or records threshold.
-//  HeartbeatType type = 1;
-//  // Checkpoint for resuming reads.
-//  // It will always be populated unless the database is empty.
-//  int64 position = 2 [jstype = JS_STRING];
-//  // When the heartbeat was sent.
-//  google.protobuf.Timestamp timestamp = 3;
-//}
+// Represents the data format of the schema.
+enum SchemaFormat {
+  // Default value, should not be used.
+  SCHEMA_FORMAT_UNSPECIFIED = 0;
+  SCHEMA_FORMAT_JSON        = 1;
+  SCHEMA_FORMAT_PROTOBUF    = 2;
+  SCHEMA_FORMAT_AVRO        = 3;
+  SCHEMA_FORMAT_BYTES       = 4;
+}
+
+message SchemaInfo {
+  // The format of the schema that the record conforms to.
+  SchemaFormat format  = 1;
+  // The name of the schema that the record conforms to.
+  string name = 2;
+  // The identifier of the specific version of the schema that the record payload
+  // conforms to. This should match a registered schema version in the system.
+  // Not necessary when not enforcing schema validation.
+  optional string id = 3;
+}
+
+// Record to be appended to a stream.
+message AppendRecord {
+  // Universally Unique identifier for the record. Must be a guid.
+  // If not provided, the server will generate a new one.
+  optional string record_id = 1;
+  // The timestamp of when the record was created, represented as
+  // milliseconds since the Unix epoch. This is primarily for
+  // informational purposes and does not affect the ordering of records
+  // within the stream, which is determined by the server.
+  // If not provided, the server will assign it upon receipt.
+  optional int64 timestamp = 2 [jstype = JS_STRING];
+  // A collection of properties providing additional information about the
+  // record. This can include user-defined metadata or system properties.
+  // System properties are uniquely identified by the "$." prefix.
+  map<string, google.protobuf.Value> properties = 3;
+  // Information about the schema that the record payload conforms to.
+  SchemaInfo schema = 4;
+  // The actual data payload of the record.
+  bytes data = 5;
+}
+
+// Constants that match the expected state of a stream during an
+// append operation. It can be used to specify whether the stream should exist,
+// not exist, or can be in any state.
+enum ExpectedRevisionConstants {
+  // The stream should exist and have a single event.
+  EXPECTED_REVISION_CONSTANTS_SINGLE_EVENT = 0;
+  // It is not important whether the stream exists or not.
+  EXPECTED_REVISION_CONSTANTS_ANY = -2;
+  // The stream should not exist. If it does, the append will fail.
+  EXPECTED_REVISION_CONSTANTS_NO_STREAM = -1;
+  // The stream should exist
+  EXPECTED_REVISION_CONSTANTS_EXISTS = -4;
+}

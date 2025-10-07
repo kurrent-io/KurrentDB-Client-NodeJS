@@ -258,60 +258,7 @@ export class Instrumentation extends InstrumentationBase {
         });
 
         try {
-          const result = await original.apply(this, [requests]);
-
-          const requestEndTime: TimeInput = Date.now();
-
-          if (!result.success) {
-            const failures: kurrentdb.AppendStreamFailure[] = result.output;
-
-            span.setStatus({
-              code: SpanStatusCode.ERROR,
-            });
-
-            failures.forEach((failure) => {
-              switch (failure.details.type) {
-                case "wrong_expected_revision":
-                  span.addEvent("exception", {
-                    "exception.type": "wrong_expected_revision",
-                    "exception.revision":
-                      failure.details.revision.toLocaleString(),
-                  });
-                  break;
-
-                case "access_denied":
-                  span.addEvent("exception", {
-                    "exception.type": failure.details.type,
-                    "exception.message": failure.details.reason,
-                  });
-                  break;
-
-                case "stream_deleted":
-                  span.addEvent("exception", {
-                    "exception.type": failure.details.type,
-                  });
-                  break;
-
-                case "transaction_max_size_exceeded":
-                  span.addEvent("exception", {
-                    "exception.type": failure.details.type,
-                    "exception.max_size":
-                      failure.details.maxSize.toLocaleString(),
-                  });
-                  break;
-
-                case "unknown":
-                  span.addEvent("exception", {
-                    "exception.type": "unknown",
-                  });
-                  break;
-              }
-            });
-          }
-
-          span.end(requestEndTime);
-
-          return result;
+          return await original.apply(this, [requests]);
         } catch (error) {
           Instrumentation.handleError(error, span);
           throw error;

@@ -98,7 +98,7 @@ export type Direction = typeof constants.FORWARDS | typeof constants.BACKWARDS;
 
 export interface AppendResult {
   /**
-   * If the append was successful. Only relevent if `throwOnAppendFailure` is set to false.
+   * If the append was successful. Only relevant if `throwOnAppendFailure` is set to false.
    */
   success: boolean;
   /**
@@ -537,10 +537,9 @@ export interface AppendStreamRequest<
   expectedState: AppendStreamState;
 }
 
-export interface AppendStreamSuccess {
+export interface AppendResponse {
   streamName: string;
   revision: bigint;
-  position: bigint;
 }
 
 export interface BaseAppendErrorDetails {
@@ -564,20 +563,10 @@ export const UnknownErrorDetails: AppendErrorDetails = {
   type: "unknown",
 } as const;
 
-export interface AppendStreamFailure {
-  streamName: string;
-  details: AppendErrorDetails;
-}
-
-export type MultiAppendResult =
-  | {
-      success: true;
-      output: AppendStreamSuccess[];
-    }
-  | {
-      success: false;
-      output: AppendStreamFailure[];
-    };
+export type MultiAppendResult = {
+  position: bigint;
+  responses: AppendResponse[];
+};
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
