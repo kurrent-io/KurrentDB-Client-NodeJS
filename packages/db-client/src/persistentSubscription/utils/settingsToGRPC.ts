@@ -1,8 +1,12 @@
-import { CreateReq, UpdateReq } from "../../../generated/persistent_pb";
+import {
+  CreateReq,
+  UpdateReq,
+} from "../../../generated/kurrentdb/protocols/v1/persistentsubscriptions_pb";
 
 import {
   DISPATCH_TO_SINGLE,
   PINNED,
+  PINNED_BY_CORRELATION,
   ROUND_ROBIN,
   UNBOUNDED,
 } from "../../constants";
@@ -61,6 +65,14 @@ export const settingsToGRPC = <T extends GRPCSettings>(
         CreateReq.ConsumerStrategy.ROUNDROBIN
       );
       break;
+    }
+    case PINNED_BY_CORRELATION: {
+      if (reqSettings instanceof CreateReq.Settings) {
+        reqSettings.setConsumerStrategy(settings.consumerStrategyName);
+        break;
+      } else {
+        throw new Error("'PinnedByCorrelation' is not supported for updates.");
+      }
     }
     default: {
       console.warn(

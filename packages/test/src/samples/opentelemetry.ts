@@ -1,4 +1,10 @@
-// region import-required-packages
+/** @jest-environment ./src/utils/enableVersionCheck.ts */
+
+/**
+ * Download and start aspire dashboard from https://aspiredashboard.com/
+ * You can also use Jaeger or any other OpenTelemetry compatible dashboard.
+ */
+
 import {
   InMemorySpanExporter,
   NodeTracerProvider,
@@ -8,15 +14,41 @@ import {
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { KurrentDBInstrumentation } from "@kurrent/opentelemetry";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
-import {} from "@opentelemetry/sdk-trace-node";
-// endregion import-required-packages
-import { createTestNode } from "@test-utils";
-import { KurrentDBClient } from "@kurrent/kurrentdb-client";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import {
+  ATTR_EXCEPTION_STACKTRACE,
+  ATTR_EXCEPTION_TYPE,
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from "@opentelemetry/semantic-conventions";
+import {
+  createTestNode,
+  Defer,
+  matchServerVersion,
+  optionalDescribe,
+} from "@test-utils";
 
-import * as esdb from "@kurrent/kurrentdb-client";
+import * as kurrentdb from "@kurrent/kurrentdb-client";
+import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
+import { v4 } from "uuid";
+import { multiStreamAppend } from "@kurrent/kurrentdb-client/src/streams/appendToStream/multiStreamAppend";
+import { WrongExpectedVersionError } from "@kurrent/kurrentdb-client";
 
-// region register-instrumentation
-const provider = new NodeTracerProvider();
+const memoryExporter = new InMemorySpanExporter();
+const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
+const consoleExporter = new ConsoleSpanExporter();
+
+const provider = new NodeTracerProvider({
+  resource: resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: "kurrentdb",
+    [ATTR_SERVICE_VERSION]: "1.0.0",
+  }),
+  spanProcessors: [
+    new SimpleSpanProcessor(memoryExporter),
+    // new SimpleSpanProcessor(consoleExporter),
+    new SimpleSpanProcessor(otlpExporter),
+  ],
+});
 
 const instrumentation = new KurrentDBInstrumentation();
 
@@ -24,30 +56,22 @@ registerInstrumentations({
   instrumentations: [instrumentation],
   tracerProvider: provider,
 });
-// endregion register-instrumentation
 
 instrumentation.disable();
 
+const getSpans = (name: string) => {
+  return memoryExporter.getFinishedSpans().filter((span) => span.name === name);
+};
+
 describe("[sample] opentelemetry", () => {
   const node = createTestNode();
-  let client!: KurrentDBClient;
-
-  // region setup-exporter
-  const memoryExporter = new InMemorySpanExporter();
-  const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
-  const consoleExporter = new ConsoleSpanExporter();
-
-  provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-  provider.addSpanProcessor(new SimpleSpanProcessor(consoleExporter));
-  provider.addSpanProcessor(new SimpleSpanProcessor(otlpExporter));
-  // endregion setup-exporter
+  const moduleName = "@kurrent/opentelemetry";
 
   // @ts-expect-error the moduleExports property is private. This is needed to make the test work with auto-mocking
-  instrumentation._modules[0].moduleExports = esdb;
+  instrumentation._modules[0].moduleExports = kurrentdb;
 
   beforeAll(async () => {
     await node.up();
-    client = KurrentDBClient.connectionString(node.connectionString());
   });
 
   beforeAll(async () => {
@@ -64,33 +88,173 @@ describe("[sample] opentelemetry", () => {
     memoryExporter.reset();
   });
 
-  test("tracing", async () => {
-    // region setup-client-for-tracing
-    const { KurrentDBClient, jsonEvent } = await import(
-      "@kurrent/kurrentdb-client"
-    );
+  optionalDescribe(matchServerVersion`>=25.0`)("multistream append", () => {
+    test("append then subscribe", async () => {
+      // Arrange
+      const defer = new Defer();
 
-    const client = KurrentDBClient.connectionString(node.connectionString());
-    // endregion setup-client-for-tracing
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
 
-    const response = await client.appendToStream(
-      "some-stream",
-      jsonEvent({
-        type: "OrderPlaced",
-        data: {
-          orderId: "1337",
-          orderValue: 123.45,
-        },
-      }),
-      {
-        streamState: "any",
+      const handleError = jest.fn((error) => {
+        defer.reject(error);
+      });
+      const handleClose = jest.fn();
+      const handleEvent = jest.fn((event: kurrentdb.ResolvedEvent) => {
+        expect(event).toBeDefined();
+      });
+      const handleCaughtUp = jest.fn(async () => {
+        try {
+          expect(handleEvent).toHaveBeenCalledTimes(3);
+          await subscription.unsubscribe();
+        } catch (error) {
+          defer.reject(error);
+        }
+      });
+      const handleEnd = jest.fn(defer.resolve);
+      const handleConfirmation = jest.fn();
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const firstOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { id: v4() },
+          }),
+          jsonEvent({
+            type: "PaymentProcessed",
+            data: { id: v4() },
+          }),
+        ],
+        expectedState: kurrentdb.ANY,
+      };
+
+      const secondOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { customerId: "cust-456" },
+          }),
+        ],
+        expectedState: kurrentdb.ANY,
+      };
+
+      // Act
+      const appendResponse = await client.multiStreamAppend([
+        firstOrderReq,
+        secondOrderReq,
+      ]);
+
+      expect(appendResponse.position).toBeGreaterThan(BigInt(0));
+      expect(appendResponse.responses).toHaveLength(2);
+
+      const subscription = client
+        .subscribeToAll({
+          filter: kurrentdb.streamNameFilter({
+            prefixes: ["order-"],
+          }),
+        })
+        .on("error", handleError)
+        .on("data", handleEvent)
+        .on("close", handleClose)
+        .on("confirmation", handleConfirmation)
+        .on("caughtUp", handleCaughtUp)
+        .on("end", handleEnd);
+
+      await defer.promise;
+
+      // Assert
+      expect(handleError).not.toHaveBeenCalled();
+      expect(handleConfirmation).toHaveBeenCalledTimes(1);
+      expect(handleEvent).toHaveBeenCalledTimes(3);
+      expect(handleCaughtUp).toHaveBeenCalled();
+
+      const appendSpans = getSpans(KurrentAttributes.STREAM_MULTI_APPEND);
+      const subscribeSpans = getSpans(KurrentAttributes.STREAM_SUBSCRIBE);
+
+      expect(appendSpans).toHaveLength(1);
+      expect(subscribeSpans).toHaveLength(3);
+
+      expect(subscribeSpans[0].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
+      );
+      expect(subscribeSpans[1].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
+      );
+
+      expect(appendSpans[0].attributes).toMatchObject({
+        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
+        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
+        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
+        [KurrentAttributes.DATABASE_OPERATION]: multiStreamAppend.name,
+      });
+    });
+
+    test("append with failures", async () => {
+      // Arrange
+      const defer = new Defer();
+
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const firstOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { id: v4() },
+          }),
+          jsonEvent({
+            type: "PaymentProcessed",
+            data: { id: v4() },
+          }),
+        ],
+        expectedState: kurrentdb.ANY,
+      };
+
+      const secondOrderReq: kurrentdb.AppendStreamRequest = {
+        streamName: `order-${v4()}`,
+        events: [
+          jsonEvent({
+            type: "OrderPlaced",
+            data: { customerId: "cust-456" },
+          }),
+        ],
+        expectedState: kurrentdb.STREAM_EXISTS,
+      };
+
+      try {
+        await client.multiStreamAppend([firstOrderReq, secondOrderReq]);
+      } catch (error) {
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans.length).toBe(1);
+
+        const failedSpan = spans[0];
+
+        const failedEvents = failedSpan.events;
+
+        expect(failedEvents.length).toBe(1);
+
+        const failedEvent = failedEvents[0];
+
+        expect(error).toBeInstanceOf(WrongExpectedVersionError);
+        expect(failedEvent).toEqual(
+          expect.objectContaining({
+            name: "exception",
+            attributes: {
+              [ATTR_EXCEPTION_TYPE]: "Error",
+              [ATTR_EXCEPTION_STACKTRACE]: error.stack,
+            },
+          })
+        );
       }
-    );
-
-    expect(response).toBeDefined();
-
-    const memorySpans = memoryExporter.getFinishedSpans();
-
-    expect(memorySpans.length).toBe(1);
+    });
   });
 });

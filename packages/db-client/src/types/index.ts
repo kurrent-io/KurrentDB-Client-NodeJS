@@ -5,7 +5,7 @@ import type {
   ChannelCredentials,
 } from "@grpc/grpc-js";
 
-import { MemberInfo as GrpcMemberInfo } from "../../generated/gossip_pb";
+import { MemberInfo as GrpcMemberInfo } from "../../generated/kurrentdb/protocols/v1/gossip_pb";
 import VNodeState = GrpcMemberInfo.VNodeState;
 
 import type {
@@ -14,6 +14,7 @@ import type {
   EventType,
   PersistentSubscriptionToAllResolvedEvent,
   PersistentSubscriptionToStreamResolvedEvent,
+  EventData,
 } from "./events";
 
 import type * as constants from "../constants";
@@ -97,7 +98,7 @@ export type Direction = typeof constants.FORWARDS | typeof constants.BACKWARDS;
 
 export interface AppendResult {
   /**
-   * If the append was successful. Only relevent if `throwOnAppendFailure` is set to false.
+   * If the append was successful. Only relevant if `throwOnAppendFailure` is set to false.
    */
   success: boolean;
   /**
@@ -246,7 +247,8 @@ export interface DeleteResult {
 export type ConsumerStrategy =
   | typeof constants.DISPATCH_TO_SINGLE
   | typeof constants.ROUND_ROBIN
-  | typeof constants.PINNED;
+  | typeof constants.PINNED
+  | typeof constants.PINNED_BY_CORRELATION;
 
 export type PersistentAction =
   | typeof constants.PARK
@@ -526,6 +528,45 @@ export interface FellBehind {
    */
   position?: Position;
 }
+
+export interface AppendStreamRequest<
+  KnownEventType extends EventType = EventType
+> {
+  streamName: string;
+  events: EventData<KnownEventType>[];
+  expectedState: AppendStreamState;
+}
+
+export interface AppendResponse {
+  streamName: string;
+  revision: bigint;
+}
+
+export interface BaseAppendErrorDetails {
+  type: string;
+}
+
+export type AppendErrorDetails =
+  | ({ type: "unknown" } & BaseAppendErrorDetails)
+  | ({ type: "access_denied"; reason: string } & BaseAppendErrorDetails)
+  | ({ type: "stream_deleted" } & BaseAppendErrorDetails)
+  | ({
+      type: "wrong_expected_revision";
+      revision: bigint;
+    } & BaseAppendErrorDetails)
+  | ({
+      type: "transaction_max_size_exceeded";
+      maxSize: number;
+    } & BaseAppendErrorDetails);
+
+export const UnknownErrorDetails: AppendErrorDetails = {
+  type: "unknown",
+} as const;
+
+export type MultiAppendResult = {
+  position: bigint;
+  responses: AppendResponse[];
+};
 
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {

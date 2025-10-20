@@ -14,6 +14,10 @@ import {
   persistentSubscriptionToAllSettingsFromDefaults,
   START,
   UnsupportedError,
+  PINNED_BY_CORRELATION,
+  ROUND_ROBIN,
+  PINNED,
+  DISPATCH_TO_SINGLE,
 } from "@kurrent/kurrentdb-client";
 
 describe("createPersistentSubscriptionToAll", () => {
@@ -85,6 +89,31 @@ describe("createPersistentSubscriptionToAll", () => {
             })
           )
         ).resolves.toBeUndefined();
+      });
+
+      test.each([
+        PINNED_BY_CORRELATION,
+        PINNED,
+        ROUND_ROBIN,
+        DISPATCH_TO_SINGLE,
+      ])("consumer strategy: %s", async (strategy) => {
+        const GROUP_NAME = `group_name_valid_consumer_strategy_${strategy.toLowerCase()}`;
+        await expect(
+          client.createPersistentSubscriptionToAll(
+            GROUP_NAME,
+            persistentSubscriptionToAllSettingsFromDefaults({
+              consumerStrategyName: strategy,
+            })
+          )
+        ).resolves.toBeUndefined();
+
+        let persistentSubscription =
+          await client.getPersistentSubscriptionToAllInfo(GROUP_NAME);
+
+        expect(persistentSubscription.groupName).toBe(GROUP_NAME);
+        expect(persistentSubscription.settings.consumerStrategyName).toBe(
+          strategy
+        );
       });
 
       test("with a filter", async () => {

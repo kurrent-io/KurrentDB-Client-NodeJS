@@ -8,6 +8,7 @@ import {
   Span,
   SpanKind,
   SpanStatusCode,
+  TimeInput,
   trace,
   TraceFlags,
   Tracer,
@@ -24,6 +25,7 @@ import type {
   EventData,
   EventType,
   JSONEventType,
+  MultiAppendResult,
   ResolvedEvent,
   SubscribeToAllOptions,
   SubscribeToPersistentSubscriptionToAllOptions,
@@ -38,6 +40,7 @@ import type { Subscription } from "@kurrent/kurrentdb-client/src/streams/utils/S
 import { INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION } from "./version";
 import type {
   AppendToStreamParams,
+  MultiStreamAppendParams,
   PersistentSubscribeParameters,
   SubscribeParameters,
 } from "./types";
@@ -66,6 +69,11 @@ export class Instrumentation extends InstrumentationBase {
         moduleExports.KurrentDBClient.prototype,
         "appendToStream",
         this._patchAppendToStream()
+      );
+      this.wrap(
+        moduleExports.KurrentDBClient.prototype,
+        "multiStreamAppend",
+        this._patchMultiStreamAppend()
       );
       this.wrap(
         moduleExports.KurrentDBClient.prototype,
@@ -106,6 +114,10 @@ export class Instrumentation extends InstrumentationBase {
       this._diag.debug("un-patching");
 
       this._unwrap(moduleExports.KurrentDBClient.prototype, "appendToStream");
+      this._unwrap(
+        moduleExports.KurrentDBClient.prototype,
+        "multiStreamAppend"
+      );
       this._unwrap(
         moduleExports.KurrentDBClient.prototype,
         "subscribeToStream"
@@ -189,6 +201,67 @@ export class Instrumentation extends InstrumentationBase {
           return result;
         } catch (error) {
           throw Instrumentation.handleError(error, span);
+        } finally {
+          span.end();
+        }
+      };
+    };
+  }
+
+  private _patchMultiStreamAppend(): (
+    original: Function,
+    operation: keyof kurrentdb.KurrentDBClient
+  ) => (...args: MultiStreamAppendParams) => Promise<MultiAppendResult> {
+    const instrumentation = this;
+    const tracer = instrumentation.tracer;
+
+    return function multiStreamAppend(
+      original: Function,
+      operation: keyof kurrentdb.KurrentDBClient
+    ) {
+      return async function (
+        this: kurrentdb.KurrentDBClient,
+        ...args: MultiStreamAppendParams
+      ): Promise<MultiAppendResult> {
+        const [requests] = [...args];
+
+        const uri = await this.resolveUri();
+        const { hostname, port } = Instrumentation.getServerAddress(uri);
+
+        const requestStartTime: TimeInput = Date.now();
+
+        const span = tracer.startSpan(KurrentAttributes.STREAM_MULTI_APPEND, {
+          kind: SpanKind.CLIENT,
+          startTime: requestStartTime,
+          attributes: {
+            [KurrentAttributes.SERVER_ADDRESS]: hostname,
+            [KurrentAttributes.SERVER_PORT]: port,
+            [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
+            [KurrentAttributes.DATABASE_OPERATION]: operation,
+          },
+        });
+
+        requests.forEach((request) => {
+          const traceId = span.spanContext().traceId;
+          const spanId = span.spanContext().spanId;
+
+          request.events.forEach((event) => {
+            const metadata = (event.metadata = event.metadata || {});
+            if (isJSONEventData(event) && typeof metadata === "object") {
+              event.metadata = {
+                ...metadata,
+                [TRACE_ID]: traceId,
+                [SPAN_ID]: spanId,
+              };
+            }
+          });
+        });
+
+        try {
+          return await original.apply(this, [requests]);
+        } catch (error) {
+          Instrumentation.handleError(error, span);
+          throw error;
         } finally {
           span.end();
         }

@@ -3,10 +3,17 @@
 /* istanbul ignore file */
 
 import { status as StatusCode, ServiceError, Metadata } from "@grpc/grpc-js";
-import { isClientCancellationError } from ".";
+import { getGrpcStatusDetails, isClientCancellationError } from ".";
 
-import type { WrongExpectedVersion } from "../../generated/shared_pb";
+import { WrongExpectedVersion } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 import type { CurrentStreamState, EndPoint, AppendStreamState } from "../types";
+import {
+  AppendTransactionSizeExceededErrorDetails,
+  StreamRevisionConflictErrorDetails,
+  StreamTombstonedErrorDetails,
+  StreamNotFoundErrorDetails,
+  AppendRecordSizeExceededErrorDetails,
+} from "../../generated/kurrentdb/protocols/v2/streams/errors_pb";
 
 export enum ErrorType {
   TIMEOUT = "timeout",
@@ -22,9 +29,12 @@ export enum ErrorType {
   INVALID_ARGUMENT = "invalid-argument",
   INVALID_TRANSACTION = "invalid-transaction",
   STREAM_DELETED = "stream-deleted",
+  STREAM_TOMBSTONED = "stream-tombstoned",
   SCAVENGE_NOT_FOUND = "scavenge-not-found",
   WRONG_EXPECTED_VERSION = "wrong-expected-version",
   MAXIMUM_APPEND_SIZE_EXCEEDED = "maximum-append-size-exceeded",
+  TRANSACTION_MAX_SIZE_EXCEEDED = "transaction-max-size-exceeded",
+  APPEND_RECORD_SIZE_EXCEEDED = "append-record-size-exceeded",
   MISSING_REQUIRED_METADATA_PROPERTY = "missing-required-metadata-property",
 
   PERSISTENT_SUBSCRIPTION_FAILED = "persistent-subscription-failed",
@@ -203,6 +213,35 @@ export class WrongExpectedVersionError extends CommandErrorBase {
     });
   };
 
+  static fromRevisionConflict = (
+    details: StreamRevisionConflictErrorDetails.AsObject
+  ) => {
+    let expected: AppendStreamState;
+    switch (details.expectedRevision) {
+      case "-1":
+        expected = "no_stream";
+        break;
+      case "-4":
+        expected = "stream_exists";
+        break;
+      case "-2":
+        expected = "any";
+        break;
+      default:
+        expected = BigInt(details.expectedRevision);
+        break;
+    }
+
+    return new WrongExpectedVersionError(undefined, {
+      current:
+        details.actualRevision === "-1"
+          ? "no_stream"
+          : BigInt(details.actualRevision),
+      expected,
+      streamName: details.stream,
+    });
+  };
+
   constructor(error: ServiceError);
   constructor(error: undefined, versions: WrongExpectedVersionDetails);
   constructor(error?: ServiceError, versions?: WrongExpectedVersionDetails) {
@@ -246,6 +285,55 @@ export class MaxAppendSizeExceededError extends CommandErrorBase {
     } else {
       this.maxAppendSize = maxAppendSize!;
     }
+  }
+}
+
+export class AppendRecordSizeExceededError extends CommandErrorBase {
+  public type: ErrorType.APPEND_RECORD_SIZE_EXCEEDED =
+    ErrorType.APPEND_RECORD_SIZE_EXCEEDED;
+  public stream: string;
+  public recordId: string;
+  public size: number;
+  public maxSize: number;
+
+  constructor(
+    error: ServiceError,
+    details: AppendRecordSizeExceededErrorDetails.AsObject
+  ) {
+    super(error);
+    this.stream = details.stream;
+    this.recordId = details.recordId;
+    this.size = details.size;
+    this.maxSize = details.maxSize;
+  }
+}
+
+export class StreamTombstonedError extends CommandErrorBase {
+  public type: ErrorType.STREAM_TOMBSTONED = ErrorType.STREAM_TOMBSTONED;
+  public stream: string;
+
+  constructor(
+    error: ServiceError,
+    details: StreamTombstonedErrorDetails.AsObject
+  ) {
+    super(error);
+    this.stream = details.stream;
+  }
+}
+
+export class TransactionMaxSizeExceededError extends CommandErrorBase {
+  public type: ErrorType.TRANSACTION_MAX_SIZE_EXCEEDED =
+    ErrorType.TRANSACTION_MAX_SIZE_EXCEEDED;
+  public size: number;
+  public maxSize: number;
+
+  constructor(
+    error: ServiceError,
+    details: AppendTransactionSizeExceededErrorDetails.AsObject
+  ) {
+    super(error);
+    this.size = details.size;
+    this.maxSize = details.maxSize;
   }
 }
 
@@ -415,9 +503,12 @@ export type CommandError =
   | InvalidArgumentError
   | InvalidTransactionError
   | StreamDeletedError
+  | StreamTombstonedError
   | ScavengeNotFoundError
   | WrongExpectedVersionError
   | MaxAppendSizeExceededError
+  | AppendRecordSizeExceededError
+  | TransactionMaxSizeExceededError
   | RequiredMetadataPropertyMissingError
   | PersistentSubscriptionFailedError
   | PersistentSubscriptionDoesNotExistError
@@ -476,19 +567,81 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
   }
 
   switch (error.code) {
-    case StatusCode.ABORTED:
+    case StatusCode.ABORTED: {
+      const details = getGrpcStatusDetails(error);
+      if (!details) break;
+
+      const { typeUrl, value } = details;
+
+      if (typeUrl.endsWith("AppendTransactionSizeExceededErrorDetails")) {
+        return new TransactionMaxSizeExceededError(
+          error,
+          AppendTransactionSizeExceededErrorDetails.deserializeBinary(
+            value
+          ).toObject()
+        );
+      }
+
       return new TimeoutError(error);
+    }
     case StatusCode.DEADLINE_EXCEEDED:
       return new DeadlineExceededError(error);
     case StatusCode.UNAVAILABLE:
       return new UnavailableError(error);
     case StatusCode.UNAUTHENTICATED:
       return new AccessDeniedError(error);
-    case StatusCode.NOT_FOUND:
+    case StatusCode.NOT_FOUND: {
+      const details = getGrpcStatusDetails(error);
+      if (details && details.typeUrl.endsWith("StreamNotFoundErrorDetails")) {
+        const stream = StreamNotFoundErrorDetails.deserializeBinary(
+          details.value
+        ).toObject().stream;
+        return new StreamNotFoundError(error, stream);
+      }
+
       return new NotFoundError(error);
+    }
     case StatusCode.CANCELLED: {
       if (isClientCancellationError(error)) break;
       return new CancelledError(error);
+    }
+    case StatusCode.FAILED_PRECONDITION: {
+      const details = getGrpcStatusDetails(error);
+      if (!details) break;
+
+      if (details.typeUrl.endsWith("StreamRevisionConflictErrorDetails")) {
+        return WrongExpectedVersionError.fromRevisionConflict(
+          StreamRevisionConflictErrorDetails.deserializeBinary(
+            details.value
+          ).toObject()
+        );
+      } else if (details.typeUrl.endsWith("StreamTombstonedErrorDetails")) {
+        return new StreamTombstonedError(
+          error,
+          StreamTombstonedErrorDetails.deserializeBinary(
+            details.value
+          ).toObject()
+        );
+      }
+
+      break;
+    }
+    case StatusCode.INVALID_ARGUMENT: {
+      const details = getGrpcStatusDetails(error);
+
+      if (
+        details &&
+        details.typeUrl.endsWith("AppendRecordSizeExceededErrorDetails")
+      ) {
+        return new AppendRecordSizeExceededError(
+          error,
+          AppendRecordSizeExceededErrorDetails.deserializeBinary(
+            details.value
+          ).toObject()
+        );
+      }
+
+      break;
     }
   }
 

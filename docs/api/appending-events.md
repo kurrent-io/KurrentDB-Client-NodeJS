@@ -196,3 +196,63 @@ await client.appendToStream("some-stream", event, {
   credentials,
 });
 ```
+
+## Append to multiple streams
+
+::: note
+This feature is only available in KurrentDB 25.1 and later. 
+:::
+
+You can append events to multiple streams in a single atomic operation. Either all streams are updated, or the entire operation fails.
+
+::: warning
+Currently, metadata must be valid JSON. Binary metadata will not be supported in
+this version. This limitation ensures compatibility with KurrentDB's metadata
+handling and will be removed in the next major release.
+:::
+
+```ts
+import { jsonEvent } from "@kurrent/kurrentdb-client";
+import { v4 as uuid } from "uuid";
+
+const metadata = {
+  timestamp: new Date().toISOString(),
+  source: "OrderProcessingSystem",
+  version: 1.0
+};
+
+const requests = [
+  {
+    streamName: "order-stream-1",
+    expectedState: "any",
+    events: [
+      jsonEvent({
+        id: uuid(),
+        type: "OrderCreated",
+        data: {
+          orderId: "12345",
+          amount: 99.99
+        },
+        metadata
+      })
+    ]
+  },
+  {
+    streamName: "inventory-stream-1", 
+    expectedState: "any",
+    events: [
+      jsonEvent({
+        id: uuid(),
+        type: "ItemReserved",
+        data: {
+          itemId: "ABC123",
+          quantity: 2
+        },
+        metadata
+      })
+    ]
+  }
+];
+
+await client.multiStreamAppend(requests);
+```

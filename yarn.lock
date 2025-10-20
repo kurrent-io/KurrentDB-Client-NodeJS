@@ -1130,12 +1130,14 @@ __metadata:
     "@types/debug": "npm:^4.1.12"
     "@types/google-protobuf": "npm:^3.15.12"
     "@types/node": "npm:^22.10.2"
+    "@types/semver": "npm:^7.7.0"
     "@types/uuid": "npm:^10.0.0"
     debug: "npm:^4.4.0"
     google-protobuf: "npm:^3.21.4"
     grpc-tools: "npm:^1.12.4"
     grpc_tools_node_protoc_ts: "npm:^5.3.3"
     nx: "npm:20.1.3"
+    semver: "npm:^7.7.2"
     shx: "npm:^0.3.4"
     uuid: "npm:11.0.3"
   languageName: unknown
@@ -1394,6 +1396,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opentelemetry/core@npm:2.0.1":
+  version: 2.0.1
+  resolution: "@opentelemetry/core@npm:2.0.1"
+  dependencies:
+    "@opentelemetry/semantic-conventions": "npm:^1.29.0"
+  peerDependencies:
+    "@opentelemetry/api": ">=1.0.0 <1.10.0"
+  checksum: 10c0/d587b1289559757d80da98039f9f57612f84f72ec608cd665dc467c7c6c5ce3a987dfcc2c63b521c7c86ce984a2552b3ead15a0dc458de1cf6bde5cdfe4ca9d8
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/exporter-trace-otlp-grpc@npm:^0.51.1":
   version: 0.51.1
   resolution: "@opentelemetry/exporter-trace-otlp-grpc@npm:0.51.1"
@@ -1513,6 +1526,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opentelemetry/resources@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@opentelemetry/resources@npm:2.0.1"
+  dependencies:
+    "@opentelemetry/core": "npm:2.0.1"
+    "@opentelemetry/semantic-conventions": "npm:^1.29.0"
+  peerDependencies:
+    "@opentelemetry/api": ">=1.3.0 <1.10.0"
+  checksum: 10c0/96532b7553b26607a7a892d72f6b03ad12bd542dc23c95135a8ae40362da9c883c21a4cff3d2296d9e0e9bd899a5977e325ed52d83142621a8ffe81d08d99341
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/sdk-logs@npm:0.51.1":
   version: 0.51.1
   resolution: "@opentelemetry/sdk-logs@npm:0.51.1"
@@ -1599,6 +1624,13 @@ __metadata:
   version: 1.30.0
   resolution: "@opentelemetry/semantic-conventions@npm:1.30.0"
   checksum: 10c0/0bf99552e3b4b7e8b7eb504b678d52f59c6f259df88e740a2011a0d858e523d36fee86047ae1b7f45849c77f00f970c3059ba58e0a06a7d47d6f01dbe8c455bd
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/semantic-conventions@npm:^1.29.0":
+  version: 1.36.0
+  resolution: "@opentelemetry/semantic-conventions@npm:1.36.0"
+  checksum: 10c0/edc8a6fe3ec4fc0c67ba3a92b86fb3dcc78fe1eb4f19838d8013c3232b9868540a034dd25cfe0afdd5eae752c5f0e9f42272ff46da144a2d5b35c644478e1c62
   languageName: node
   linkType: hard
 
@@ -1936,6 +1968,13 @@ __metadata:
   version: 2.4.34
   resolution: "@types/seedrandom@npm:2.4.34"
   checksum: 10c0/de045c55f07270ee300c4f33de0724b69cea9f3597047b53b039b43d4b21c4a40d5f13fe29f2b69a857f124048c4b58bf92ab5faf5816c21c5b2eb4e803cfae6
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.7.0":
+  version: 7.7.0
+  resolution: "@types/semver@npm:7.7.0"
+  checksum: 10c0/6b5f65f647474338abbd6ee91a6bbab434662ddb8fe39464edcbcfc96484d388baad9eb506dff217b6fc1727a88894930eb1f308617161ac0f376fe06be4e1ee
   languageName: node
   linkType: hard
 
@@ -7169,6 +7208,7 @@ __metadata:
   dependencies:
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/node": "npm:18.19.76"
+    "@types/semver": "npm:^7.7.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.10.0"
     "@typescript-eslint/parser": "npm:^8.10.0"
     cross-env: "npm:^7.0.3"
@@ -7176,7 +7216,7 @@ __metadata:
     eslint-plugin-tsdoc: "npm:^0.2.17"
     nx: "npm:20.1.3"
     prettier: "npm:^2.8.8"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.2"
     typescript: "npm:^5.6.3"
   languageName: unknown
   linkType: soft
@@ -9577,6 +9617,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^7.7.2":
+  version: 7.7.2
+  resolution: "semver@npm:7.7.2"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/aca305edfbf2383c22571cb7714f48cadc7ac95371b4b52362fb8eeffdfbc0de0669368b82b2b15978f8848f01d7114da65697e56cd8c37b0dab8c58e543f9ea
+  languageName: node
+  linkType: hard
+
 "set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
@@ -10365,6 +10414,7 @@ __metadata:
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.51.1"
     "@opentelemetry/instrumentation": "npm:^0.56.0"
+    "@opentelemetry/resources": "npm:^2.0.1"
     "@opentelemetry/sdk-trace-node": "npm:^1.30.0"
     "@opentelemetry/semantic-conventions": "npm:^1.28.0"
     "@types/debug": "npm:^4.1.12"
