@@ -29,6 +29,7 @@ export enum ErrorType {
   INVALID_ARGUMENT = "invalid-argument",
   INVALID_TRANSACTION = "invalid-transaction",
   STREAM_DELETED = "stream-deleted",
+  STREAM_TOMBSTONED = "stream-tombstoned",
   SCAVENGE_NOT_FOUND = "scavenge-not-found",
   WRONG_EXPECTED_VERSION = "wrong-expected-version",
   MAXIMUM_APPEND_SIZE_EXCEEDED = "maximum-append-size-exceeded",
@@ -304,6 +305,19 @@ export class AppendRecordSizeExceededError extends CommandErrorBase {
     this.recordId = details.recordId;
     this.size = details.size;
     this.maxSize = details.maxSize;
+  }
+}
+
+export class StreamTombstonedError extends CommandErrorBase {
+  public type: ErrorType.STREAM_TOMBSTONED = ErrorType.STREAM_TOMBSTONED;
+  public stream: string;
+
+  constructor(
+    error: ServiceError,
+    details: StreamTombstonedErrorDetails.AsObject
+  ) {
+    super(error);
+    this.stream = details.stream;
   }
 }
 
@@ -600,11 +614,11 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
           ).toObject()
         );
       } else if (details.typeUrl.endsWith("StreamTombstonedErrorDetails")) {
-        return new StreamDeletedError(
-          undefined,
+        return new StreamTombstonedError(
+          error,
           StreamTombstonedErrorDetails.deserializeBinary(
             details.value
-          ).toObject().stream
+          ).toObject()
         );
       }
 

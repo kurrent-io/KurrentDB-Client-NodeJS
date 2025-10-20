@@ -15,8 +15,8 @@ import {
   UnsupportedError,
   AppendStreamRequest,
   STREAM_EXISTS,
-  StreamDeletedError,
   WrongExpectedVersionError,
+  StreamTombstonedError,
 } from "@kurrent/kurrentdb-client";
 
 import { v4 } from "uuid";
@@ -124,7 +124,7 @@ describe("multiAppend", () => {
       try {
         await client.multiStreamAppend(requests);
       } catch (error) {
-        expect(error).toBeInstanceOf(StreamDeletedError);
+        expect(error).toBeInstanceOf(StreamTombstonedError);
       }
     });
   });
