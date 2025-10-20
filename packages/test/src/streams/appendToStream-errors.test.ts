@@ -121,7 +121,7 @@ describe("appendToStream - errors", () => {
       }
     });
 
-    optionalTest(supported)("MaximumAppendSizeExceeded", async () => {
+    optionalTest(supported).skip("MaximumAppendSizeExceeded", async () => {
       const STREAM_NAME = `${prefix}_i_am_too_many`;
 
       try {

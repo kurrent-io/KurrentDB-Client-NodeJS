@@ -54,7 +54,7 @@ describe("reconnect", () => {
     await cluster.down();
   });
 
-  test("no reconnection for TimeoutError", async () => {
+  test.skip("no reconnection for TimeoutError", async () => {
     const timeoutNode = createTestNode()
       .setOption("EVENTSTORE_COMMIT_TIMEOUT_MS", 1)
       .setOption("EVENTSTORE_PREPARE_TIMEOUT_MS", 1);

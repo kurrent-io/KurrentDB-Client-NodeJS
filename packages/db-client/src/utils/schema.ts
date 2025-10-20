@@ -1,12 +1,4 @@
-/**
- * Specifies the data format for schema content.
- */
-export enum SchemaDataFormat {
-  JSON = "Json",
-  BINARY = "Binary",
-  PROTOBUF = "Protobuf",
-  BYTES = "Bytes",
-}
+import { SchemaFormat } from "../../generated/kurrentdb/protocols/v2/streams/streams_pb";
 
 /**
  * Converts a content type to a SchemaDataFormat.
@@ -15,12 +7,12 @@ export enum SchemaDataFormat {
  */
 export const convertToSchemaDataFormat = (
   format: "application/json" | "application/octet-stream"
-): SchemaDataFormat => {
+): SchemaFormat => {
   switch (format) {
     case "application/json":
-      return SchemaDataFormat.JSON;
+      return SchemaFormat.SCHEMA_FORMAT_JSON;
     case "application/octet-stream":
-      return SchemaDataFormat.BINARY;
+      return SchemaFormat.SCHEMA_FORMAT_BYTES;
     default:
       throw new Error(`Unsupported data format: ${format}`);
   }

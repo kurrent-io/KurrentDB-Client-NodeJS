@@ -205,22 +205,11 @@ This feature is only available in KurrentDB 25.1 and later.
 
 You can append events to multiple streams in a single atomic operation. Either all streams are updated, or the entire operation fails.
 
-The `multiStreamAppend` method accepts a collection of `AppendStreamRequest` objects and returns a `MultiAppendResult`. Each `AppendStreamRequest` contains:
-
-- **streamName** - The name of the stream
-- **expectedState** - The expected state of the stream for optimistic concurrency control
-- **events** - A collection of `EventData` objects to append
-
-The operation returns either:
-- `AppendStreamSuccess` - Successful append results for all streams
-- `AppendStreamFailure` - Specific exceptions for any failed operations
-
 ::: warning
-Event metadata in `EventData` must be valid JSON objects. This requirement will
-be removed in a future major release.
+Currently, metadata must be valid JSON. Binary metadata will not be supported in
+this version. This limitation ensures compatibility with KurrentDB's metadata
+handling and will be removed in the next major release.
 :::
-
-Here's a basic example of appending events to multiple streams:
 
 ```ts
 import { jsonEvent } from "@kurrent/kurrentdb-client";
@@ -265,43 +254,5 @@ const requests = [
   }
 ];
 
-const result = await client.multiStreamAppend(requests);
-
-if (result.success) {
-  result.output.forEach((success) => {
-    console.log(`Stream '${success.streamName}' updated at position ${success.position}`);
-  });
-}
-```
-
-If the operation doesn't succeed, it can fail with the following exceptions:
-
-```ts
-const result = await client.multiStreamAppend(requests);
-
-if (!result.success) {
-  result.output.forEach((failure) => {
-    switch (failure.details.type) {
-      case "wrong_expected_revision":
-        console.log(`Version conflict in stream '${failure.streamName}': expected revision ${failure.details.revision}`);
-        break;
-
-      case "access_denied":
-        console.log(`Access denied to stream '${failure.streamName}': ${failure.details.reason}`);
-        break;
-
-      case "stream_deleted":
-        console.log(`Stream '${failure.streamName}' was deleted`);
-        break;
-
-      case "transaction_max_size_exceeded":
-        console.log(`Transaction too large for stream '${failure.streamName}': max size is ${failure.details.maxSize} bytes`);
-        break;
-
-      default:
-        console.log(`Unexpected error for stream '${failure.streamName}': ${failure.details.type}`);
-        break;
-    }
-  });
-}
+await client.multiStreamAppend(requests);
 ```
