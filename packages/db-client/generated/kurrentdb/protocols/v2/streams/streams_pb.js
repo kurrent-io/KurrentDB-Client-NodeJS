@@ -407,7 +407,7 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.toObject = function(includeIn
   var f, obj = {
     stream: jspb.Message.getFieldWithDefault(msg, 1, ""),
     streamRevision: jspb.Message.getFieldWithDefault(msg, 2, "0"),
-    position: jspb.Message.getFieldWithDefault(msg, 4, "0")
+    position: jspb.Message.getFieldWithDefault(msg, 3, "0")
   };
 
   if (includeInstance) {
@@ -449,11 +449,11 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.deserializeBinaryFromReader =
       msg.setStream(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readInt64String());
+      var value = /** @type {string} */ (reader.readSint64String());
       msg.setStreamRevision(value);
       break;
-    case 4:
-      var value = /** @type {string} */ (reader.readInt64String());
+    case 3:
+      var value = /** @type {string} */ (reader.readSint64String());
       msg.setPosition(value);
       break;
     default:
@@ -494,15 +494,15 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.serializeBinaryToWriter = fun
   }
   f = message.getStreamRevision();
   if (parseInt(f, 10) !== 0) {
-    writer.writeInt64String(
+    writer.writeSint64String(
       2,
       f
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 4));
+  f = /** @type {string} */ (jspb.Message.getField(message, 3));
   if (f != null) {
-    writer.writeInt64String(
-      4,
+    writer.writeSint64String(
+      3,
       f
     );
   }
@@ -528,7 +528,7 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.setStream = functio
 
 
 /**
- * optional int64 stream_revision = 2;
+ * optional sint64 stream_revision = 2;
  * @return {string}
  */
 proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.getStreamRevision = function() {
@@ -546,11 +546,11 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.setStreamRevision =
 
 
 /**
- * optional int64 position = 4;
+ * optional sint64 position = 3;
  * @return {string}
  */
 proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.getPosition = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, "0"));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, "0"));
 };
 
 
@@ -559,7 +559,7 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.getPosition = funct
  * @return {!proto.kurrentdb.protocol.v2.streams.AppendResponse} returns this
  */
 proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.setPosition = function(value) {
-  return jspb.Message.setField(this, 4, value);
+  return jspb.Message.setField(this, 3, value);
 };
 
 
@@ -568,7 +568,7 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.setPosition = funct
  * @return {!proto.kurrentdb.protocol.v2.streams.AppendResponse} returns this
  */
 proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.clearPosition = function() {
-  return jspb.Message.setField(this, 4, undefined);
+  return jspb.Message.setField(this, 3, undefined);
 };
 
 
@@ -577,7 +577,7 @@ proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.clearPosition = fun
  * @return {boolean}
  */
 proto.kurrentdb.protocol.v2.streams.AppendResponse.prototype.hasPosition = function() {
-  return jspb.Message.getField(this, 4) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
@@ -665,7 +665,7 @@ proto.kurrentdb.protocol.v2.streams.AppendSessionResponse.deserializeBinaryFromR
       msg.addOutput(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readInt64String());
+      var value = /** @type {string} */ (reader.readSint64String());
       msg.setPosition(value);
       break;
     default:
@@ -707,7 +707,7 @@ proto.kurrentdb.protocol.v2.streams.AppendSessionResponse.serializeBinaryToWrite
   }
   f = message.getPosition();
   if (parseInt(f, 10) !== 0) {
-    writer.writeInt64String(
+    writer.writeSint64String(
       2,
       f
     );
@@ -754,7 +754,7 @@ proto.kurrentdb.protocol.v2.streams.AppendSessionResponse.prototype.clearOutputL
 
 
 /**
- * optional int64 position = 2;
+ * optional sint64 position = 2;
  * @return {string}
  */
 proto.kurrentdb.protocol.v2.streams.AppendSessionResponse.prototype.getPosition = function() {
@@ -1012,7 +1012,6 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.toObject = function(o
 proto.kurrentdb.protocol.v2.streams.AppendRecord.toObject = function(includeInstance, msg) {
   var f, obj = {
     recordId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    timestamp: jspb.Message.getFieldWithDefault(msg, 2, "0"),
     propertiesMap: (f = msg.getPropertiesMap()) ? f.toObject(includeInstance, proto.google.protobuf.Value.toObject) : [],
     schema: (f = msg.getSchema()) && proto.kurrentdb.protocol.v2.streams.SchemaInfo.toObject(includeInstance, f),
     data: msg.getData_asB64()
@@ -1057,21 +1056,17 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.deserializeBinaryFromReader = f
       msg.setRecordId(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readInt64String());
-      msg.setTimestamp(value);
-      break;
-    case 3:
       var value = msg.getPropertiesMap();
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.google.protobuf.Value.deserializeBinaryFromReader, "", new proto.google.protobuf.Value());
          });
       break;
-    case 4:
+    case 3:
       var value = new proto.kurrentdb.protocol.v2.streams.SchemaInfo;
       reader.readMessage(value,proto.kurrentdb.protocol.v2.streams.SchemaInfo.deserializeBinaryFromReader);
       msg.setSchema(value);
       break;
-    case 5:
+    case 4:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setData(value);
       break;
@@ -1111,21 +1106,14 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.serializeBinaryToWriter = funct
       f
     );
   }
-  f = /** @type {string} */ (jspb.Message.getField(message, 2));
-  if (f != null) {
-    writer.writeInt64String(
-      2,
-      f
-    );
-  }
   f = message.getPropertiesMap(true);
   if (f && f.getLength() > 0) {
-    f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.google.protobuf.Value.serializeBinaryToWriter);
+    f.serializeBinary(2, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.google.protobuf.Value.serializeBinaryToWriter);
   }
   f = message.getSchema();
   if (f != null) {
     writer.writeMessage(
-      4,
+      3,
       f,
       proto.kurrentdb.protocol.v2.streams.SchemaInfo.serializeBinaryToWriter
     );
@@ -1133,7 +1121,7 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.serializeBinaryToWriter = funct
   f = message.getData_asU8();
   if (f.length > 0) {
     writer.writeBytes(
-      5,
+      4,
       f
     );
   }
@@ -1177,50 +1165,14 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.hasRecordId = functio
 
 
 /**
- * optional int64 timestamp = 2;
- * @return {string}
- */
-proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getTimestamp = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, "0"));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.kurrentdb.protocol.v2.streams.AppendRecord} returns this
- */
-proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.setTimestamp = function(value) {
-  return jspb.Message.setField(this, 2, value);
-};
-
-
-/**
- * Clears the field making it undefined.
- * @return {!proto.kurrentdb.protocol.v2.streams.AppendRecord} returns this
- */
-proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.clearTimestamp = function() {
-  return jspb.Message.setField(this, 2, undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.hasTimestamp = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * map<string, google.protobuf.Value> properties = 3;
+ * map<string, google.protobuf.Value> properties = 2;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,!proto.google.protobuf.Value>}
  */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getPropertiesMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,!proto.google.protobuf.Value>} */ (
-      jspb.Message.getMapField(this, 3, opt_noLazyCreate,
+      jspb.Message.getMapField(this, 2, opt_noLazyCreate,
       proto.google.protobuf.Value));
 };
 
@@ -1235,12 +1187,12 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.clearPropertiesMap = 
 
 
 /**
- * optional SchemaInfo schema = 4;
+ * optional SchemaInfo schema = 3;
  * @return {?proto.kurrentdb.protocol.v2.streams.SchemaInfo}
  */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getSchema = function() {
   return /** @type{?proto.kurrentdb.protocol.v2.streams.SchemaInfo} */ (
-    jspb.Message.getWrapperField(this, proto.kurrentdb.protocol.v2.streams.SchemaInfo, 4));
+    jspb.Message.getWrapperField(this, proto.kurrentdb.protocol.v2.streams.SchemaInfo, 3));
 };
 
 
@@ -1249,7 +1201,7 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getSchema = function(
  * @return {!proto.kurrentdb.protocol.v2.streams.AppendRecord} returns this
 */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.setSchema = function(value) {
-  return jspb.Message.setWrapperField(this, 4, value);
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
@@ -1267,21 +1219,21 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.clearSchema = functio
  * @return {boolean}
  */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.hasSchema = function() {
-  return jspb.Message.getField(this, 4) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * optional bytes data = 5;
+ * optional bytes data = 4;
  * @return {!(string|Uint8Array)}
  */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getData = function() {
-  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /**
- * optional bytes data = 5;
+ * optional bytes data = 4;
  * This is a type-conversion wrapper around `getData()`
  * @return {string}
  */
@@ -1292,7 +1244,7 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getData_asB64 = funct
 
 
 /**
- * optional bytes data = 5;
+ * optional bytes data = 4;
  * Note that Uint8Array is not supported on all browsers.
  * @see http://caniuse.com/Uint8Array
  * This is a type-conversion wrapper around `getData()`
@@ -1309,7 +1261,7 @@ proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.getData_asU8 = functi
  * @return {!proto.kurrentdb.protocol.v2.streams.AppendRecord} returns this
  */
 proto.kurrentdb.protocol.v2.streams.AppendRecord.prototype.setData = function(value) {
-  return jspb.Message.setProto3BytesField(this, 5, value);
+  return jspb.Message.setProto3BytesField(this, 4, value);
 };
 
 
@@ -1329,8 +1281,8 @@ proto.kurrentdb.protocol.v2.streams.SchemaFormat = {
  */
 proto.kurrentdb.protocol.v2.streams.ExpectedRevisionConstants = {
   EXPECTED_REVISION_CONSTANTS_SINGLE_EVENT: 0,
-  EXPECTED_REVISION_CONSTANTS_ANY: -2,
   EXPECTED_REVISION_CONSTANTS_NO_STREAM: -1,
+  EXPECTED_REVISION_CONSTANTS_ANY: -2,
   EXPECTED_REVISION_CONSTANTS_EXISTS: -4
 };
 

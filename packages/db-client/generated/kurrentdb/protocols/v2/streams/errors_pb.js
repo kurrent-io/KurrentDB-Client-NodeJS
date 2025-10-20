@@ -796,11 +796,11 @@ proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.de
       msg.setStream(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readInt64String());
+      var value = /** @type {string} */ (reader.readSint64String());
       msg.setExpectedRevision(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readInt64String());
+      var value = /** @type {string} */ (reader.readSint64String());
       msg.setActualRevision(value);
       break;
     default:
@@ -841,14 +841,14 @@ proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.se
   }
   f = message.getExpectedRevision();
   if (parseInt(f, 10) !== 0) {
-    writer.writeInt64String(
+    writer.writeSint64String(
       2,
       f
     );
   }
   f = message.getActualRevision();
   if (parseInt(f, 10) !== 0) {
-    writer.writeInt64String(
+    writer.writeSint64String(
       3,
       f
     );
@@ -875,7 +875,7 @@ proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.pr
 
 
 /**
- * optional int64 expected_revision = 2;
+ * optional sint64 expected_revision = 2;
  * @return {string}
  */
 proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.prototype.getExpectedRevision = function() {
@@ -893,7 +893,7 @@ proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.pr
 
 
 /**
- * optional int64 actual_revision = 3;
+ * optional sint64 actual_revision = 3;
  * @return {string}
  */
 proto.kurrentdb.protocol.v2.streams.errors.StreamRevisionConflictErrorDetails.prototype.getActualRevision = function() {
@@ -1432,7 +1432,8 @@ proto.kurrentdb.protocol.v2.streams.errors.StreamsError = {
   STREAMS_ERROR_STREAM_REVISION_CONFLICT: 5,
   STREAMS_ERROR_APPEND_RECORD_SIZE_EXCEEDED: 6,
   STREAMS_ERROR_APPEND_TRANSACTION_SIZE_EXCEEDED: 7,
-  STREAMS_ERROR_STREAM_ALREADY_IN_APPEND_SESSION: 8
+  STREAMS_ERROR_STREAM_ALREADY_IN_APPEND_SESSION: 8,
+  STREAMS_ERROR_APPEND_SESSION_NO_REQUESTS: 9
 };
 
 goog.object.extend(exports, proto.kurrentdb.protocol.v2.streams.errors);

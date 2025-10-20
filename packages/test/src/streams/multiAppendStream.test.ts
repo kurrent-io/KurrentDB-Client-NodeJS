@@ -97,7 +97,6 @@ describe("multiAppend", () => {
         expect(event).toBeDefined();
         expect(event?.metadata).toEqual(
           expect.objectContaining({
-            "$record.timestamp": expect.any(String),
             "$schema.format": "Json",
             "$schema.name": "test",
             ...expectedMetadata,
@@ -130,7 +129,7 @@ describe("multiAppend", () => {
   });
 
   optionalDescribe(supported)("Supported (>=25.1)", () => {
-    test.only("stream revision conflict", async () => {
+    test("stream revision conflict", async () => {
       const STREAM_NAME = v4().toString();
 
       const requests: AppendStreamRequest[] = [];

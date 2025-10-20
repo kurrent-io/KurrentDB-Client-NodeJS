@@ -31,24 +31,4 @@ export namespace ErrorMetadata {
     }
 }
 
-export class RequestErrorInfo extends jspb.Message { 
-    getCode(): string;
-    setCode(value: string): RequestErrorInfo;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): RequestErrorInfo.AsObject;
-    static toObject(includeInstance: boolean, msg: RequestErrorInfo): RequestErrorInfo.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: RequestErrorInfo, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): RequestErrorInfo;
-    static deserializeBinaryFromReader(message: RequestErrorInfo, reader: jspb.BinaryReader): RequestErrorInfo;
-}
-
-export namespace RequestErrorInfo {
-    export type AsObject = {
-        code: string,
-    }
-}
-
 export const error: jspb.ExtensionFieldInfo<ErrorMetadata>;

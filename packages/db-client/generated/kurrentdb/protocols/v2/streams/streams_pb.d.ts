@@ -128,11 +128,6 @@ export class AppendRecord extends jspb.Message {
     getRecordId(): string | undefined;
     setRecordId(value: string): AppendRecord;
 
-    hasTimestamp(): boolean;
-    clearTimestamp(): void;
-    getTimestamp(): string | undefined;
-    setTimestamp(value: string): AppendRecord;
-
     getPropertiesMap(): jspb.Map<string, google_protobuf_struct_pb.Value>;
     clearPropertiesMap(): void;
 
@@ -158,7 +153,6 @@ export class AppendRecord extends jspb.Message {
 export namespace AppendRecord {
     export type AsObject = {
         recordId?: string,
-        timestamp?: string,
 
         propertiesMap: Array<[string, google_protobuf_struct_pb.Value.AsObject]>,
         schema?: SchemaInfo.AsObject,
@@ -176,7 +170,7 @@ export enum SchemaFormat {
 
 export enum ExpectedRevisionConstants {
     EXPECTED_REVISION_CONSTANTS_SINGLE_EVENT = 0,
-    EXPECTED_REVISION_CONSTANTS_ANY = -2,
     EXPECTED_REVISION_CONSTANTS_NO_STREAM = -1,
+    EXPECTED_REVISION_CONSTANTS_ANY = -2,
     EXPECTED_REVISION_CONSTANTS_EXISTS = -4,
 }

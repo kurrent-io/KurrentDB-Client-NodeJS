@@ -21,17 +21,6 @@ function deserialize_kurrentdb_protocol_v2_streams_AppendRequest(buffer_arg) {
   return kurrentdb_protocols_v2_streams_streams_pb.AppendRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_kurrentdb_protocol_v2_streams_AppendResponse(arg) {
-  if (!(arg instanceof kurrentdb_protocols_v2_streams_streams_pb.AppendResponse)) {
-    throw new Error('Expected argument of type kurrentdb.protocol.v2.streams.AppendResponse');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_kurrentdb_protocol_v2_streams_AppendResponse(buffer_arg) {
-  return kurrentdb_protocols_v2_streams_streams_pb.AppendResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 function serialize_kurrentdb_protocol_v2_streams_AppendSessionResponse(arg) {
   if (!(arg instanceof kurrentdb_protocols_v2_streams_streams_pb.AppendSessionResponse)) {
     throw new Error('Expected argument of type kurrentdb.protocol.v2.streams.AppendSessionResponse');
@@ -45,26 +34,25 @@ function deserialize_kurrentdb_protocol_v2_streams_AppendSessionResponse(buffer_
 
 
 var StreamsServiceService = exports.StreamsServiceService = {
-  // Executes an atomic operation to append records to multiple streams.
-// This transactional method ensures that all appends either succeed
-// completely, or are entirely rolled back, thereby maintaining strict
-// data consistency across all involved streams.
-append: {
-    path: '/kurrentdb.protocol.v2.streams.StreamsService/Append',
-    requestStream: false,
-    responseStream: false,
-    requestType: kurrentdb_protocols_v2_streams_streams_pb.AppendRequest,
-    responseType: kurrentdb_protocols_v2_streams_streams_pb.AppendResponse,
-    requestSerialize: serialize_kurrentdb_protocol_v2_streams_AppendRequest,
-    requestDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendRequest,
-    responseSerialize: serialize_kurrentdb_protocol_v2_streams_AppendResponse,
-    responseDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendResponse,
-  },
-  // Streaming version of Append that allows clients to send multiple
-// append requests continuously. Once completed, all records are
-// appended transactionally (all succeed or fail together).
-// Provides improved efficiency for high-throughput scenarios while
-// maintaining the same transactional guarantees.
+  // Appends records to multiple streams atomically within a single transaction.
+//
+// This is a client-streaming RPC where the client sends multiple AppendRequest messages
+// (one per stream) and receives a single AppendSessionResponse upon commit.
+//
+// Guarantees:
+// - Atomicity: All writes succeed or all fail together
+// - Optimistic Concurrency: Expected revisions are validated for all streams before commit
+// - Ordering: Records within each stream maintain send order
+//
+// Current Limitations:
+// - Each stream can only appear once per session (no multiple appends to same stream)
+//
+// Example flow:
+//   1. Client opens stream
+//   2. Client sends AppendRequest for stream "orders" with 3 records
+//   3. Client sends AppendRequest for stream "inventory" with 2 records
+//   4. Client completes the stream
+//   5. Server validates, commits, returns AppendSessionResponse with positions
 appendSession: {
     path: '/kurrentdb.protocol.v2.streams.StreamsService/AppendSession',
     requestStream: true,
