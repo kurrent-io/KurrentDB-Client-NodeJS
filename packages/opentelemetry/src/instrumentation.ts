@@ -262,6 +262,8 @@ export class Instrumentation extends InstrumentationBase {
         } catch (error) {
           Instrumentation.handleError(error, span);
           throw error;
+        } finally {
+          span.end();
         }
       };
     };

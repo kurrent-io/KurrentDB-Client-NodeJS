@@ -236,7 +236,7 @@ describe("[sample] opentelemetry", () => {
         const spans = memoryExporter.getFinishedSpans();
         expect(spans.length).toBe(1);
 
-        const failedSpan = spans[1];
+        const failedSpan = spans[0];
 
         const failedEvents = failedSpan.events;
 
