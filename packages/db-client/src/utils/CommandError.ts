@@ -503,9 +503,11 @@ export type CommandError =
   | InvalidArgumentError
   | InvalidTransactionError
   | StreamDeletedError
+  | StreamTombstonedError
   | ScavengeNotFoundError
   | WrongExpectedVersionError
   | MaxAppendSizeExceededError
+  | AppendRecordSizeExceededError
   | TransactionMaxSizeExceededError
   | RequiredMetadataPropertyMissingError
   | PersistentSubscriptionFailedError
