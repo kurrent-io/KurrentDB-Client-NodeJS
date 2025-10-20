@@ -86,7 +86,7 @@ Client.prototype.multiStreamAppend = async function (
   this: Client,
   requests: AppendStreamRequest[]
 ): Promise<MultiAppendResult> {
-  if (!(await this.supports(StreamsServiceService.multiStreamAppendSession))) {
+  if (!(await this.supports(StreamsServiceService.appendSession))) {
     throw new UnsupportedError("multiStreamAppend", "25.1");
   }
   return multiStreamAppend.call(this, requests);
