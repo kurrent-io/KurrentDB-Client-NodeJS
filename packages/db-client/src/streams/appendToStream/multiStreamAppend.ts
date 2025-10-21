@@ -19,16 +19,22 @@ export const multiStreamAppend = async function (
   this: Client,
   requests: AppendStreamRequest[]
 ): Promise<MultiAppendResult> {
-  if (
-    requests.some((request) =>
-      request.events.some(
-        (event) => event.metadata && event.metadata.constructor === Uint8Array
-      )
-    )
-  )
-    throw new Error(
-      "multiStreamAppend requires all event metadata to be in JSON format."
-    );
+  for (const request of requests) {
+    for (const event of request.events) {
+      const { metadata } = event;
+      if (metadata == null) continue;
+      if (
+        metadata.constructor === Uint8Array ||
+        typeof metadata !== "object" ||
+        Array.isArray(metadata) ||
+        Object.values(metadata).some((value) => typeof value !== "string")
+      ) {
+        throw new Error(
+          "multiStreamAppend requires metadata to be a plain object with string keys and string values."
+        );
+      }
+    }
+  }
 
   return this.execute(
     grpc.StreamsServiceClient,
@@ -95,7 +101,7 @@ export const multiStreamAppend = async function (
 
             if (event.metadata) {
               const metadataMap = mapToValueMap(
-                event.metadata as Record<string, unknown>
+                event.metadata as Record<string, string>
               );
               for (const [key, value] of metadataMap) {
                 record.getPropertiesMap().set(key, value);
