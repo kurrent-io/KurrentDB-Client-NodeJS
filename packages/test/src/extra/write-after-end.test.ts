@@ -73,10 +73,9 @@ describe("write after end", () => {
 
   test("Should not write after end (batch append)", async () => {
     // We are going to do a huge append, so tell KurrentDB not to reject it
-    const node = createTestNode().setOption(
-      "EVENTSTORE_MAX_APPEND_SIZE",
-      10_000_000
-    );
+    const node = createTestNode()
+      .setOption("EVENTSTORE_MAX_APPEND_SIZE", 10_000_000)
+      .setOption("EVENTSTORE_MAX_APPEND_EVENT_SIZE", 10_000_000);
     await node.up();
 
     const client = KurrentDBClient.connectionString(node.connectionString());
