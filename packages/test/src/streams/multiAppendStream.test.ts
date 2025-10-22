@@ -94,7 +94,7 @@ describe("multiAppend", () => {
       const STREAM_NAME_2 = v4().toString();
       const expectedMetadata = {
         name: "multiAppendTest",
-        empty: ""
+        empty: "",
       };
 
       const requests: AppendStreamRequest[] = [];
@@ -130,7 +130,7 @@ describe("multiAppend", () => {
             "$schema.format": "Json",
             "$schema.name": "test",
             name: "multiAppendTest",
-            empty: ""
+            empty: "",
           })
         );
       }
