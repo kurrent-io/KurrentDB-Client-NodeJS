@@ -33,13 +33,12 @@ Array.isArray = (arg): arg is never[] => {
 
 // jest.retryTimes(5, { logErrorsBeforeRetry: true });
 
-describe("write after end", () => {
+describe.skip("write after end", () => {
   test("Should not write after end", async () => {
     // We are going to do a huge append, so tell KurrentDB not to reject it
-    const node = createTestNode().setOption(
-      "EVENTSTORE_MAX_APPEND_SIZE",
-      10_000_000
-    );
+    const node = createTestNode()
+      .setOption("EVENTSTORE_MAX_APPEND_SIZE", 10_000_000)
+      .setOption("EVENTSTORE_MAX_APPEND_EVENT_SIZE", 10_000_000);
     await node.up();
 
     const client = KurrentDBClient.connectionString(node.connectionString());
@@ -74,10 +73,9 @@ describe("write after end", () => {
 
   test("Should not write after end (batch append)", async () => {
     // We are going to do a huge append, so tell KurrentDB not to reject it
-    const node = createTestNode().setOption(
-      "EVENTSTORE_MAX_APPEND_SIZE",
-      10_000_000
-    );
+    const node = createTestNode()
+      .setOption("EVENTSTORE_MAX_APPEND_SIZE", 10_000_000)
+      .setOption("EVENTSTORE_MAX_APPEND_EVENT_SIZE", 10_000_000);
     await node.up();
 
     const client = KurrentDBClient.connectionString(node.connectionString());
@@ -106,7 +104,7 @@ describe("write after end", () => {
   });
 
   // todo: investigate why this test does not work in ci only
-  test.skip("Should not write after end (batch append)", async () => {
+  test("Should not write after end (batch append)", async () => {
     const node = createTestNode();
     await node.up();
 

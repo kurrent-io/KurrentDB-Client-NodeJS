@@ -17,6 +17,8 @@ import {
   STREAM_EXISTS,
   WrongExpectedVersionError,
   StreamTombstonedError,
+  jsonEvent,
+  binaryEvent,
 } from "@kurrent/kurrentdb-client";
 
 import { v4 } from "uuid";
@@ -35,36 +37,64 @@ describe("multiAppend", () => {
     await node.down();
   });
 
-  test("json events", async () => {
-    const STREAM_NAME = v4().toString();
+  optionalDescribe(supported)("Supported (>=25.1)", () => {
+    test("invalid metadata (binary metadata)", async () => {
+      const STREAM_NAME = v4().toString();
 
-    const requests: AppendStreamRequest[] = [];
+      const requests: AppendStreamRequest[] = [];
 
-    requests.push({
-      streamName: STREAM_NAME,
-      events: binaryTestEvents(),
-      expectedState: ANY,
+      requests.push({
+        streamName: STREAM_NAME,
+        events: [
+          jsonEvent({
+            type: "test",
+            data: { key: "value" },
+            metadata: Buffer.from("binary metadata"),
+          }),
+        ],
+        expectedState: ANY,
+      });
+
+      await expect(client.multiStreamAppend(requests)).rejects.toThrow(
+        "multiStreamAppend requires metadata to be a plain object with string keys and string values."
+      );
     });
 
-    try {
-      await client.multiStreamAppend(requests);
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect(error.message).toBe(
-        "multiStreamAppend requires server version 25.1 or higher."
-      );
-    }
-  });
+    test("invalid metadata (non plain object)", async () => {
+      const STREAM_NAME = v4().toString();
 
-  optionalDescribe(supported)("Supported (>=25.1)", () => {
+      const requests: AppendStreamRequest[] = [];
+
+      requests.push({
+        streamName: STREAM_NAME,
+        events: [
+          jsonEvent({
+            type: "test",
+            data: {
+              stringKey: "stringValue",
+              numberKey: 42,
+            },
+          }),
+        ],
+        expectedState: ANY,
+      });
+
+      try {
+        await client.multiStreamAppend(requests);
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        await expect(client.multiStreamAppend(requests)).rejects.toThrow(
+          "multiStreamAppend requires metadata to be a plain object with string keys and string values."
+        );
+      }
+    });
+
     test("json events", async () => {
       const STREAM_NAME_1 = v4().toString();
       const STREAM_NAME_2 = v4().toString();
       const expectedMetadata = {
-        timestamp: new Date().toISOString(),
-        int: 1,
-        float: 1.1,
-        string: "test",
+        name: "multiAppendTest",
+        empty: "",
       };
 
       const requests: AppendStreamRequest[] = [];
@@ -99,14 +129,13 @@ describe("multiAppend", () => {
           expect.objectContaining({
             "$schema.format": "Json",
             "$schema.name": "test",
-            ...expectedMetadata,
+            name: "multiAppendTest",
+            empty: "",
           })
         );
       }
     });
-  });
 
-  optionalDescribe(supported)("Supported (>=25.1)", () => {
     test("stream deleted", async () => {
       const STREAM_NAME = v4().toString();
 
@@ -126,9 +155,7 @@ describe("multiAppend", () => {
         expect(error).toBeInstanceOf(StreamTombstonedError);
       }
     });
-  });
 
-  optionalDescribe(supported)("Supported (>=25.1)", () => {
     test("stream revision conflict", async () => {
       const STREAM_NAME = v4().toString();
 
