@@ -15,11 +15,11 @@ Add the `@kurrent/kurrentdb-client` dependency to your project:
 ::: tabs
 @tab NPM
 ```bash
-npm install --save @kurrent/kurrentdb-client@~1.0
+npm install --save @kurrent/kurrentdb-client@~1.1
 ```
 @tab Yarn
 ```bash
-yarn add @kurrent/kurrentdb-client@~1.0
+yarn add @kurrent/kurrentdb-client@~1.1
 ```
 :::
 
