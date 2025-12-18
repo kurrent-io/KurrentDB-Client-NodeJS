@@ -1,0 +1,30 @@
+// ******************************************************************************************
+// This protocol is UNSTABLE in the sense of being subject to change.
+// ******************************************************************************************
+
+syntax = "proto3";
+
+package kurrentdb.protocol.v2.registry.errors;
+
+option csharp_namespace = "KurrentDB.Protocol.V2.Registry.Errors";
+
+import "kurrentdb/protocols/v2/rpc.proto";
+
+// Error codes specific to the Schema Registry API.
+enum RegistryError {
+  // Default value. This value is not used.
+  // An error code MUST always be set to a non-zero value.
+  // If an error code is not explicitly set, it MUST be treated as
+  // an internal server error (INTERNAL).
+  REGISTRY_ERROR_UNSPECIFIED = 0;
+
+//  // The specified schema could not be found. Please check the schema name and try again.
+//  REGISTRY_ERROR_NOT_FOUND = 1 [(kurrent.rpc.error) = {
+//    status_code: NOT_FOUND
+//  }];
+//
+//  // The specified schema has already been created and cannot be created again. Please use a different name.
+//  REGISTRY_ERROR_ALREADY_EXISTS = 2 [(kurrent.rpc.error) = {
+//    status_code: ALREADY_EXISTS
+//  }];
+}
