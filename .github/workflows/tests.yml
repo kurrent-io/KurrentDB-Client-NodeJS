@@ -60,6 +60,9 @@ jobs:
           - name: opentelemetry
             path: ./src/opentelemetry
 
+          - name: schemaRegistry
+            path: ./src/schemaRegistry
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
