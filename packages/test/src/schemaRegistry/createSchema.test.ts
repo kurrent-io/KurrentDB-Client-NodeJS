@@ -21,18 +21,22 @@ describe("createSchema", () => {
   });
 
   describe("should create a schema", () => {
-    test("with metadata only", async () => {
+    test("with metadata and definition", async () => {
       const schemaName = generateSchemaName();
 
-      const result = await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "backward",
-        description: "Test schema without definition",
-      });
+      const result = await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "backward",
+          description: "Test schema with definition",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       expect(result).toBeDefined();
-      expect(result.schemaVersionId).toBeUndefined();
-      expect(result.versionNumber).toBeUndefined();
+      expect(result.schemaVersionId).toBeDefined();
+      expect(result.versionNumber).toBe(1);
     });
 
     test("with initial definition", async () => {
@@ -64,14 +68,18 @@ describe("createSchema", () => {
     test("with tags", async () => {
       const schemaName = generateSchemaName();
 
-      const result = await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-        tags: {
-          environment: "test",
-          owner: "test-suite",
+      const result = await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+          tags: {
+            environment: "test",
+            owner: "test-suite",
+          },
         },
-      });
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       expect(result).toBeDefined();
     });
@@ -82,10 +90,14 @@ describe("createSchema", () => {
       for (const dataFormat of formats) {
         const schemaName = generateSchemaName();
 
-        const result = await client.createSchema(schemaName, {
-          dataFormat,
-          compatibility: "none",
-        });
+        const result = await client.createSchema(
+          schemaName,
+          {
+            dataFormat,
+            compatibility: "none",
+          },
+          { schemaDefinition: JSON.stringify({ type: "object" }) }
+        );
 
         expect(result).toBeDefined();
       }
@@ -97,17 +109,25 @@ describe("createSchema", () => {
       const schemaName = generateSchemaName();
 
       // Create first schema
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       // Attempt to create duplicate
       await expect(
-        client.createSchema(schemaName, {
-          dataFormat: "json",
-          compatibility: "none",
-        })
+        client.createSchema(
+          schemaName,
+          {
+            dataFormat: "json",
+            compatibility: "none",
+          },
+          { schemaDefinition: JSON.stringify({ type: "object" }) }
+        )
       ).rejects.toThrow();
     });
   });

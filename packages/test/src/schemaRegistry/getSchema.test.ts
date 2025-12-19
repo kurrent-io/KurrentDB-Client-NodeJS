@@ -24,12 +24,16 @@ describe("getSchema", () => {
     test("get schema with all properties", async () => {
       const schemaName = generateSchemaName();
 
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "backward",
-        description: "Test description",
-        tags: { env: "test" },
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "backward",
+          description: "Test description",
+          tags: { env: "test" },
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       const schema = await client.getSchema(schemaName);
 
@@ -38,16 +42,20 @@ describe("getSchema", () => {
       expect(schema.details.compatibility).toBe("backward");
       expect(schema.details.description).toBe("Test description");
       expect(schema.details.tags).toEqual({ env: "test" });
-      expect(schema.latestSchemaVersion).toBe(0);
+      expect(schema.latestSchemaVersion).toBe(1);
     });
 
     test("timestamps are populated", async () => {
       const schemaName = generateSchemaName();
 
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       const schema = await client.getSchema(schemaName);
 

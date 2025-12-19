@@ -41,12 +41,16 @@ describe("listRegisteredSchemas", () => {
     );
     versionId2 = result2.schemaVersionId!;
 
-    // Create schema without version (should not appear in registered schemas)
-    await client.createSchema(generateSchemaName("gamma"), {
-      dataFormat: "json",
-      compatibility: "none",
-      tags: { category: "c", env: "prod" },
-    });
+    // Create schema with version but different tags for variety
+    await client.createSchema(
+      generateSchemaName("gamma"),
+      {
+        dataFormat: "json",
+        compatibility: "none",
+        tags: { category: "c", env: "prod" },
+      },
+      { schemaDefinition: JSON.stringify({ schema: "gamma" }) }
+    );
   });
 
   afterAll(async () => {
@@ -60,14 +64,13 @@ describe("listRegisteredSchemas", () => {
       });
 
       expect(Array.isArray(schemas)).toBe(true);
-      // Only schemas with versions should be returned
-      expect(schemas.length).toBe(2);
+      // All schemas with versions should be returned
+      expect(schemas.length).toBe(3);
 
       const schemaNames = schemas.map((s) => s.schemaName);
       expect(schemaNames).toContain(generateSchemaName("alpha"));
       expect(schemaNames).toContain(generateSchemaName("beta"));
-      // gamma has no version, should not be included
-      expect(schemaNames).not.toContain(generateSchemaName("gamma"));
+      expect(schemaNames).toContain(generateSchemaName("gamma"));
     });
 
     test("filter by version ID", async () => {

@@ -16,23 +16,35 @@ describe("listSchemas", () => {
     client = KurrentDBClient.connectionString(node.connectionString());
 
     // Create test schemas for filtering tests
-    await client.createSchema(generateSchemaName("alpha"), {
-      dataFormat: "json",
-      compatibility: "none",
-      tags: { category: "a", env: "test" },
-    });
+    await client.createSchema(
+      generateSchemaName("alpha"),
+      {
+        dataFormat: "json",
+        compatibility: "none",
+        tags: { category: "a", env: "test" },
+      },
+      { schemaDefinition: JSON.stringify({ schema: "alpha" }) }
+    );
 
-    await client.createSchema(generateSchemaName("beta"), {
-      dataFormat: "json",
-      compatibility: "backward",
-      tags: { category: "b", env: "test" },
-    });
+    await client.createSchema(
+      generateSchemaName("beta"),
+      {
+        dataFormat: "json",
+        compatibility: "backward",
+        tags: { category: "b", env: "test" },
+      },
+      { schemaDefinition: JSON.stringify({ schema: "beta" }) }
+    );
 
-    await client.createSchema(generateSchemaName("gamma"), {
-      dataFormat: "protobuf",
-      compatibility: "full",
-      tags: { category: "a", env: "prod" },
-    });
+    await client.createSchema(
+      generateSchemaName("gamma"),
+      {
+        dataFormat: "protobuf",
+        compatibility: "full",
+        tags: { category: "a", env: "prod" },
+      },
+      { schemaDefinition: JSON.stringify({ schema: "gamma" }) }
+    );
   });
 
   afterAll(async () => {

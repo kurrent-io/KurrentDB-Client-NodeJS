@@ -24,21 +24,25 @@ describe("registerSchemaVersion", () => {
     test("register new version for existing schema", async () => {
       const schemaName = generateSchemaName();
 
-      // Create schema without initial version
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      // Create schema with initial version
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
-      // Register first version
+      // Register second version
       const result = await client.registerSchemaVersion(
         schemaName,
-        JSON.stringify({ type: "object" })
+        JSON.stringify({ type: "object", version: 2 })
       );
 
       expect(result.schemaVersionId).toBeDefined();
       expect(result.schemaVersionId).not.toBe("");
-      expect(result.versionNumber).toBe(1);
+      expect(result.versionNumber).toBe(2);
     });
 
     test("version number increments", async () => {
@@ -76,17 +80,23 @@ describe("registerSchemaVersion", () => {
     test("register with Uint8Array definition", async () => {
       const schemaName = generateSchemaName();
 
-      await client.createSchema(schemaName, {
-        dataFormat: "bytes",
-        compatibility: "none",
-      });
+      const initialDefinition = new TextEncoder().encode("initial binary data");
+
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "bytes",
+          compatibility: "none",
+        },
+        { schemaDefinition: initialDefinition }
+      );
 
       const definition = new TextEncoder().encode("binary data content");
 
       const result = await client.registerSchemaVersion(schemaName, definition);
 
       expect(result.schemaVersionId).toBeDefined();
-      expect(result.versionNumber).toBe(1);
+      expect(result.versionNumber).toBe(2);
     });
   });
 

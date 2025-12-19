@@ -25,10 +25,15 @@ describe("deleteSchema", () => {
       const schemaName = generateSchemaName();
 
       // Create schema
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+          description: "Test schema with definition",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       // Verify it exists
       const schemaBefore = await client.getSchema(schemaName);

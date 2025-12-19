@@ -46,13 +46,17 @@ describe("lookupSchemaName", () => {
     test("lookup by version ID from registered version", async () => {
       const schemaName = generateSchemaName();
 
-      // Create schema without version
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      // Create schema with initial version
+      const createResult = await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
-      // Register a version
+      // Register another version
       const versionResult = await client.registerSchemaVersion(
         schemaName,
         JSON.stringify({ type: "string" })

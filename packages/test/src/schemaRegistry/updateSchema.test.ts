@@ -25,11 +25,15 @@ describe("updateSchema", () => {
       const schemaName = generateSchemaName();
 
       // Create schema
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-        description: "Original description",
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+          description: "Original description",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       // Update description
       await expect(
@@ -47,11 +51,15 @@ describe("updateSchema", () => {
       const schemaName = generateSchemaName();
 
       // Create schema with initial tags
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-        tags: { initial: "tag" },
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+          tags: { initial: "tag" },
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       // Update tags
       await expect(
@@ -72,10 +80,14 @@ describe("updateSchema", () => {
       const schemaName = generateSchemaName();
 
       // Create schema
-      await client.createSchema(schemaName, {
-        dataFormat: "json",
-        compatibility: "none",
-      });
+      await client.createSchema(
+        schemaName,
+        {
+          dataFormat: "json",
+          compatibility: "none",
+        },
+        { schemaDefinition: JSON.stringify({ type: "object" }) }
+      );
 
       // Update both
       await expect(
