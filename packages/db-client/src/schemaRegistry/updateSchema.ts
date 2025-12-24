@@ -10,7 +10,7 @@ import { Client } from "../Client";
 import { debug, convertToCommandError } from "../utils";
 
 import type { UpdateSchemaOptions } from "./types";
-import { mapCompatibilityModeToGrpc, mapSchemaDataFormatToGrpc } from './utils';
+import { mapCompatibilityModeToGrpc, mapSchemaDataFormatToGrpc } from "./utils";
 
 declare module "../Client" {
   interface Client {
@@ -31,7 +31,8 @@ Client.prototype.updateSchema = async function (
   schemaName: string,
   options: UpdateSchemaOptions
 ): Promise<void> {
-  const { description, tags, dataFormat, compatibility, ...baseOptions } = options;
+  const { description, tags, dataFormat, compatibility, ...baseOptions } =
+    options;
 
   const req = new UpdateSchemaRequest();
   req.setSchemaName(schemaName);

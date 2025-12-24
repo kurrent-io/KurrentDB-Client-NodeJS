@@ -1,6 +1,10 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
+import {
+  createTestNode,
+  matchServerVersion,
+  optionalDescribe,
+} from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
@@ -17,12 +21,14 @@ describe("deleteSchema", () => {
     for (let i = 0; i < maxAttempts; i++) {
       try {
         await client.getSchema(schemaName);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         return;
       }
     }
-    throw new Error(`Schema ${schemaName} was not deleted after ${maxAttempts} attempts`);
+    throw new Error(
+      `Schema ${schemaName} was not deleted after ${maxAttempts} attempts`
+    );
   };
 
   beforeAll(async () => {

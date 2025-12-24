@@ -1,6 +1,11 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
+import {
+  createTestNode,
+  delay,
+  matchServerVersion,
+  optionalDescribe,
+} from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
