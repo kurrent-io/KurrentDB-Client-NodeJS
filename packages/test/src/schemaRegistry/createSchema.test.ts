@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("createSchema", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("createSchema", () => {
     await node.down();
   });
 
-  describe("should create a schema", () => {
+  optionalDescribe(supported)("should create a schema", () => {
     test("with metadata and definition", async () => {
       const schemaName = generateSchemaName();
 

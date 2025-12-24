@@ -219,6 +219,14 @@ export interface CreateSchemaResult {
  */
 export interface UpdateSchemaOptions extends BaseOptions {
   /**
+   * The data format of the schema (must match existing schema).
+   */
+  dataFormat: SchemaDataFormat;
+  /**
+   * The compatibility mode (must match existing schema).
+   */
+  compatibility: CompatibilityMode;
+  /**
    * Updated description for the schema.
    */
   description?: string;

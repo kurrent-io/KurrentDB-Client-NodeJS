@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("registerSchemaVersion", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("registerSchemaVersion", () => {
     await node.down();
   });
 
-  describe("should register schema version", () => {
+  optionalDescribe(supported)("should register schema version", () => {
     test("register new version for existing schema", async () => {
       const schemaName = generateSchemaName();
 

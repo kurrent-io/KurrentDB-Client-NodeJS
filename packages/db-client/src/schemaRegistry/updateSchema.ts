@@ -10,6 +10,7 @@ import { Client } from "../Client";
 import { debug, convertToCommandError } from "../utils";
 
 import type { UpdateSchemaOptions } from "./types";
+import { mapCompatibilityModeToGrpc, mapSchemaDataFormatToGrpc } from './utils';
 
 declare module "../Client" {
   interface Client {
@@ -28,9 +29,9 @@ declare module "../Client" {
 Client.prototype.updateSchema = async function (
   this: Client,
   schemaName: string,
-  options: UpdateSchemaOptions = {}
+  options: UpdateSchemaOptions
 ): Promise<void> {
-  const { description, tags, ...baseOptions } = options;
+  const { description, tags, dataFormat, compatibility, ...baseOptions } = options;
 
   const req = new UpdateSchemaRequest();
   req.setSchemaName(schemaName);
@@ -38,9 +39,13 @@ Client.prototype.updateSchema = async function (
   const details = new GrpcSchemaDetails();
   const updatePaths: string[] = [];
 
+  // dataFormat and compatibility are required fields but not updated via field mask
+  details.setDataFormat(mapSchemaDataFormatToGrpc(dataFormat));
+  details.setCompatibility(mapCompatibilityModeToGrpc(compatibility));
+
   if (description !== undefined) {
     details.setDescription(description);
-    updatePaths.push("description");
+    updatePaths.push("details.description");
   }
 
   if (tags !== undefined) {
@@ -48,7 +53,7 @@ Client.prototype.updateSchema = async function (
     for (const [key, value] of Object.entries(tags)) {
       tagsMap.set(key, value);
     }
-    updatePaths.push("tags");
+    updatePaths.push("details.tags");
   }
 
   req.setDetails(details);

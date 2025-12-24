@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("checkSchemaCompatibility", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("checkSchemaCompatibility", () => {
     await node.down();
   });
 
-  describe("check by schema name", () => {
+  optionalDescribe(supported)("check by schema name", () => {
     test("compatible definition returns success", async () => {
       const schemaName = generateSchemaName();
 
@@ -41,6 +43,9 @@ describe("checkSchemaCompatibility", () => {
           }),
         }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Check backward compatible definition (adding optional field)
       const result = await client.checkSchemaCompatibility(
@@ -82,6 +87,9 @@ describe("checkSchemaCompatibility", () => {
         }
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       // Check incompatible definition (changing required field type)
       const result = await client.checkSchemaCompatibility(
         JSON.stringify({
@@ -117,6 +125,9 @@ describe("checkSchemaCompatibility", () => {
           }),
         }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Completely different schema should be compatible with 'none'
       const result = await client.checkSchemaCompatibility(
@@ -164,6 +175,9 @@ describe("checkSchemaCompatibility", () => {
         })
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       // Check compatibility against version 1 specifically
       const result = await client.checkSchemaCompatibility(
         JSON.stringify({
@@ -200,6 +214,9 @@ describe("checkSchemaCompatibility", () => {
           }),
         }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Breaking forward compatibility by adding required field
       const result = await client.checkSchemaCompatibility(

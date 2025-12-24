@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("listSchemaVersions", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("listSchemaVersions", () => {
     await node.down();
   });
 
-  describe("should list schema versions", () => {
+  optionalDescribe(supported)("should list schema versions", () => {
     test("list all versions of schema", async () => {
       const schemaName = generateSchemaName();
 
@@ -37,6 +39,9 @@ describe("listSchemaVersions", () => {
       await client.registerSchemaVersion(schemaName, JSON.stringify({ v: 2 }));
 
       await client.registerSchemaVersion(schemaName, JSON.stringify({ v: 3 }));
+
+      // Wait a moment to ensure the registry is updated
+      await delay(100);
 
       const versions = await client.listSchemaVersions(schemaName);
 
@@ -59,6 +64,9 @@ describe("listSchemaVersions", () => {
         { schemaDefinition: JSON.stringify({ data: "test" }) }
       );
 
+      // Wait a moment to ensure the registry is updated
+      await delay(100);
+
       const versions = await client.listSchemaVersions(schemaName, {
         includeDefinition: false,
       });
@@ -80,6 +88,9 @@ describe("listSchemaVersions", () => {
         },
         { schemaDefinition: JSON.stringify(definitionObj) }
       );
+
+      // Wait a moment to ensure the registry is updated
+      await delay(100);
 
       const versions = await client.listSchemaVersions(schemaName, {
         includeDefinition: true,
@@ -104,6 +115,9 @@ describe("listSchemaVersions", () => {
         },
         { schemaDefinition: JSON.stringify({ v: 1 }) }
       );
+
+      // Wait a moment to ensure the registry is updated
+      await delay(100);
 
       const versions = await client.listSchemaVersions(schemaName);
 

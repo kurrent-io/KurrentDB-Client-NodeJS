@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("getSchemaVersion", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("getSchemaVersion", () => {
     await node.down();
   });
 
-  describe("should get schema version", () => {
+  optionalDescribe(supported)("should get schema version", () => {
     test("get latest version (no version number specified)", async () => {
       const schemaName = generateSchemaName();
 
@@ -43,6 +45,9 @@ describe("getSchemaVersion", () => {
         schemaName,
         JSON.stringify({ version: 3 })
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Get latest version (should be 3)
       const version = await client.getSchemaVersion(schemaName);
@@ -68,6 +73,9 @@ describe("getSchemaVersion", () => {
         schemaName,
         JSON.stringify({ version: 2 })
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Get version 1 specifically
       const version = await client.getSchemaVersion(schemaName, {
@@ -95,6 +103,9 @@ describe("getSchemaVersion", () => {
         { schemaDefinition: definition }
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       const version = await client.getSchemaVersion(schemaName);
 
       expect(version.schemaDefinition).toBeDefined();
@@ -117,6 +128,9 @@ describe("getSchemaVersion", () => {
         { schemaDefinition: JSON.stringify({ v: 1 }) }
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       const version = await client.getSchemaVersion(schemaName);
 
       expect(version.registeredAt).toBeDefined();
@@ -136,6 +150,9 @@ describe("getSchemaVersion", () => {
         },
         { schemaDefinition: JSON.stringify({ v: 1 }) }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       await expect(
         client.getSchemaVersion(schemaName, { versionNumber: 999 })

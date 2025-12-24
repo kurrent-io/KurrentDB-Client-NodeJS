@@ -1629,7 +1629,7 @@ proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.prototype.toObject = f
  */
 proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    schemaName: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -1666,6 +1666,10 @@ proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.deserializeBinaryFromR
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSchemaName(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1695,6 +1699,31 @@ proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.prototype.serializeBin
  */
 proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSchemaName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string schema_name = 1;
+ * @return {string}
+ */
+proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.prototype.getSchemaName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse} returns this
+ */
+proto.kurrentdb.protocol.registry.v2.UpdateSchemaResponse.prototype.setSchemaName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -1860,7 +1889,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.prototype.toObject = f
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    schemaName: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -1897,6 +1926,10 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.deserializeBinaryFromR
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSchemaName(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1926,6 +1959,31 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.prototype.serializeBin
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSchemaName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string schema_name = 1;
+ * @return {string}
+ */
+proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.prototype.getSchemaName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse} returns this
+ */
+proto.kurrentdb.protocol.registry.v2.DeleteSchemaResponse.prototype.setSchemaName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -3662,7 +3720,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsRequest.prototype.clear
  * @private {!Array<number>}
  * @const
  */
-proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.repeatedFields_ = [1];
+proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.repeatedFields_ = [2];
 
 
 
@@ -3695,6 +3753,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.toOb
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
+    schemaName: jspb.Message.getFieldWithDefault(msg, 1, ""),
     errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.toObject, includeInstance)
   };
@@ -3734,6 +3793,10 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.deserializeBin
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSchemaName(value);
+      break;
+    case 2:
       var value = new proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError;
       reader.readMessage(value,proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.deserializeBinaryFromReader);
       msg.addErrors(value);
@@ -3767,10 +3830,17 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.seri
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSchemaName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
   f = message.getErrorsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      1,
+      2,
       f,
       proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.serializeBinaryToWriter
     );
@@ -3810,8 +3880,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionE
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.toObject = function(includeInstance, msg) {
   var f, obj = {
-    versionNumber: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    error: (f = msg.getError()) && kurrentdb_protocols_v2_registry_shared_pb.ErrorDetails.toObject(includeInstance, f)
+    versionNumber: jspb.Message.getFieldWithDefault(msg, 1, 0)
   };
 
   if (includeInstance) {
@@ -3852,11 +3921,6 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionE
       var value = /** @type {number} */ (reader.readInt32());
       msg.setVersionNumber(value);
       break;
-    case 2:
-      var value = new kurrentdb_protocols_v2_registry_shared_pb.ErrorDetails;
-      reader.readMessage(value,kurrentdb_protocols_v2_registry_shared_pb.ErrorDetails.deserializeBinaryFromReader);
-      msg.setError(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -3893,14 +3957,6 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionE
       f
     );
   }
-  f = message.getError();
-  if (f != null) {
-    writer.writeMessage(
-      2,
-      f,
-      kurrentdb_protocols_v2_registry_shared_pb.ErrorDetails.serializeBinaryToWriter
-    );
-  }
 };
 
 
@@ -3923,49 +3979,30 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionE
 
 
 /**
- * optional ErrorDetails error = 2;
- * @return {?proto.kurrentdb.protocol.registry.v2.ErrorDetails}
+ * optional string schema_name = 1;
+ * @return {string}
  */
-proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.prototype.getError = function() {
-  return /** @type{?proto.kurrentdb.protocol.registry.v2.ErrorDetails} */ (
-    jspb.Message.getWrapperField(this, kurrentdb_protocols_v2_registry_shared_pb.ErrorDetails, 2));
+proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.getSchemaName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /**
- * @param {?proto.kurrentdb.protocol.registry.v2.ErrorDetails|undefined} value
- * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError} returns this
-*/
-proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.prototype.setError = function(value) {
-  return jspb.Message.setWrapperField(this, 2, value);
-};
-
-
-/**
- * Clears the message field making it undefined.
- * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError} returns this
+ * @param {string} value
+ * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse} returns this
  */
-proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.prototype.clearError = function() {
-  return this.setError(undefined);
+proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.setSchemaName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError.prototype.hasError = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * repeated SchemaVersionError errors = 1;
+ * repeated SchemaVersionError errors = 2;
  * @return {!Array<!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError>}
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.getErrorsList = function() {
   return /** @type{!Array<!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError, 1));
+    jspb.Message.getRepeatedWrapperField(this, proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError, 2));
 };
 
 
@@ -3974,7 +4011,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.getE
  * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse} returns this
 */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.setErrorsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+  return jspb.Message.setRepeatedWrapperField(this, 2, value);
 };
 
 
@@ -3984,7 +4021,7 @@ proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.setE
  * @return {!proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError}
  */
 proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.prototype.addErrors = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.kurrentdb.protocol.registry.v2.DeleteSchemaVersionsResponse.SchemaVersionError, opt_index);
 };
 
 

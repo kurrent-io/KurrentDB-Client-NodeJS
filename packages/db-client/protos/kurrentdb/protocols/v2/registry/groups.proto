@@ -23,7 +23,7 @@ message CompatibilitySettings {
 }
 
 message DataFormatSettings {
-  bool             enforce = 1;
+  bool         enforce = 1;
   SchemaDataFormat format  = 2;
 }
 
@@ -56,11 +56,11 @@ message SchemaGroupDetails {
   //  CompatibilityMode compatibility             = 9;   // Compatibility mode enforced for all schemas in the group
   //  StreamFilter      stream_filter             = 10;  // Filter that restricts the schemas to a specific set of streams
 
-  AutoRegistrationSettings auto_registration = 11;  // Settings for automatic registration
-  ValidationSettings       validation        = 12;  // Settings for schema validation
-  CompatibilitySettings    compatibility     = 13;  // Settings for compatibility mode
-  DataFormatSettings       data_format       = 14;  // Settings for data format enforcement
-  StreamFilterSettings     stream_filter     = 15;  // Settings for stream filtering
+  AutoRegistrationSettings auto_registration = 11; // Settings for automatic registration
+  ValidationSettings       validation        = 12; // Settings for schema validation
+  CompatibilitySettings    compatibility     = 13; // Settings for compatibility mode
+  DataFormatSettings       data_format       = 14; // Settings for data format enforcement
+  StreamFilterSettings     stream_filter     = 15; // Settings for stream filtering
 }
 
 message SchemaGroup {
@@ -75,12 +75,12 @@ message SchemaGroup {
 // Command to create a new schema group with optional identifier and required configuration
 message CreateSchemaGroupRequest {
   optional string    group_id = 1;  // Unique identifier of the schema group
-  SchemaGroupDetails details  = 2;  // Details of the schema group to be created
+  SchemaGroupDetails details  = 2; // Details of the schema group to be created
 }
 
 // Response returned after successful schema group creation
 message CreateSchemaGroupResponse {
-  string group_id = 1;  // Unique identifier of the schema group
+  string group_id = 1; // Unique identifier of the schema group
 }
 
 // Command to update an existing schema group's details with field masking support
@@ -98,7 +98,7 @@ message UpdateSchemaGroupResponse {}
 
 // Command to remove an existing schema group by identifier
 message DeleteSchemaGroupRequest {
-  string group_id = 1;  // Unique identifier of the schema group
+  string group_id = 1; // Unique identifier of the schema group
 }
 
 // Empty response returned after successful schema group deletion

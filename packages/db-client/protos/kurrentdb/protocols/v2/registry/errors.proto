@@ -16,15 +16,33 @@ enum RegistryError {
   // An error code MUST always be set to a non-zero value.
   // If an error code is not explicitly set, it MUST be treated as
   // an internal server error (INTERNAL).
-  REGISTRY_ERROR_UNSPECIFIED = 0;
+  UNSPECIFIED = 0;
 
-//  // The specified schema could not be found. Please check the schema name and try again.
-//  REGISTRY_ERROR_NOT_FOUND = 1 [(kurrent.rpc.error) = {
-//    status_code: NOT_FOUND
-//  }];
-//
-//  // The specified schema has already been created and cannot be created again. Please use a different name.
-//  REGISTRY_ERROR_ALREADY_EXISTS = 2 [(kurrent.rpc.error) = {
-//    status_code: ALREADY_EXISTS
-//  }];
+  SCHEMA_NOT_FOUND = 1 [(kurrent.rpc.error) = {
+    status_code: NOT_FOUND,
+    has_details: true,
+  }];
+
+  SCHEMA_ALREADY_EXISTS = 2 [(kurrent.rpc.error) = {
+    status_code: ALREADY_EXISTS,
+    has_details: true
+  }];
+
+  SCHEMA_DELETED = 3 [(kurrent.rpc.error) = {
+    status_code: FAILED_PRECONDITION,
+    has_details: true
+  }];
+
+}
+
+message SchemaNotFoundErrorDetails {
+  string schema = 1;
+}
+
+message SchemaAlreadyExistsErrorDetails {
+  string schema = 1;
+}
+
+message SchemaDeletedErrorDetails {
+  string schema = 1;
 }

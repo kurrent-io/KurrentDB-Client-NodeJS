@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("lookupSchemaName", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("lookupSchemaName", () => {
     await node.down();
   });
 
-  describe("should lookup schema name", () => {
+  optionalDescribe(supported)("should lookup schema name", () => {
     test("lookup by version ID", async () => {
       const schemaName = generateSchemaName();
       const definition = JSON.stringify({ type: "object" });
@@ -47,7 +49,7 @@ describe("lookupSchemaName", () => {
       const schemaName = generateSchemaName();
 
       // Create schema with initial version
-      const createResult = await client.createSchema(
+      await client.createSchema(
         schemaName,
         {
           dataFormat: "json",
@@ -61,6 +63,9 @@ describe("lookupSchemaName", () => {
         schemaName,
         JSON.stringify({ type: "string" })
       );
+
+      // Wait a moment to ensure the registry is updated
+      await delay(100);
 
       // Lookup schema name
       const foundName = await client.lookupSchemaName(

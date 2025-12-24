@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("listSchemas", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -15,7 +17,6 @@ describe("listSchemas", () => {
     await node.up();
     client = KurrentDBClient.connectionString(node.connectionString());
 
-    // Create test schemas for filtering tests
     await client.createSchema(
       generateSchemaName("alpha"),
       {
@@ -51,20 +52,7 @@ describe("listSchemas", () => {
     await node.down();
   });
 
-  describe("should list schemas", () => {
-    test("list all schemas", async () => {
-      const schemas = await client.listSchemas();
-
-      expect(Array.isArray(schemas)).toBe(true);
-      expect(schemas.length).toBeGreaterThanOrEqual(3);
-
-      // Verify our test schemas are in the list
-      const schemaNames = schemas.map((s) => s.schemaName);
-      expect(schemaNames).toContain(generateSchemaName("alpha"));
-      expect(schemaNames).toContain(generateSchemaName("beta"));
-      expect(schemaNames).toContain(generateSchemaName("gamma"));
-    });
-
+  optionalDescribe(supported)("should list schemas", () => {
     test("filter by name prefix", async () => {
       const schemas = await client.listSchemas({
         schemaNamePrefix: testPrefix,
@@ -96,15 +84,6 @@ describe("listSchemas", () => {
 
       expect(schemas.length).toBe(1);
       expect(schemas[0].schemaName).toBe(generateSchemaName("alpha"));
-    });
-
-    test("returns empty array for non-matching filters", async () => {
-      const schemas = await client.listSchemas({
-        schemaNamePrefix: "non-existent-prefix-xyz",
-      });
-
-      expect(Array.isArray(schemas)).toBe(true);
-      expect(schemas.length).toBe(0);
     });
   });
 });

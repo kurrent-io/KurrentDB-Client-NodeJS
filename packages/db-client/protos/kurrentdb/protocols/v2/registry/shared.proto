@@ -4,19 +4,13 @@ package kurrentdb.protocol.registry.v2;
 
 option csharp_namespace = "KurrentDB.Protocol.V2.Registry";
 
-message ErrorDetails {
-  string code    = 1;  // Standardized string to programmatically identify the error.
-  string message = 2;  // Detailed error description and debugging information.
-}
-
-// Represents the format of the schema data.
 enum SchemaDataFormat {
   // Default value, should not be used.
   SCHEMA_DATA_FORMAT_UNSPECIFIED = 0;
-  SCHEMA_DATA_FORMAT_JSON        = 1;  // application/json
-  SCHEMA_DATA_FORMAT_PROTOBUF    = 2;  // application/vnd.google.protobuf
-  SCHEMA_DATA_FORMAT_AVRO        = 3;  // application/vnd.apache.avro+json
-  SCHEMA_DATA_FORMAT_BYTES       = 4;  // application/octet-stream
+  SCHEMA_DATA_FORMAT_JSON        = 1; // application/json
+  SCHEMA_DATA_FORMAT_PROTOBUF    = 2; // application/vnd.google.protobuf
+  SCHEMA_DATA_FORMAT_AVRO        = 3; // application/vnd.apache.avro+json
+  SCHEMA_DATA_FORMAT_BYTES       = 4; // application/octet-stream
 }
 
 // Schema compatibility modes define how schema changes are validated against previous versions.

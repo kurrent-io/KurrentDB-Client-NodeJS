@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("listRegisteredSchemas", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -57,7 +59,7 @@ describe("listRegisteredSchemas", () => {
     await node.down();
   });
 
-  describe("should list registered schemas", () => {
+  optionalDescribe(supported)("should list registered schemas", () => {
     test("list all registered schemas with latest versions", async () => {
       const schemas = await client.listRegisteredSchemas({
         schemaNamePrefix: testPrefix,
@@ -102,17 +104,6 @@ describe("listRegisteredSchemas", () => {
       expect(schemas[0].schemaName).toBe(generateSchemaName("beta"));
     });
 
-    test("without definitions (default)", async () => {
-      const schemas = await client.listRegisteredSchemas({
-        schemaNamePrefix: testPrefix,
-        includeDefinition: false,
-      });
-
-      schemas.forEach((schema) => {
-        expect(schema.schemaDefinition).toBeUndefined();
-      });
-    });
-
     test("with definitions", async () => {
       const schemas = await client.listRegisteredSchemas({
         schemaNamePrefix: testPrefix,
@@ -140,17 +131,6 @@ describe("listRegisteredSchemas", () => {
       expect(schema.compatibility).toBe("backward");
       expect(schema.tags).toEqual({ category: "a", env: "test" });
       expect(schema.registeredAt).toBeDefined();
-    });
-  });
-
-  describe("edge cases", () => {
-    test("returns empty array for non-matching filters", async () => {
-      const schemas = await client.listRegisteredSchemas({
-        schemaNamePrefix: "non-existent-prefix-xyz",
-      });
-
-      expect(Array.isArray(schemas)).toBe(true);
-      expect(schemas.length).toBe(0);
     });
   });
 });

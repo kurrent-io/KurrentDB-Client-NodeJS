@@ -8,8 +8,8 @@ import "kurrentdb/protocols/v2/registry/shared.proto";
 
 // Represents a schema compatibility error.
 message SchemaCompatibilityError {
-  SchemaCompatibilityErrorKind kind    = 1;  // The type of compatibility error.
-  string                       details = 2;  // The error message
+  SchemaCompatibilityErrorKind kind    = 1; // The type of compatibility error.
+  string                       details = 2; // The error message
 
   optional string property_path = 3;  // The path to the property where the compatibility error occurred.
   optional string original_type = 4;  // The type of property in the registered schema (e.g. array, bool, number, object)
@@ -57,14 +57,14 @@ message CheckSchemaCompatibilityResponse {
 
 // Enum representing different kinds of compatibility errors.
 enum SchemaCompatibilityErrorKind {
-  SCHEMA_COMPATIBILITY_ERROR_KIND_UNSPECIFIED                    = 0;  // Default value, do not use.
-  SCHEMA_COMPATIBILITY_ERROR_KIND_MISSING_REQUIRED_PROPERTY      = 1;  // Backward compatibility: Required property from old schema missing in new schema
-  SCHEMA_COMPATIBILITY_ERROR_KIND_INCOMPATIBLE_TYPE_CHANGE       = 2;  // Backward compatibility: Property type changed incompatibly
-  SCHEMA_COMPATIBILITY_ERROR_KIND_OPTIONAL_TO_REQUIRED           = 3;  // Backward compatibility: Property changed from optional to required
-  SCHEMA_COMPATIBILITY_ERROR_KIND_NEW_REQUIRED_PROPERTY          = 4;  // Forward compatibility: New required property added
-  SCHEMA_COMPATIBILITY_ERROR_KIND_REMOVED_PROPERTY               = 5;  // Forward compatibility: Property removed from schema
-  SCHEMA_COMPATIBILITY_ERROR_KIND_ARRAY_TYPE_INCOMPATIBILITY     = 6;  // Issues with array item types
-  SCHEMA_COMPATIBILITY_ERROR_KIND_DATA_FORMAT_MISMATCH           = 7;  // Data format mismatch between schemas
+  SCHEMA_COMPATIBILITY_ERROR_KIND_UNSPECIFIED                    = 0; // Default value, do not use.
+  SCHEMA_COMPATIBILITY_ERROR_KIND_MISSING_REQUIRED_PROPERTY      = 1; // Backward compatibility: Required property from old schema missing in new schema
+  SCHEMA_COMPATIBILITY_ERROR_KIND_INCOMPATIBLE_TYPE_CHANGE       = 2; // Backward compatibility: Property type changed incompatibly
+  SCHEMA_COMPATIBILITY_ERROR_KIND_OPTIONAL_TO_REQUIRED           = 3; // Backward compatibility: Property changed from optional to required
+  SCHEMA_COMPATIBILITY_ERROR_KIND_NEW_REQUIRED_PROPERTY          = 4; // Forward compatibility: New required property added
+  SCHEMA_COMPATIBILITY_ERROR_KIND_REMOVED_PROPERTY               = 5; // Forward compatibility: Property removed from schema
+  SCHEMA_COMPATIBILITY_ERROR_KIND_ARRAY_TYPE_INCOMPATIBILITY     = 6; // Issues with array item types
+  SCHEMA_COMPATIBILITY_ERROR_KIND_DATA_FORMAT_MISMATCH           = 7; // Data format mismatch between schemas
 }
 
 // Represents the information necessary to check schema compatibility or validate a schema.

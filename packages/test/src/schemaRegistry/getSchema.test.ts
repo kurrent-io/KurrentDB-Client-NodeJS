@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("getSchema", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("getSchema", () => {
     await node.down();
   });
 
-  describe("should retrieve schema metadata", () => {
+  optionalDescribe(supported)("should retrieve schema metadata", () => {
     test("get schema with all properties", async () => {
       const schemaName = generateSchemaName();
 
@@ -34,6 +36,9 @@ describe("getSchema", () => {
         },
         { schemaDefinition: JSON.stringify({ type: "object" }) }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       const schema = await client.getSchema(schemaName);
 
@@ -57,6 +62,9 @@ describe("getSchema", () => {
         { schemaDefinition: JSON.stringify({ type: "object" }) }
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       const schema = await client.getSchema(schemaName);
 
       expect(schema.createdAt).toBeDefined();
@@ -77,6 +85,9 @@ describe("getSchema", () => {
         { schemaDefinition: definition }
       );
 
+      // Ensure any eventual consistency
+      await delay(100);
+
       let schema = await client.getSchema(schemaName);
       expect(schema.latestSchemaVersion).toBe(1);
 
@@ -85,6 +96,9 @@ describe("getSchema", () => {
         schemaName,
         JSON.stringify({ type: "object", properties: {} })
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       schema = await client.getSchema(schemaName);
       expect(schema.latestSchemaVersion).toBe(2);

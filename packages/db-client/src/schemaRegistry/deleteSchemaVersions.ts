@@ -3,12 +3,12 @@ import { DeleteSchemaVersionsRequest } from "../../generated/kurrentdb/protocols
 
 import { Client } from "../Client";
 import { debug, convertToCommandError } from "../utils";
+import { mapGrpcSchemaVersionError } from "./utils/mappers";
 
 import type {
   DeleteSchemaVersionsOptions,
   DeleteSchemaVersionsResult,
 } from "./types";
-import { mapGrpcSchemaVersionError } from "./utils/mappers";
 
 declare module "../Client" {
   interface Client {

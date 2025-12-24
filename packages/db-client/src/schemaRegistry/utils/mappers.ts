@@ -221,15 +221,8 @@ export function mapGrpcRegisteredSchema(
 export function mapGrpcSchemaVersionError(
   error: DeleteSchemaVersionsResponse.SchemaVersionError
 ): SchemaVersionError {
-  const errorDetails = error.getError();
   return {
     versionNumber: error.getVersionNumber(),
-    error: errorDetails
-      ? {
-          code: errorDetails.getCode(),
-          message: errorDetails.getMessage(),
-        }
-      : undefined,
   };
 }
 

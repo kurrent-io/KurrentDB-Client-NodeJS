@@ -37,13 +37,17 @@ message UpdateSchemaRequest {
   google.protobuf.FieldMask update_mask = 3;
 }
 
-message UpdateSchemaResponse {}
+message UpdateSchemaResponse {
+  string schema_name = 1;
+}
 
 message DeleteSchemaRequest {
   string schema_name = 1;
 }
 
-message DeleteSchemaResponse {}
+message DeleteSchemaResponse {
+  string schema_name = 1;
+}
 
 message Schema {
   string                    schema_name           = 1;
@@ -107,11 +111,14 @@ message DeleteSchemaVersionsRequest {
 }
 
 message DeleteSchemaVersionsResponse {
-  repeated SchemaVersionError errors = 1;
+  // The name of the schema whose versions were deleted.
+  string schema_name = 1;
+
+  repeated SchemaVersionError errors = 2;
 
   message SchemaVersionError {
     int32        version_number = 1;
-    ErrorDetails error          = 2;
+    // ErrorDetails error          = 2;
   }
 }
 
@@ -163,7 +170,8 @@ message RegisteredSchema {
 
 // This message is used to request a list of registered schemas.
 message ListRegisteredSchemasRequest {
-  // The unique identifier of the schema version. If specified, only the schema with the specified version ID is returned.
+  // The unique identifier of the schema version. If specified, only the schema with the specified version ID is
+  // returned.
   optional string schema_version_id = 1;
   // The prefix of the schema name. If specified, only schemas with the specified prefix are returned.
   optional string schema_name_prefix = 2;

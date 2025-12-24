@@ -1,15 +1,32 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("updateSchema", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
   const generateSchemaName = () =>
     `test-schema-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+  const waitForUpdate = async (
+    schemaName: string,
+    check: (schema: Awaited<ReturnType<typeof client.getSchema>>) => boolean,
+    maxAttempts = 10
+  ) => {
+    for (let i = 0; i < maxAttempts; i++) {
+      const schema = await client.getSchema(schemaName);
+      if (check(schema)) {
+        return schema;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    throw new Error(`Schema ${schemaName} update did not propagate after ${maxAttempts} attempts`);
+  };
 
   beforeAll(async () => {
     await node.up();
@@ -20,7 +37,7 @@ describe("updateSchema", () => {
     await node.down();
   });
 
-  describe("should update schema metadata", () => {
+  optionalDescribe(supported)("should update schema metadata", () => {
     test("update description", async () => {
       const schemaName = generateSchemaName();
 
@@ -38,12 +55,17 @@ describe("updateSchema", () => {
       // Update description
       await expect(
         client.updateSchema(schemaName, {
-          description: "Updated description",
+          dataFormat: "json",
+          compatibility: "none",
+          description: "Updated description"
         })
       ).resolves.toBeUndefined();
 
       // Verify update
-      const schema = await client.getSchema(schemaName);
+      const schema = await waitForUpdate(
+        schemaName,
+        (s) => s.details.description === "Updated description"
+      );
       expect(schema.details.description).toBe("Updated description");
     });
 
@@ -64,12 +86,17 @@ describe("updateSchema", () => {
       // Update tags
       await expect(
         client.updateSchema(schemaName, {
-          tags: { updated: "tag", another: "value" },
+          dataFormat: "json",
+          compatibility: "none",
+          tags: { updated: "tag", another: "value" }
         })
       ).resolves.toBeUndefined();
 
       // Verify update
-      const schema = await client.getSchema(schemaName);
+      const schema = await waitForUpdate(
+        schemaName,
+        (s) => s.details.tags?.updated === "tag" && s.details.tags?.another === "value"
+      );
       expect(schema.details.tags).toEqual({
         updated: "tag",
         another: "value",
@@ -92,13 +119,18 @@ describe("updateSchema", () => {
       // Update both
       await expect(
         client.updateSchema(schemaName, {
+          dataFormat: "json",
+          compatibility: "none",
           description: "New description",
-          tags: { key: "value" },
+          tags: { key: "value" }
         })
       ).resolves.toBeUndefined();
 
       // Verify update
-      const schema = await client.getSchema(schemaName);
+      const schema = await waitForUpdate(
+        schemaName,
+        (s) => s.details.description === "New description" && s.details.tags?.key === "value"
+      );
       expect(schema.details.description).toBe("New description");
       expect(schema.details.tags).toEqual({ key: "value" });
     });
@@ -110,7 +142,9 @@ describe("updateSchema", () => {
 
       await expect(
         client.updateSchema(nonExistentName, {
-          description: "Should fail",
+          dataFormat: "json",
+          compatibility: "none",
+          description: "Should fail"
         })
       ).rejects.toThrow();
     });

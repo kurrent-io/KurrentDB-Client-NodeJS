@@ -1,10 +1,12 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { createTestNode } from "@test-utils";
+import { createTestNode, delay, matchServerVersion, optionalDescribe } from "@test-utils";
 
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 
 describe("getSchemaVersionById", () => {
+  const supported = matchServerVersion`>=25.1`;
+
   const node = createTestNode();
   let client!: KurrentDBClient;
 
@@ -20,7 +22,7 @@ describe("getSchemaVersionById", () => {
     await node.down();
   });
 
-  describe("should retrieve version by ID", () => {
+  optionalDescribe(supported)("should retrieve version by ID", () => {
     test("get version by unique ID", async () => {
       const schemaName = generateSchemaName();
       const definition = JSON.stringify({ type: "object" });
@@ -36,6 +38,9 @@ describe("getSchemaVersionById", () => {
       );
 
       const versionId = createResult.schemaVersionId!;
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Retrieve by ID
       const version = await client.getSchemaVersionById(versionId);
@@ -58,6 +63,9 @@ describe("getSchemaVersionById", () => {
         },
         { schemaDefinition: definition }
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       const version = await client.getSchemaVersionById(
         createResult.schemaVersionId!
@@ -86,6 +94,9 @@ describe("getSchemaVersionById", () => {
         schemaName,
         JSON.stringify({ version: 2 })
       );
+
+      // Ensure any eventual consistency
+      await delay(100);
 
       // Retrieve both versions by ID
       const v1 = await client.getSchemaVersionById(result1.schemaVersionId!);
