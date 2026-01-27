@@ -37,17 +37,13 @@ message UpdateSchemaRequest {
   google.protobuf.FieldMask update_mask = 3;
 }
 
-message UpdateSchemaResponse {
-  string schema_name = 1;
-}
+message UpdateSchemaResponse {}
 
 message DeleteSchemaRequest {
   string schema_name = 1;
 }
 
-message DeleteSchemaResponse {
-  string schema_name = 1;
-}
+message DeleteSchemaResponse {}
 
 message Schema {
   string                    schema_name           = 1;
@@ -111,10 +107,7 @@ message DeleteSchemaVersionsRequest {
 }
 
 message DeleteSchemaVersionsResponse {
-  // The name of the schema whose versions were deleted.
-  string schema_name = 1;
-
-  repeated SchemaVersionError errors = 2;
+  repeated SchemaVersionError errors = 1;
 
   message SchemaVersionError {
     int32        version_number = 1;

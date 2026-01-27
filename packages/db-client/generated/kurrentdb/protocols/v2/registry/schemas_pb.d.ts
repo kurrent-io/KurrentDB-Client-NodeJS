@@ -134,8 +134,6 @@ export namespace UpdateSchemaRequest {
 }
 
 export class UpdateSchemaResponse extends jspb.Message { 
-    getSchemaName(): string;
-    setSchemaName(value: string): UpdateSchemaResponse;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpdateSchemaResponse.AsObject;
@@ -149,7 +147,6 @@ export class UpdateSchemaResponse extends jspb.Message {
 
 export namespace UpdateSchemaResponse {
     export type AsObject = {
-        schemaName: string,
     }
 }
 
@@ -174,8 +171,6 @@ export namespace DeleteSchemaRequest {
 }
 
 export class DeleteSchemaResponse extends jspb.Message { 
-    getSchemaName(): string;
-    setSchemaName(value: string): DeleteSchemaResponse;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DeleteSchemaResponse.AsObject;
@@ -189,7 +184,6 @@ export class DeleteSchemaResponse extends jspb.Message {
 
 export namespace DeleteSchemaResponse {
     export type AsObject = {
-        schemaName: string,
     }
 }
 
@@ -441,8 +435,6 @@ export namespace DeleteSchemaVersionsRequest {
 }
 
 export class DeleteSchemaVersionsResponse extends jspb.Message { 
-    getSchemaName(): string;
-    setSchemaName(value: string): DeleteSchemaVersionsResponse;
     clearErrorsList(): void;
     getErrorsList(): Array<DeleteSchemaVersionsResponse.SchemaVersionError>;
     setErrorsList(value: Array<DeleteSchemaVersionsResponse.SchemaVersionError>): DeleteSchemaVersionsResponse;
@@ -460,7 +452,6 @@ export class DeleteSchemaVersionsResponse extends jspb.Message {
 
 export namespace DeleteSchemaVersionsResponse {
     export type AsObject = {
-        schemaName: string,
         errorsList: Array<DeleteSchemaVersionsResponse.SchemaVersionError.AsObject>,
     }
 
