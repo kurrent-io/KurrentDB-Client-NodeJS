@@ -39,26 +39,26 @@ jobs:
       fail-fast: false
       matrix:
         group:
-          # - name: samples
-          #   path: ./src/samples
+          - name: samples
+            path: ./src/samples
 
-          # - name: connection
-          #   path: ./src/connection
+          - name: connection
+            path: ./src/connection
 
-          # - name: extra
-          #   path: ./src/extra
+          - name: extra
+            path: ./src/extra
 
-          # - name: persistentSubscription
-          #   path: ./src/persistentSubscription
+          - name: persistentSubscription
+            path: ./src/persistentSubscription
 
-          # - name: projections
-          #   path: ./src/projections
+          - name: projections
+            path: ./src/projections
 
-          # - name: streams
-          #   path: ./src/streams
+          - name: streams
+            path: ./src/streams
 
-          # - name: opentelemetry
-          #   path: ./src/opentelemetry
+          - name: opentelemetry
+            path: ./src/opentelemetry
 
           - name: schemaRegistry
             path: ./src/schemaRegistry
