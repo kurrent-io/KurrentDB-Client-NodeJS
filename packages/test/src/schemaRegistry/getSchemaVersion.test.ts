@@ -143,7 +143,7 @@ describe("getSchemaVersion", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when getting non-existent version", async () => {
       const schemaName = generateSchemaName();
 

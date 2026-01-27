@@ -147,7 +147,7 @@ describe("checkSchemaCompatibility", () => {
     });
   });
 
-  describe("check by schema version ID", () => {
+  optionalDescribe(supported)("check by schema version ID", () => {
     test("check against specific version by ID", async () => {
       const schemaName = generateSchemaName();
 
@@ -199,7 +199,7 @@ describe("checkSchemaCompatibility", () => {
     });
   });
 
-  describe("error details", () => {
+  optionalDescribe(supported)("error details", () => {
     test("errors include descriptive messages", async () => {
       const schemaName = generateSchemaName();
 
@@ -245,7 +245,7 @@ describe("checkSchemaCompatibility", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when checking non-existent schema", async () => {
       const nonExistentName = `non-existent-${Date.now()}`;
 

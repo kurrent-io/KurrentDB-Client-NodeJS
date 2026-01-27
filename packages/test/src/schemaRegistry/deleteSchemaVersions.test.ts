@@ -106,7 +106,7 @@ describe("deleteSchemaVersions", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error handling for non-existent versions", async () => {
       const schemaName = generateSchemaName();
 

@@ -146,7 +146,7 @@ describe("updateSchema", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when updating non-existent schema", async () => {
       const nonExistentName = `non-existent-${Date.now()}`;
 

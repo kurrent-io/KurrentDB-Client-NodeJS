@@ -81,7 +81,7 @@ describe("lookupSchemaName", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when looking up non-existent version ID", async () => {
       const fakeVersionId = "00000000-0000-0000-0000-000000000000";
 

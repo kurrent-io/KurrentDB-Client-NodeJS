@@ -33,6 +33,7 @@ describe("deleteSchema", () => {
 
   beforeAll(async () => {
     await node.up();
+    client = KurrentDBClient.connectionString(node.connectionString());
   });
 
   afterAll(async () => {
@@ -93,7 +94,7 @@ describe("deleteSchema", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when deleting non-existent schema", async () => {
       const nonExistentName = `non-existent-${Date.now()}`;
 

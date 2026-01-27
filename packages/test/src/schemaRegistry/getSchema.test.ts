@@ -110,7 +110,7 @@ describe("getSchema", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when getting non-existent schema", async () => {
       const nonExistentName = `non-existent-${Date.now()}`;
 

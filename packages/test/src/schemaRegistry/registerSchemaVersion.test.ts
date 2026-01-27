@@ -106,7 +106,7 @@ describe("registerSchemaVersion", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when registering to non-existent schema", async () => {
       const nonExistentName = `non-existent-${Date.now()}`;
 

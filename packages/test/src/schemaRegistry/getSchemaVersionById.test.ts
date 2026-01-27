@@ -113,7 +113,7 @@ describe("getSchemaVersionById", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("error when getting non-existent ID", async () => {
       const fakeVersionId = "00000000-0000-0000-0000-000000000000";
 

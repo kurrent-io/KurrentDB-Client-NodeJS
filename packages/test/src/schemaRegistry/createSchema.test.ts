@@ -110,7 +110,7 @@ describe("createSchema", () => {
     });
   });
 
-  describe("should handle errors", () => {
+  optionalDescribe(supported)("should handle errors", () => {
     test("duplicate schema name", async () => {
       const schemaName = generateSchemaName();
 
