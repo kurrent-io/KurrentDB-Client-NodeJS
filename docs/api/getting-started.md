@@ -4,7 +4,7 @@ order: 1
 
 # Getting started
 
-This guide will help you get started with KurrentDB in your Java application.
+This guide will help you get started with KurrentDB in your Node.js application.
 It covers the basic steps to connect to KurrentDB, create events, append them
 to streams, and read them back.
 
