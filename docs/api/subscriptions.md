@@ -45,7 +45,7 @@ When you subscribe to a stream with link events (e.g., `$ce` category stream), s
 
 ## Subscribing from a Position
 
-Both stream and `$all` subscriptions accept a starting position if you want to read from a specific point onward. If events already exist at the position you subscribe to, they will be read on the server side and sent to the subscription.
+Both stream and `$all` subscriptions accept a starting position if you want to read from a specific point onward. If events already exist after the position you subscribe to, they will be read on the server side and sent to the subscription.
 
 Once caught up, the server will push any new events received on the streams to the client. There is no difference between catching up and live on the client side.
 
