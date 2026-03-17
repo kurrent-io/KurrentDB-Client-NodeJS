@@ -568,6 +568,73 @@ export type MultiAppendResult = {
   responses: AppendResponse[];
 };
 
+/**
+ * Represents a record to be appended in an {@link Client.appendRecords} operation.
+ * Each record specifies its own target stream, allowing interleaved writes across multiple streams.
+ */
+export interface AppendRecordInput<
+  KnownEventType extends EventType = EventType
+> {
+  /**
+   * The name of the target stream for this record.
+   */
+  streamName: string;
+  /**
+   * The record data to append.
+   */
+  record: EventData<KnownEventType>;
+}
+
+/**
+ * Represents a consistency check to be evaluated before committing an {@link Client.appendRecords} operation.
+ * Checks are decoupled from writes: a check can reference any stream, whether or not the request writes to it.
+ */
+export type ConsistencyCheck = StreamStateCheck;
+
+/**
+ * A check that asserts a stream is at a specific revision or lifecycle state before commit.
+ */
+export interface StreamStateCheck {
+  type: typeof constants.STREAM_STATE;
+  /**
+   * The stream name to check.
+   */
+  streamName: string;
+  /**
+   * The expected state of the stream (revision number or state constant).
+   */
+  expectedState: AppendStreamState;
+}
+
+/**
+ * Details of a single consistency check violation.
+ */
+export interface ConsistencyViolation {
+  /**
+   * Index of the check in the original checks list.
+   */
+  checkIndex: number;
+  /**
+   * The stream whose state was checked.
+   */
+  streamName: string;
+  /**
+   * The expected state of the stream.
+   */
+  expectedState: AppendStreamState;
+  /**
+   * The actual state of the stream at the time the check was evaluated.
+   * Specific revision (bigint >= 0), or "no_stream" if the stream doesn't exist.
+   * Deleted streams return -5n and tombstoned streams return -6n.
+   */
+  actualState: CurrentStreamState;
+}
+
+/**
+ * Result of a successful {@link Client.appendRecords} operation.
+ */
+export type AppendRecordsResult = MultiAppendResult;
+
 // Other listeners that are only supported in catch-up subscriptions
 export interface CatchupSubscription {
   addListener(event: "caughtUp", listener: (info: CaughtUp) => void): this;

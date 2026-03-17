@@ -20,6 +20,7 @@ import {
 } from "@opentelemetry/instrumentation";
 import type * as kurrentdb from "@kurrent/kurrentdb-client";
 import type {
+  AppendRecordsResult,
   AppendResult,
   BinaryEventType,
   EventData,
@@ -39,6 +40,7 @@ import type { PersistentSubscriptionImpl } from "@kurrent/kurrentdb-client/src/p
 import type { Subscription } from "@kurrent/kurrentdb-client/src/streams/utils/Subscription";
 import { INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION } from "./version";
 import type {
+  AppendRecordsParams,
   AppendToStreamParams,
   MultiStreamAppendParams,
   PersistentSubscribeParameters,
@@ -74,6 +76,11 @@ export class Instrumentation extends InstrumentationBase {
         moduleExports.KurrentDBClient.prototype,
         "multiStreamAppend",
         this._patchMultiStreamAppend()
+      );
+      this.wrap(
+        moduleExports.KurrentDBClient.prototype,
+        "appendRecords",
+        this._patchAppendRecords()
       );
       this.wrap(
         moduleExports.KurrentDBClient.prototype,
@@ -118,6 +125,7 @@ export class Instrumentation extends InstrumentationBase {
         moduleExports.KurrentDBClient.prototype,
         "multiStreamAppend"
       );
+      this._unwrap(moduleExports.KurrentDBClient.prototype, "appendRecords");
       this._unwrap(
         moduleExports.KurrentDBClient.prototype,
         "subscribeToStream"
@@ -259,6 +267,66 @@ export class Instrumentation extends InstrumentationBase {
 
         try {
           return await original.apply(this, [requests]);
+        } catch (error) {
+          Instrumentation.handleError(error, span);
+          throw error;
+        } finally {
+          span.end();
+        }
+      };
+    };
+  }
+
+  private _patchAppendRecords(): (
+    original: Function,
+    operation: keyof kurrentdb.KurrentDBClient
+  ) => (...args: AppendRecordsParams) => Promise<AppendRecordsResult> {
+    const instrumentation = this;
+    const tracer = instrumentation.tracer;
+
+    return function appendRecords(
+      original: Function,
+      operation: keyof kurrentdb.KurrentDBClient
+    ) {
+      return async function (
+        this: kurrentdb.KurrentDBClient,
+        ...args: AppendRecordsParams
+      ): Promise<AppendRecordsResult> {
+        const [records] = [...args];
+
+        const uri = await this.resolveUri();
+        const { hostname, port } = Instrumentation.getServerAddress(uri);
+
+        const requestStartTime: TimeInput = Date.now();
+
+        const span = tracer.startSpan(KurrentAttributes.STREAM_MULTI_APPEND, {
+          kind: SpanKind.CLIENT,
+          startTime: requestStartTime,
+          attributes: {
+            [KurrentAttributes.SERVER_ADDRESS]: hostname,
+            [KurrentAttributes.SERVER_PORT]: port,
+            [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
+            [KurrentAttributes.DATABASE_OPERATION]: operation,
+          },
+        });
+
+        const traceId = span.spanContext().traceId;
+        const spanId = span.spanContext().spanId;
+
+        records.forEach((record) => {
+          const metadata = (record.record.metadata =
+            record.record.metadata || {});
+          if (isJSONEventData(record.record) && typeof metadata === "object") {
+            record.record.metadata = {
+              ...metadata,
+              [TRACE_ID]: traceId,
+              [SPAN_ID]: spanId,
+            };
+          }
+        });
+
+        try {
+          return await original.apply(this, [records, args[1]]);
         } catch (error) {
           Instrumentation.handleError(error, span);
           throw error;

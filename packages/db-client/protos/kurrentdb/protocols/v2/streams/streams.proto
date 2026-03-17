@@ -31,6 +31,28 @@ service StreamsService {
   //   4. Client completes the stream
   //   5. Server validates, commits, returns AppendSessionResponse with positions
   rpc AppendSession(stream AppendRequest) returns (AppendSessionResponse);
+
+  // Appends records to multiple streams atomically with cross-stream consistency checks.
+  //
+  // This is a unary RPC where the client sends all records and consistency checks
+  // in a single request and receives a single AppendRecordsResponse.
+  //
+  // Records can be interleaved across streams in any order and the global log preserves
+  // the exact sequence from the request.
+  //
+  // Consistency checks are decoupled from writes: a check can reference any stream,
+  // whether or not the request writes to it. This enables Dynamic Consistency Boundary
+  // (DCB) patterns where a decision depends on multiple streams but only produces
+  // events for a subset.
+  //
+  // Guarantees:
+  // - Atomicity: All writes succeed or all fail together
+  // - Ordering: Records maintain the exact send order in the global log
+  // - Cross-stream checks: Consistency checks can reference any stream
+  //
+  // On consistency check failure, no records are written and all failing checks
+  // are reported in the response so the client can refresh stale state in one round trip.
+  rpc AppendRecords(AppendRecordsRequest) returns (AppendRecordsResponse);
 }
 
 // Represents the input for appending records to a specific stream.
@@ -132,6 +154,11 @@ message AppendRecord {
   // The record payload as raw bytes.
   // The format specified in SchemaInfo determines how to interpret these bytes.
   bytes data = 4;
+
+  // Target stream for this record.
+  // Required for AppendRecords (each record specifies its own stream).
+  // Ignored for AppendSession (the stream is specified in AppendRequest).
+  string stream = 5;
 }
 
 // Constants for expected revision validation in optimistic concurrency control.
@@ -152,4 +179,62 @@ enum ExpectedRevisionConstants {
   // The stream must exist (have at least one record).
   // Fails if the stream doesn't exist yet.
   EXPECTED_REVISION_CONSTANTS_EXISTS = -4;
+}
+
+// Request to append records to one or more streams atomically.
+//
+// All records are committed in a single transaction. Each record specifies its
+// target stream via AppendRecord.stream. Consistency checks are evaluated before
+// any records are written.
+message AppendRecordsRequest {
+  // The records to append. Records targeting the same stream maintain their
+  // order from this list.
+  repeated AppendRecord records = 1;
+
+  // Optional consistency checks evaluated before commit. If any check fails,
+  // the entire transaction is aborted.
+  repeated ConsistencyCheck checks = 2;
+}
+
+// Response from a successful AppendRecords operation.
+//
+// Contains the resulting revision for each stream that was written to and the
+// global commit position of the transaction.
+message AppendRecordsResponse {
+  // The resulting revision for each stream that received records. One entry per
+  // distinct stream written to, in no guaranteed order.
+  repeated StreamRevision revisions = 1;
+
+  // The global commit position of the last record written in this transaction.
+  // Can be used for read-your-writes consistency or progress tracking.
+  sint64 position = 2 [jstype = JS_STRING];
+}
+
+// A pre-commit condition that must hold true for the transaction to succeed.
+//
+// Consistency checks are evaluated atomically before any records are written. If
+// any check is violated, the entire transaction is aborted.
+message ConsistencyCheck {
+  oneof type {
+    // Check that a stream is at a specific revision or lifecycle state.
+    StreamStateCheck stream_state = 1;
+  }
+
+  // Asserts a stream is at a specific revision or lifecycle state before commit.
+  message StreamStateCheck {
+    // The stream name.
+    string stream = 1;
+
+    // The expected state of the stream (revision number or state constant).
+    sint64 expected_state = 2 [jstype = JS_STRING];
+  }
+}
+
+// A specific revision of a stream.
+message StreamRevision {
+  // Stream name.
+  string stream = 1;
+
+  // Revision within the stream.
+  sint64 revision = 2 [jstype = JS_STRING];
 }
