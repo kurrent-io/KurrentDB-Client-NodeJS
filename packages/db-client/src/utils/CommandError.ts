@@ -714,6 +714,13 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
     return new UnavailableError(error);
   }
 
+  // grpc-js reports transport-level connection failures on streaming RPCs as
+  // StatusCode.Unknown instead of StatusCode.Unavailable. This prevents the
+  // client from tearing down the dead channel and triggering rediscovery.
+  if (error.details.includes("client error (Connect)")) {
+    return new UnavailableError(error);
+  }
+
   return new UnknownError(error);
 };
 
