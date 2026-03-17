@@ -94,9 +94,7 @@ describe.skip("reconnect", () => {
       })) {
         count++;
       }
-    }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"UnknownError("Server-side error: status: Unknown, message: \\"client error (Connect)\\", details: [], metadata: MetadataMap { headers: {} }")"`
-    );
+    }).rejects.toThrowError(UnavailableError);
     // create subsctiption
     await expect(
       client.createPersistentSubscriptionToStream(
@@ -127,6 +125,7 @@ describe.skip("reconnect", () => {
       '"Failed to discover after 10 attempts."'
     );
     // read the stream
+    // Channel is torn down by now, so readStream goes through discovery which fails.
     await expect(async () => {
       let count = 0;
       for await (const e of client.readStream(STREAM_NAME, {
@@ -135,7 +134,7 @@ describe.skip("reconnect", () => {
         count++;
       }
     }).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"UnknownError("Server-side error: status: Unknown, message: \\"client error (Connect)\\", details: [], metadata: MetadataMap { headers: {} }")"`
+      '"Failed to discover after 10 attempts."'
     );
     // create subsctiption
     await expect(
