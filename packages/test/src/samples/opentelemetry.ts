@@ -32,7 +32,11 @@ import * as kurrentdb from "@kurrent/kurrentdb-client";
 import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
 import { v4 } from "uuid";
 import { multiStreamAppend } from "@kurrent/kurrentdb-client/src/streams/appendToStream/multiStreamAppend";
-import { WrongExpectedVersionError } from "@kurrent/kurrentdb-client";
+import { appendRecords } from "@kurrent/kurrentdb-client/src/streams/appendToStream/appendRecords";
+import {
+  WrongExpectedVersionError,
+  AppendConsistencyViolationError,
+} from "@kurrent/kurrentdb-client";
 
 const memoryExporter = new InMemorySpanExporter();
 const otlpExporter = new OTLPTraceExporter({ url: "http://localhost:4317" }); // change this to your OTLP receiver address
@@ -253,6 +257,161 @@ describe("[sample] opentelemetry", () => {
               [ATTR_EXCEPTION_STACKTRACE]: error.stack,
             },
           })
+        );
+      }
+    });
+  });
+
+  optionalDescribe(matchServerVersion`>=26.0`)("append records", () => {
+    test("append then subscribe", async () => {
+      // Arrange
+      const defer = new Defer();
+
+      const { KurrentDBClient, jsonEvent } = await import(
+        "@kurrent/kurrentdb-client"
+      );
+
+      const handleError = jest.fn((error) => {
+        defer.reject(error);
+      });
+      const handleClose = jest.fn();
+      const handleEvent = jest.fn((event: kurrentdb.ResolvedEvent) => {
+        expect(event).toBeDefined();
+      });
+      const handleCaughtUp = jest.fn(async () => {
+        try {
+          expect(handleEvent).toHaveBeenCalledTimes(3);
+          await subscription.unsubscribe();
+        } catch (error) {
+          defer.reject(error);
+        }
+      });
+      const handleEnd = jest.fn(defer.resolve);
+      const handleConfirmation = jest.fn();
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const prefix = `rec-${v4().slice(0, 8)}`;
+      const streamA = `${prefix}-${v4()}`;
+      const streamB = `${prefix}-${v4()}`;
+
+      const records: kurrentdb.AppendRecordInput[] = [
+        {
+          streamName: streamA,
+          record: jsonEvent({
+            type: "OrderPlaced",
+            data: { id: v4() },
+          }),
+        },
+        {
+          streamName: streamA,
+          record: jsonEvent({
+            type: "PaymentProcessed",
+            data: { id: v4() },
+          }),
+        },
+        {
+          streamName: streamB,
+          record: jsonEvent({
+            type: "OrderPlaced",
+            data: { customerId: "cust-456" },
+          }),
+        },
+      ];
+
+      // Act
+      const appendResponse = await client.appendRecords(records);
+
+      expect(appendResponse.position).toBeGreaterThan(BigInt(0));
+      expect(appendResponse.responses).toHaveLength(2);
+
+      const subscription = client
+        .subscribeToAll({
+          filter: kurrentdb.streamNameFilter({
+            prefixes: [prefix],
+          }),
+        })
+        .on("error", handleError)
+        .on("data", handleEvent)
+        .on("close", handleClose)
+        .on("confirmation", handleConfirmation)
+        .on("caughtUp", handleCaughtUp)
+        .on("end", handleEnd);
+
+      await defer.promise;
+
+      // Assert
+      expect(handleError).not.toHaveBeenCalled();
+      expect(handleConfirmation).toHaveBeenCalledTimes(1);
+      expect(handleEvent).toHaveBeenCalledTimes(3);
+      expect(handleCaughtUp).toHaveBeenCalled();
+
+      const appendSpans = getSpans(KurrentAttributes.STREAM_MULTI_APPEND);
+      const subscribeSpans = getSpans(KurrentAttributes.STREAM_SUBSCRIBE);
+
+      expect(appendSpans).toHaveLength(1);
+      expect(subscribeSpans).toHaveLength(3);
+
+      expect(subscribeSpans[0].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
+      );
+      expect(subscribeSpans[1].parentSpanId).toBe(
+        appendSpans[0].spanContext().spanId
+      );
+
+      expect(appendSpans[0].attributes).toMatchObject({
+        [KurrentAttributes.SERVER_ADDRESS]: node.endpoints[0].address,
+        [KurrentAttributes.SERVER_PORT]: node.endpoints[0].port.toString(),
+        [KurrentAttributes.DATABASE_SYSTEM]: moduleName,
+        [KurrentAttributes.DATABASE_OPERATION]: appendRecords.name,
+      });
+    });
+
+    test("append with failures", async () => {
+      // Arrange
+      const { KurrentDBClient, jsonEvent, NO_STREAM, STREAM_EXISTS } =
+        await import("@kurrent/kurrentdb-client");
+
+      const client = KurrentDBClient.connectionString(node.connectionString());
+
+      const streamName = `order-${v4()}`;
+
+      const records: kurrentdb.AppendRecordInput[] = [
+        {
+          streamName,
+          record: jsonEvent({
+            type: "OrderPlaced",
+            data: { id: v4() },
+          }),
+        },
+      ];
+
+      const checks: kurrentdb.ConsistencyCheck[] = [
+        {
+          type: kurrentdb.STREAM_STATE,
+          streamName,
+          expectedState: STREAM_EXISTS,
+        },
+      ];
+
+      try {
+        await client.appendRecords(records, checks);
+      } catch (error) {
+        const spans = memoryExporter.getFinishedSpans();
+        expect(spans.length).toBe(1);
+
+        const failedSpan = spans[0];
+
+        const failedEvents = failedSpan.events;
+
+        expect(failedEvents.length).toBe(1);
+
+        const failedEvent = failedEvents[0];
+
+        expect(error).toBeInstanceOf(AppendConsistencyViolationError);
+        expect(failedEvent.name).toBe("exception");
+        expect(failedEvent.attributes![ATTR_EXCEPTION_STACKTRACE]).toBe(
+          error.stack
         );
       }
     });

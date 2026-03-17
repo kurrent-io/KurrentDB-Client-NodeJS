@@ -144,6 +144,21 @@ enum StreamsError {
   STREAMS_ERROR_APPEND_SESSION_NO_REQUESTS = 9 [(kurrent.rpc.error) = {
     status_code: FAILED_PRECONDITION
   }];
+
+  // One or more consistency checks failed during an AppendRecords operation.
+  // The transaction is aborted — no records are written.
+  //
+  // Common causes:
+  // - A stream state check found the stream at a different revision than expected
+  // - A stream referenced in a state check does not exist, was deleted, or was tombstoned
+  //
+  // Client action: Inspect the AppendConsistencyViolationErrorDetails to determine which
+  // checks failed and why, then correct the request or refresh local state and retry.
+  // Recoverable by reading the current state and resubmitting with updated checks.
+  STREAMS_ERROR_APPEND_CONSISTENCY_VIOLATION = 14 [(kurrent.rpc.error) = {
+    status_code: FAILED_PRECONDITION,
+    has_details: true
+  }];
 }
 
 // Details for STREAM_NOT_FOUND errors.
@@ -210,4 +225,36 @@ message AppendTransactionSizeExceededErrorDetails {
 message StreamAlreadyInAppendSessionErrorDetails {
   // The name of the stream that appears multiple times.
   string stream = 1;
+}
+
+// Details for APPEND_CONSISTENCY_VIOLATION errors.
+//
+// Contains all consistency checks that were violated during the append operation.
+// Only violated checks are included; satisfied checks are omitted.
+message AppendConsistencyViolationErrorDetails {
+  // The consistency checks that were violated.
+  repeated ConsistencyViolation violations = 1;
+}
+
+// Details for a single consistency check that was violated.
+message ConsistencyViolation {
+  // Index of the check in the original consistency_checks list.
+  int32 check_index = 1;
+
+  oneof type {
+    // The stream was not at the expected state.
+    StreamStateViolation stream_state = 2;
+  }
+
+  // A stream state check was violated because the actual state did not match the expected state.
+  message StreamStateViolation {
+    // The name of the stream whose state was checked.
+    string stream = 1;
+
+    // The expected state of the stream as specified in the consistency check.
+    sint64 expected_state = 2 [jstype = JS_STRING];
+
+    // The actual state of the stream at the time the check was evaluated.
+    sint64 actual_state = 3 [jstype = JS_STRING];
+  }
 }

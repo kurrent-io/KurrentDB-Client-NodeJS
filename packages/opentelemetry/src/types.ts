@@ -27,3 +27,7 @@ export type AppendToStreamParams = Parameters<
 export type MultiStreamAppendParams = Parameters<
   kdb.KurrentDBClient["multiStreamAppend"]
 >;
+
+export type AppendRecordsParams = Parameters<
+  kdb.KurrentDBClient["appendRecords"]
+>;

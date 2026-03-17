@@ -10,12 +10,16 @@ import type {
   EventType,
   MultiAppendResult,
   AppendStreamRequest,
+  AppendRecordInput,
+  AppendRecordsResult,
+  ConsistencyCheck,
 } from "../../types";
 import { UnsupportedError } from "../../utils";
 
 import { append } from "./append";
 import { batchAppend } from "./batchAppend";
 import { multiStreamAppend } from "./multiStreamAppend";
+import { appendRecords } from "./appendRecords";
 
 export interface AppendToStreamOptions extends BaseOptions {
   /**
@@ -47,6 +51,18 @@ declare module "../../Client" {
     multiStreamAppend<KnownEventType extends EventType = EventType>(
       requests: AppendStreamRequest<KnownEventType>[]
     ): Promise<MultiAppendResult>;
+
+    /**
+     * Appends records to one or more streams atomically with cross-stream consistency checks.
+     * Records can be interleaved across streams in any order and the global log preserves
+     * the exact sequence from the request.
+     * @param records - The records to append. Each record specifies its target stream.
+     * @param checks - Optional consistency checks evaluated before commit.
+     */
+    appendRecords<KnownEventType extends EventType = EventType>(
+      records: AppendRecordInput<KnownEventType>[],
+      checks?: ConsistencyCheck[]
+    ): Promise<AppendRecordsResult>;
   }
 }
 
@@ -90,4 +106,15 @@ Client.prototype.multiStreamAppend = async function (
     throw new UnsupportedError("multiStreamAppend", "25.1");
   }
   return multiStreamAppend.call(this, requests);
+};
+
+Client.prototype.appendRecords = async function (
+  this: Client,
+  records: AppendRecordInput[],
+  checks?: ConsistencyCheck[]
+): Promise<AppendRecordsResult> {
+  if (!(await this.supports(StreamsServiceService.appendRecords))) {
+    throw new UnsupportedError("appendRecords", "26.1");
+  }
+  return appendRecords.call(this, records, checks);
 };

@@ -139,6 +139,8 @@ export class AppendRecord extends jspb.Message {
     getData_asU8(): Uint8Array;
     getData_asB64(): string;
     setData(value: Uint8Array | string): AppendRecord;
+    getStream(): string;
+    setStream(value: string): AppendRecord;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): AppendRecord.AsObject;
@@ -157,6 +159,138 @@ export namespace AppendRecord {
         propertiesMap: Array<[string, google_protobuf_struct_pb.Value.AsObject]>,
         schema?: SchemaInfo.AsObject,
         data: Uint8Array | string,
+        stream: string,
+    }
+}
+
+export class AppendRecordsRequest extends jspb.Message { 
+    clearRecordsList(): void;
+    getRecordsList(): Array<AppendRecord>;
+    setRecordsList(value: Array<AppendRecord>): AppendRecordsRequest;
+    addRecords(value?: AppendRecord, index?: number): AppendRecord;
+    clearChecksList(): void;
+    getChecksList(): Array<ConsistencyCheck>;
+    setChecksList(value: Array<ConsistencyCheck>): AppendRecordsRequest;
+    addChecks(value?: ConsistencyCheck, index?: number): ConsistencyCheck;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppendRecordsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: AppendRecordsRequest): AppendRecordsRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppendRecordsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppendRecordsRequest;
+    static deserializeBinaryFromReader(message: AppendRecordsRequest, reader: jspb.BinaryReader): AppendRecordsRequest;
+}
+
+export namespace AppendRecordsRequest {
+    export type AsObject = {
+        recordsList: Array<AppendRecord.AsObject>,
+        checksList: Array<ConsistencyCheck.AsObject>,
+    }
+}
+
+export class AppendRecordsResponse extends jspb.Message { 
+    clearRevisionsList(): void;
+    getRevisionsList(): Array<StreamRevision>;
+    setRevisionsList(value: Array<StreamRevision>): AppendRecordsResponse;
+    addRevisions(value?: StreamRevision, index?: number): StreamRevision;
+    getPosition(): string;
+    setPosition(value: string): AppendRecordsResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppendRecordsResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: AppendRecordsResponse): AppendRecordsResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppendRecordsResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppendRecordsResponse;
+    static deserializeBinaryFromReader(message: AppendRecordsResponse, reader: jspb.BinaryReader): AppendRecordsResponse;
+}
+
+export namespace AppendRecordsResponse {
+    export type AsObject = {
+        revisionsList: Array<StreamRevision.AsObject>,
+        position: string,
+    }
+}
+
+export class ConsistencyCheck extends jspb.Message { 
+
+    hasStreamState(): boolean;
+    clearStreamState(): void;
+    getStreamState(): ConsistencyCheck.StreamStateCheck | undefined;
+    setStreamState(value?: ConsistencyCheck.StreamStateCheck): ConsistencyCheck;
+
+    getTypeCase(): ConsistencyCheck.TypeCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ConsistencyCheck.AsObject;
+    static toObject(includeInstance: boolean, msg: ConsistencyCheck): ConsistencyCheck.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ConsistencyCheck, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ConsistencyCheck;
+    static deserializeBinaryFromReader(message: ConsistencyCheck, reader: jspb.BinaryReader): ConsistencyCheck;
+}
+
+export namespace ConsistencyCheck {
+    export type AsObject = {
+        streamState?: ConsistencyCheck.StreamStateCheck.AsObject,
+    }
+
+
+    export class StreamStateCheck extends jspb.Message { 
+        getStream(): string;
+        setStream(value: string): StreamStateCheck;
+        getExpectedState(): string;
+        setExpectedState(value: string): StreamStateCheck;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): StreamStateCheck.AsObject;
+        static toObject(includeInstance: boolean, msg: StreamStateCheck): StreamStateCheck.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: StreamStateCheck, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): StreamStateCheck;
+        static deserializeBinaryFromReader(message: StreamStateCheck, reader: jspb.BinaryReader): StreamStateCheck;
+    }
+
+    export namespace StreamStateCheck {
+        export type AsObject = {
+            stream: string,
+            expectedState: string,
+        }
+    }
+
+
+    export enum TypeCase {
+        TYPE_NOT_SET = 0,
+        STREAM_STATE = 1,
+    }
+
+}
+
+export class StreamRevision extends jspb.Message { 
+    getStream(): string;
+    setStream(value: string): StreamRevision;
+    getRevision(): string;
+    setRevision(value: string): StreamRevision;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): StreamRevision.AsObject;
+    static toObject(includeInstance: boolean, msg: StreamRevision): StreamRevision.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: StreamRevision, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): StreamRevision;
+    static deserializeBinaryFromReader(message: StreamRevision, reader: jspb.BinaryReader): StreamRevision;
+}
+
+export namespace StreamRevision {
+    export type AsObject = {
+        stream: string,
+        revision: string,
     }
 }
 
