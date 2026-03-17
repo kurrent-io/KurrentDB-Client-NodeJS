@@ -10,6 +10,28 @@ var grpc = require('@grpc/grpc-js');
 var kurrentdb_protocols_v2_streams_streams_pb = require('../../../../kurrentdb/protocols/v2/streams/streams_pb.js');
 var google_protobuf_struct_pb = require('google-protobuf/google/protobuf/struct_pb.js');
 
+function serialize_kurrentdb_protocol_v2_streams_AppendRecordsRequest(arg) {
+  if (!(arg instanceof kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsRequest)) {
+    throw new Error('Expected argument of type kurrentdb.protocol.v2.streams.AppendRecordsRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_kurrentdb_protocol_v2_streams_AppendRecordsRequest(buffer_arg) {
+  return kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_kurrentdb_protocol_v2_streams_AppendRecordsResponse(arg) {
+  if (!(arg instanceof kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsResponse)) {
+    throw new Error('Expected argument of type kurrentdb.protocol.v2.streams.AppendRecordsResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_kurrentdb_protocol_v2_streams_AppendRecordsResponse(buffer_arg) {
+  return kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_kurrentdb_protocol_v2_streams_AppendRequest(arg) {
   if (!(arg instanceof kurrentdb_protocols_v2_streams_streams_pb.AppendRequest)) {
     throw new Error('Expected argument of type kurrentdb.protocol.v2.streams.AppendRequest');
@@ -63,6 +85,37 @@ appendSession: {
     requestDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendRequest,
     responseSerialize: serialize_kurrentdb_protocol_v2_streams_AppendSessionResponse,
     responseDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendSessionResponse,
+  },
+  // Appends records to multiple streams atomically with cross-stream consistency checks.
+//
+// This is a unary RPC where the client sends all records and consistency checks
+// in a single request and receives a single AppendRecordsResponse.
+//
+// Records can be interleaved across streams in any order and the global log preserves
+// the exact sequence from the request.
+//
+// Consistency checks are decoupled from writes: a check can reference any stream,
+// whether or not the request writes to it. This enables Dynamic Consistency Boundary
+// (DCB) patterns where a decision depends on multiple streams but only produces
+// events for a subset.
+//
+// Guarantees:
+// - Atomicity: All writes succeed or all fail together
+// - Ordering: Records maintain the exact send order in the global log
+// - Cross-stream checks: Consistency checks can reference any stream
+//
+// On consistency check failure, no records are written and all failing checks
+// are reported in the response so the client can refresh stale state in one round trip.
+appendRecords: {
+    path: '/kurrentdb.protocol.v2.streams.StreamsService/AppendRecords',
+    requestStream: false,
+    responseStream: false,
+    requestType: kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsRequest,
+    responseType: kurrentdb_protocols_v2_streams_streams_pb.AppendRecordsResponse,
+    requestSerialize: serialize_kurrentdb_protocol_v2_streams_AppendRecordsRequest,
+    requestDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendRecordsRequest,
+    responseSerialize: serialize_kurrentdb_protocol_v2_streams_AppendRecordsResponse,
+    responseDeserialize: deserialize_kurrentdb_protocol_v2_streams_AppendRecordsResponse,
   },
 };
 

@@ -51,6 +51,9 @@ export const PAUSED = "Paused";
 export const WRITING_RESULTS = "Writing results";
 // STOPPED
 
+// consistency check types
+export const STREAM_STATE = "stream_state";
+
 // filter
 export const STREAM_NAME = "streamName";
 export const EVENT_TYPE = "eventType";
