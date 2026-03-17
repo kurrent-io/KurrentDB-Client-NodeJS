@@ -29,7 +29,7 @@ const event = jsonEvent({
 });
 
 await client.appendToStream("orders", event, {
-  streamState NO_STREAM,
+  streamState: NO_STREAM,
 });
 ```
 
@@ -136,49 +136,49 @@ This check can be used to implement optimistic concurrency. When retrieving a
 stream from KurrentDB, note the current version number. When you save it back,
 you can determine if somebody else has modified the record in the meantime.
 
-```ts {6,9,26-28,41-43}
-const events = client.readStream("order-stream", {
+```ts
+const events = client.readStream("order-12345", {
   fromRevision: START,
   direction: FORWARDS,
 });
 
+// Get the current revision to use for optimistic concurrency
 let revision: AppendStreamState = NO_STREAM;
 
 for await (const { event } of events) {
   revision = event?.revision ?? revision;
 }
 
-const orderPlacedEvent = jsonEvent({
-  id: uuid(),
-  type: "OrderPlaced",
-  data: {
-    orderId: "order-456",
-    customerId: "customer-789",
-    totalAmount: 149.99,
-    items: [
-      { productId: "prod-123", quantity: 2, price: 49.99 },
-      { productId: "prod-456", quantity: 1, price: 49.99 }
-    ]
-  },
-});
-
-await client.appendToStream("order-stream", orderPlacedEvent, {
-  streamState revision,
-});
-
+// Two concurrent operations trying to update the same order
 const paymentProcessedEvent = jsonEvent({
   id: uuid(),
   type: "PaymentProcessed",
   data: {
-    orderId: "order-456",
+    orderId: "order-12345",
     paymentId: "payment-789",
     amount: 149.99,
     paymentMethod: "credit_card"
   },
 });
 
-await client.appendToStream("order-stream", paymentProcessedEvent, {
-  streamState revision,
+const orderCancelledEvent = jsonEvent({
+  id: uuid(),
+  type: "OrderCancelled",
+  data: {
+    orderId: "order-12345",
+    reason: "customer-request",
+    comment: "Customer changed mind"
+  },
+});
+
+// Process payment (succeeds)
+await client.appendToStream("order-12345", paymentProcessedEvent, {
+  streamState: revision,
+});
+
+// Cancel order (fails due to concurrency conflict)
+await client.appendToStream("order-12345", orderCancelledEvent, {
+  streamState: revision,
 });
 ```
 
@@ -197,13 +197,16 @@ await client.appendToStream("some-stream", event, {
 });
 ```
 
-## Append to multiple streams
+## Atomic appends
 
-::: note
-This feature is only available in KurrentDB 25.1 and later. 
-:::
+KurrentDB provides two operations for appending events to one or more streams in a single atomic transaction: `appendRecords` and `multiStreamAppend`. Both guarantee that either all writes succeed or the entire operation fails, but they differ in how records are organized, ordered, and validated.
 
-You can append events to multiple streams in a single atomic operation. Either all streams are updated, or the entire operation fails.
+| | `appendRecords` | `multiStreamAppend` |
+|---|---|---|
+| **Available since** | KurrentDB 26.1 | KurrentDB 25.1 |
+| **Record ordering** | Interleaved. Records from different streams can be mixed, and their exact order is preserved in the global log. | Grouped. All records for a stream are sent together; ordering across streams is not guaranteed. |
+| **Consistency checks** | Decoupled. Can validate the state of any stream, including streams not being written to. | Coupled. Expected state is specified per stream being written to. |
+| **Protocol** | Unary RPC. All records and checks sent in a single request. | Client-streaming RPC. Records are streamed per stream. |
 
 ::: warning
 Metadata must be a valid JSON object, using string keys and string values only.
@@ -212,13 +215,135 @@ KurrentDB's metadata handling. This restriction will be lifted in the next major
 release.
 :::
 
+### appendRecords
+
+::: note
+This feature is only available in KurrentDB 26.1 and later.
+:::
+
+`appendRecords` appends events to one or more streams atomically. Each record specifies which stream it targets, and the exact order of records is preserved in the global log across all streams.
+
+#### Single stream
+
+The simplest usage appends events to a single stream:
+
+```ts
+import { jsonEvent, STREAM_STATE, NO_STREAM } from "@kurrent/kurrentdb-client";
+import { v4 as uuid } from "uuid";
+
+const records = [
+  {
+    streamName: "order-123",
+    record: jsonEvent({
+      id: uuid(),
+      type: "OrderPlaced",
+      data: { orderId: "123", amount: 99.99 },
+    }),
+  },
+  {
+    streamName: "order-123",
+    record: jsonEvent({
+      id: uuid(),
+      type: "OrderShipped",
+      data: { orderId: "123" },
+    }),
+  },
+];
+
+await client.appendRecords(records);
+```
+
+You can also pass consistency checks for optimistic concurrency:
+
+```ts
+await client.appendRecords(records, [
+  { type: STREAM_STATE, streamName: "order-123", expectedState: NO_STREAM },
+]);
+```
+
+#### Multiple streams
+
+Records can target different streams and be interleaved freely. The global log preserves the exact order you specify:
+
+```ts
+const records = [
+  {
+    streamName: "order-stream",
+    record: jsonEvent({
+      id: uuid(),
+      type: "OrderCreated",
+      data: { orderId: "123" },
+    }),
+  },
+  {
+    streamName: "inventory-stream",
+    record: jsonEvent({
+      id: uuid(),
+      type: "ItemReserved",
+      data: { itemId: "abc", quantity: 2 },
+    }),
+  },
+  {
+    streamName: "order-stream",
+    record: jsonEvent({
+      id: uuid(),
+      type: "OrderConfirmed",
+      data: { orderId: "123" },
+    }),
+  },
+];
+
+await client.appendRecords(records);
+```
+
+#### Consistency checks
+
+Consistency checks let you validate the state of any stream, including streams you are not writing to, before the append is committed. All checks are evaluated atomically: if any check fails, the entire operation is rejected and an `AppendConsistencyViolationError` is thrown with details about every failing check and the actual state observed.
+
+```ts
+import { STREAM_STATE, STREAM_EXISTS } from "@kurrent/kurrentdb-client";
+
+const records = [
+  {
+    streamName: "order-stream",
+    record: jsonEvent({
+      id: uuid(),
+      type: "OrderConfirmed",
+      data: { orderId: "123" },
+    }),
+  },
+];
+
+const checks = [
+  // ensure the inventory stream exists before confirming the order,
+  // even though we are not writing to it
+  {
+    type: STREAM_STATE,
+    streamName: "inventory-stream",
+    expectedState: STREAM_EXISTS,
+  },
+];
+
+await client.appendRecords(records, checks);
+```
+
+This decoupling of checks from writes enables [Dynamic Consistency Boundary](https://www.eventstore.com/blog/dynamic-consistency-boundary) patterns, where a business decision depends on the state of multiple streams but the resulting event is written to only one of them.
+
+### multiStreamAppend
+
+::: note
+This feature is only available in KurrentDB 25.1 and later.
+:::
+
+`multiStreamAppend` appends events to one or more streams atomically. Records are grouped per stream using `AppendStreamRequest`, where each request specifies a stream name, an expected state, and the events for that stream.
+
 ```ts
 import { jsonEvent } from "@kurrent/kurrentdb-client";
 import { v4 as uuid } from "uuid";
 
 const metadata = {
   source: "OrderProcessingSystem",
-  version: "1.0"
+  version: "1.0",
 };
 
 const requests = [
@@ -229,30 +354,26 @@ const requests = [
       jsonEvent({
         id: uuid(),
         type: "OrderCreated",
-        data: {
-          orderId: "12345",
-          amount: 99.99
-        },
-        metadata
-      })
-    ]
+        data: { orderId: "12345", amount: 99.99 },
+        metadata,
+      }),
+    ],
   },
   {
-    streamName: "inventory-stream-1", 
+    streamName: "inventory-stream-1",
     expectedState: "any",
     events: [
       jsonEvent({
         id: uuid(),
         type: "ItemReserved",
-        data: {
-          itemId: "ABC123",
-          quantity: 2
-        },
-        metadata
-      })
-    ]
-  }
+        data: { itemId: "ABC123", quantity: 2 },
+        metadata,
+      }),
+    ],
+  },
 ];
 
 await client.multiStreamAppend(requests);
 ```
+
+Each stream can only appear once in the request. The expected state is validated per stream before the transaction is committed.

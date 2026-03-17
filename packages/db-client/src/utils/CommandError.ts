@@ -6,13 +6,19 @@ import { status as StatusCode, ServiceError, Metadata } from "@grpc/grpc-js";
 import { getGrpcStatusDetails, isClientCancellationError } from ".";
 
 import { WrongExpectedVersion } from "../../generated/kurrentdb/protocols/v1/shared_pb";
-import type { CurrentStreamState, EndPoint, AppendStreamState } from "../types";
+import type {
+  CurrentStreamState,
+  EndPoint,
+  AppendStreamState,
+  ConsistencyViolation,
+} from "../types";
 import {
   AppendTransactionSizeExceededErrorDetails,
   StreamRevisionConflictErrorDetails,
   StreamTombstonedErrorDetails,
   StreamNotFoundErrorDetails,
   AppendRecordSizeExceededErrorDetails,
+  AppendConsistencyViolationErrorDetails,
 } from "../../generated/kurrentdb/protocols/v2/streams/errors_pb";
 
 export enum ErrorType {
@@ -35,6 +41,7 @@ export enum ErrorType {
   MAXIMUM_APPEND_SIZE_EXCEEDED = "maximum-append-size-exceeded",
   TRANSACTION_MAX_SIZE_EXCEEDED = "transaction-max-size-exceeded",
   APPEND_RECORD_SIZE_EXCEEDED = "append-record-size-exceeded",
+  APPEND_CONSISTENCY_VIOLATION = "append-consistency-violation",
   MISSING_REQUIRED_METADATA_PROPERTY = "missing-required-metadata-property",
 
   PERSISTENT_SUBSCRIPTION_FAILED = "persistent-subscription-failed",
@@ -337,6 +344,51 @@ export class TransactionMaxSizeExceededError extends CommandErrorBase {
   }
 }
 
+export class AppendConsistencyViolationError extends CommandErrorBase {
+  public type: ErrorType.APPEND_CONSISTENCY_VIOLATION =
+    ErrorType.APPEND_CONSISTENCY_VIOLATION;
+  public violations: ConsistencyViolation[];
+
+  constructor(
+    error: ServiceError,
+    details: AppendConsistencyViolationErrorDetails.AsObject
+  ) {
+    super(error);
+    this.violations = details.violationsList.map((v) => {
+      const streamState = v.streamState!;
+
+      const parseExpectedState = (value: string): AppendStreamState => {
+        switch (value) {
+          case "-1":
+            return "no_stream";
+          case "-2":
+            return "any";
+          case "-4":
+            return "stream_exists";
+          default:
+            return BigInt(value);
+        }
+      };
+
+      const parseActualState = (value: string): CurrentStreamState => {
+        switch (value) {
+          case "-1":
+            return "no_stream";
+          default:
+            return BigInt(value);
+        }
+      };
+
+      return {
+        checkIndex: v.checkIndex,
+        streamName: streamState.stream,
+        expectedState: parseExpectedState(streamState.expectedState),
+        actualState: parseActualState(streamState.actualState),
+      };
+    });
+  }
+}
+
 export class RequiredMetadataPropertyMissingError extends CommandErrorBase {
   public type: ErrorType.MISSING_REQUIRED_METADATA_PROPERTY =
     ErrorType.MISSING_REQUIRED_METADATA_PROPERTY;
@@ -509,6 +561,7 @@ export type CommandError =
   | MaxAppendSizeExceededError
   | AppendRecordSizeExceededError
   | TransactionMaxSizeExceededError
+  | AppendConsistencyViolationError
   | RequiredMetadataPropertyMissingError
   | PersistentSubscriptionFailedError
   | PersistentSubscriptionDoesNotExistError
@@ -619,6 +672,15 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
         return new StreamTombstonedError(
           error,
           StreamTombstonedErrorDetails.deserializeBinary(
+            details.value
+          ).toObject()
+        );
+      } else if (
+        details.typeUrl.endsWith("AppendConsistencyViolationErrorDetails")
+      ) {
+        return new AppendConsistencyViolationError(
+          error,
+          AppendConsistencyViolationErrorDetails.deserializeBinary(
             details.value
           ).toObject()
         );
