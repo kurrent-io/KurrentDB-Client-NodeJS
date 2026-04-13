@@ -3,43 +3,32 @@ import {
   StreamNotFoundError,
   StreamDeletedError,
   AccessDeniedError,
+  UnavailableError,
+  DeadlineExceededError,
+  UnknownError,
 } from "./CommandError";
 import { ServiceError } from "@grpc/grpc-js";
-
-// export const convertBridgeError = (
-//   error: ServiceError,
-//   streamName?: string
-// ) => {
-//   const stream = streamName ?? "unknown stream";
-//
-//   switch (error.name) {
-//     case StreamNotFoundError.name:
-//       throw new StreamNotFoundError(error, stream);
-//     case StreamDeletedError.name:
-//       throw StreamDeletedError.fromStreamName(stream);
-//     case NotLeaderError.name:
-//       throw new NotLeaderError(error);
-//     case AccessDeniedError.name:
-//       throw new AccessDeniedError(error);
-//     default:
-//       throw error;
-//   }
-// };
 
 export const convertBridgeError = (error: Error, streamName?: string) => {
   const stream = streamName ?? "unknown stream";
   const serviceError = error as ServiceError;
 
   switch (error.name) {
-    case StreamNotFoundError.name:
+    case "StreamNotFoundError":
       return new StreamNotFoundError(serviceError, stream);
-    case StreamDeletedError.name:
+    case "StreamDeletedError":
       return StreamDeletedError.fromStreamName(stream);
-    case NotLeaderError.name:
+    case "NotLeaderError":
       return new NotLeaderError(serviceError);
-    case AccessDeniedError.name:
+    case "AccessDeniedError":
       return new AccessDeniedError(serviceError);
+    case "UnavailableError":
+      return new UnavailableError(serviceError);
+    case "DeadlineExceededError":
+      return new DeadlineExceededError(serviceError);
+    case "UnknownError":
+      return new UnknownError(serviceError);
     default:
-      return error;
+      return new UnknownError(serviceError);
   }
 };
