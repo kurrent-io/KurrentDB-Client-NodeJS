@@ -7,10 +7,15 @@ import {
   DeadlineExceededError,
   UnknownError,
 } from "./CommandError";
+import { debug } from "./debug";
 import { ServiceError } from "@grpc/grpc-js";
 
 export const convertBridgeError = (error: Error, streamName?: string) => {
   const stream = streamName ?? "unknown stream";
+
+  // Bridge errors are plain Error objects from the Rust native addon with
+  // name, message, and metadata (plain object). They lack gRPC-specific
+  // ServiceError properties (code, details) but CommandErrorBase handles this.
   const serviceError = error as ServiceError;
 
   switch (error.name) {
@@ -26,9 +31,12 @@ export const convertBridgeError = (error: Error, streamName?: string) => {
       return new UnavailableError(serviceError);
     case "DeadlineExceededError":
       return new DeadlineExceededError(serviceError);
-    case "UnknownError":
-      return new UnknownError(serviceError);
     default:
+      debug.connection(
+        "Unrecognized bridge error type '%s': %s",
+        error.name,
+        error.message
+      );
       return new UnknownError(serviceError);
   }
 };
