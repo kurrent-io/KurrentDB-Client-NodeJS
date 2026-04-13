@@ -587,6 +587,8 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
     case StatusCode.DEADLINE_EXCEEDED:
       return new DeadlineExceededError(error);
     case StatusCode.UNAVAILABLE:
+    case StatusCode.INTERNAL:
+    case StatusCode.DATA_LOSS:
       return new UnavailableError(error);
     case StatusCode.UNAUTHENTICATED:
       return new AccessDeniedError(error);
