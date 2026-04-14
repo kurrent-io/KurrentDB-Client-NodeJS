@@ -38,7 +38,7 @@ KurrentDB uses connection strings to configure the client connection. The connec
 - **`kurrentdb://`** - for connecting to a single node, or to a multi-node cluster using multiple gossip seed endpoints
 - **`kurrentdb+discover://`** - for connecting using DNS discovery with a single DNS endpoint
 
-When using `kurrentdb://` with multiple endpoints separated by commas, the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference. If one of the nodes is down, the client will try the next endpoint. 
+When using `kurrentdb://` with multiple endpoints separated by commas, the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference. If one of the nodes is down, the client will try another endpoint.
 
 With `kurrentdb+discover://`, the client resolves a single DNS endpoint to discover the cluster topology. This is useful when you have a DNS `A` record pointing to your cluster nodes.
 
@@ -57,7 +57,7 @@ For multi-node clusters where you know the individual node addresses, use multip
 kurrentdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
 ```
 
-The client will try each endpoint in turn and use the Gossip API to discover the cluster topology and select the best node based on the configured node preference.
+The client will use the Gossip API to discover the cluster topology and select the best node based on the configured node preference.
 
 For cluster connections using DNS discovery, use a single DNS endpoint:
 
