@@ -35,19 +35,31 @@ mode, you must explicitly set `tls=false` in your connection string or client co
 
 KurrentDB uses connection strings to configure the client connection. The connection string supports two protocols:
 
-- **`kurrentdb://`** - for connecting directly to specific node endpoints (single node or multi-node cluster with explicit endpoints)
-- **`kurrentdb+discover://`** - for connecting using cluster discovery via DNS or gossip endpoints
+- **`kurrentdb://`** - for connecting to a single node, or to a multi-node cluster using multiple gossip seed endpoints
+- **`kurrentdb+discover://`** - for connecting using DNS discovery with a single DNS endpoint
 
-When using `kurrentdb://`, you specify the exact endpoints to connect to. The client will connect directly to these endpoints. For multi-node clusters, you can specify multiple endpoints separated by commas, and the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference.
+When using `kurrentdb://` with multiple endpoints separated by commas, the client will query each node's Gossip API to get cluster information, then picks a node based on the URI's node preference. If one of the nodes is down, the client will try the next endpoint. 
 
-With `kurrentdb+discover://`, the client uses cluster discovery to find available nodes. This is particularly useful when you have a DNS A record pointing to cluster nodes or when you want the client to automatically discover the cluster topology.
+With `kurrentdb+discover://`, the client resolves a single DNS endpoint to discover the cluster topology. This is useful when you have a DNS `A` record pointing to your cluster nodes.
+
+::: warning Only one host with +discover
+When using `kurrentdb+discover://`, only a single host should be provided. If multiple hosts are specified, only the first one will be used for discovery and the rest will be ignored. If you need to specify multiple endpoints for redundancy, use `kurrentdb://` without `+discover` instead.
+:::
 
 ::: info Gossip support
 Since version 22.10, kurrentdb supports gossip on single-node deployments, so
 `kurrentdb+discover://` can be used for any topology, including single-node setups.
 :::
 
-For cluster connections using discovery, use the following format:
+For multi-node clusters where you know the individual node addresses, use multiple gossip seed endpoints:
+
+```
+kurrentdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
+```
+
+The client will try each endpoint in turn and use the Gossip API to discover the cluster topology and select the best node based on the configured node preference.
+
+For cluster connections using DNS discovery, use a single DNS endpoint:
 
 ```
 kurrentdb+discover://admin:changeit@cluster.dns.name:2113
@@ -55,13 +67,7 @@ kurrentdb+discover://admin:changeit@cluster.dns.name:2113
 
 Where `cluster.dns.name` is a DNS `A` record that points to all cluster nodes.
 
-For direct connections to specific endpoints, you can specify individual nodes:
-
-```
-kurrentdb://admin:changeit@node1.dns.name:2113,node2.dns.name:2113,node3.dns.name:2113
-```
-
-Or for a single node:
+For a single node:
 
 ```
 kurrentdb://admin:changeit@localhost:2113
