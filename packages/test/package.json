@@ -52,6 +52,6 @@
     "jest-environment-node": "^29.7.0",
     "shx": "^0.3.4",
     "ts-jest": "^29.2.5",
-    "uuid": "11.0.3"
+    "uuid": "14.0.0"
   }
 }

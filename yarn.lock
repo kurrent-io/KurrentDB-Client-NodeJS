@@ -1163,7 +1163,7 @@ __metadata:
     nx: "npm:20.1.3"
     semver: "npm:^7.7.2"
     shx: "npm:^0.3.4"
-    uuid: "npm:11.0.3"
+    uuid: "npm:14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -10349,7 +10349,7 @@ __metadata:
     jest-environment-node: "npm:^29.7.0"
     shx: "npm:^0.3.4"
     ts-jest: "npm:^29.2.5"
-    uuid: "npm:11.0.3"
+    uuid: "npm:14.0.0"
   languageName: unknown
   linkType: soft
 
@@ -10940,12 +10940,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:11.0.3":
-  version: 11.0.3
-  resolution: "uuid@npm:11.0.3"
+"uuid@npm:14.0.0":
+  version: 14.0.0
+  resolution: "uuid@npm:14.0.0"
   bin:
-    uuid: dist/esm/bin/uuid
-  checksum: 10c0/cee762fc76d949a2ff9205770334699e0043d52bb766472593a25f150077c9deed821230251ea3d6ab3943a5ea137d2826678797f1d5f6754c7ce5ce27e9f7a6
+    uuid: dist-node/bin/uuid
+  checksum: 10c0/a57ae7794c45005c1a9208989196c5baf79a7679c30f43c1bee9033a2c4d113a2cea216fa6fcc9663b08b0d55635df1a7c6eb7e7f3d21c3e50688c698fa39a50
   languageName: node
   linkType: hard
 
