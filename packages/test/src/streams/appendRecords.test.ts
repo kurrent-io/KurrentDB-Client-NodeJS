@@ -20,7 +20,7 @@ import {
   jsonEvent,
 } from "@kurrent/kurrentdb-client";
 
-import { v4 } from "uuid";
+import { randomUUID as v4 } from "crypto";
 
 describe("appendRecords", () => {
   const supported = matchServerVersion`>=26.0`;
