@@ -12,7 +12,7 @@ import {
 } from "@opentelemetry/semantic-conventions";
 import { KurrentDBInstrumentation } from "@kurrent/opentelemetry";
 import { KurrentAttributes } from "@kurrent/opentelemetry/dist/attributes";
-import { v4 } from "uuid";
+import { randomUUID as v4 } from "crypto";
 import { collect } from "@test-utils";
 
 const tracerProvider = new NodeTracerProvider();

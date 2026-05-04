@@ -30,7 +30,7 @@ import {
 
 import * as kurrentdb from "@kurrent/kurrentdb-client";
 import { KurrentAttributes } from "@kurrent/opentelemetry/src/attributes";
-import { v4 } from "uuid";
+import { randomUUID as v4 } from "crypto";
 import { multiStreamAppend } from "@kurrent/kurrentdb-client/src/streams/appendToStream/multiStreamAppend";
 import { appendRecords } from "@kurrent/kurrentdb-client/src/streams/appendToStream/appendRecords";
 import {

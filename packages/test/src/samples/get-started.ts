@@ -6,7 +6,7 @@ import {
   JSONEventType,
 } from "@kurrent/kurrentdb-client";
 import { optionalDescribe } from "@test-utils";
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 
 const CLOUD_ID = process.env.EVENTSTORE_CLOUD_ID!;
 const STREAM_NAME = uuid();

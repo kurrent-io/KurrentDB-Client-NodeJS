@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { promisify } from "util";
 import * as cp from "child_process";
 
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 import getPort from "get-port";
 import { upAll, down, exec, stopOne, logs } from "docker-compose/dist/v2";
 

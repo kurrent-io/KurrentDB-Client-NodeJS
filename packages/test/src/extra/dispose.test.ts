@@ -1,7 +1,7 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
 import type { Stream } from "stream";
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 
 import {
   createTestNode,

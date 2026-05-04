@@ -21,7 +21,7 @@ import {
   binaryEvent,
 } from "@kurrent/kurrentdb-client";
 
-import { v4 } from "uuid";
+import { randomUUID as v4 } from "crypto";
 
 describe("multiAppend", () => {
   const supported = matchServerVersion`>=25.0`;

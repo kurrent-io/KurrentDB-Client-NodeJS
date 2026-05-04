@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 
 import type { BinaryEventType, EventData } from "../types";
 
@@ -19,7 +19,7 @@ export const binaryEvent = <E extends BinaryEventType = BinaryEventType>({
   type,
   data,
   metadata,
-  id = uuid(),
+  id = randomUUID(),
 }: BinaryEventOptions<E>): EventData<E> =>
   ({
     id,

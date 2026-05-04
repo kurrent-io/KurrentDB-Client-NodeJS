@@ -9,7 +9,7 @@ import {
   WrongExpectedVersionError,
 } from "@kurrent/kurrentdb-client";
 import { createTestNode } from "@test-utils";
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 
 describe("[sample] appending-events", () => {
   const node = createTestNode();
