@@ -262,6 +262,10 @@ export type NodePreference =
   | typeof constants.LEADER
   | typeof constants.READ_ONLY_REPLICA;
 
+export type ProjectionEngineVersion =
+  | typeof constants.PROJECTION_ENGINE_V1
+  | typeof constants.PROJECTION_ENGINE_V2;
+
 export interface EndPoint {
   address: string;
   port: number;

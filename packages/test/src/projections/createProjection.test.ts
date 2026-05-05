@@ -3,7 +3,7 @@ import { collect, createTestNode, delay } from "@test-utils";
 import {
   KurrentDBClient,
   jsonEvent,
-  ProjectionEngineVersion,
+  PROJECTION_ENGINE_V2,
   StreamNotFoundError,
 } from "@kurrent/kurrentdb-client";
 
@@ -134,7 +134,7 @@ describe("createProjection", () => {
             }
           });
         `,
-        { engineVersion: ProjectionEngineVersion.V2 }
+        { engineVersion: PROJECTION_ENGINE_V2 }
       )
     ).resolves.toBeUndefined();
   });

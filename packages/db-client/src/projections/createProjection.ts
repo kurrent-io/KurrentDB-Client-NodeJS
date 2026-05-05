@@ -5,30 +5,13 @@ import {
 import { CreateReq } from "../../generated/kurrentdb/protocols/v1/projectionmanagement_pb";
 
 import { Client } from "../Client";
-import type { BaseOptions } from "../types";
+import { PROJECTION_ENGINE_V1, PROJECTION_ENGINE_V2 } from "../constants";
+import type { BaseOptions, ProjectionEngineVersion } from "../types";
 import { debug, convertToCommandError } from "../utils";
 
-/**
- * The projection engine version used to execute a projection.
- *
- * The engine version is pinned at create time and cannot be changed later.
- */
-export enum ProjectionEngineVersion {
-  /** The original projection engine. This is the default. */
-  V1 = "v1",
-  /**
-   * The next-generation projection engine that processes partitions in
-   * parallel. V2 is opt-in and does not support `trackEmittedStreams`,
-   * bi-state projections, or live `outputState` result streams. See the
-   * KurrentDB documentation for the full list of limitations before
-   * choosing V2.
-   */
-  V2 = "v2",
-}
-
 const ENGINE_VERSION_WIRE: Record<ProjectionEngineVersion, number> = {
-  [ProjectionEngineVersion.V1]: 1,
-  [ProjectionEngineVersion.V2]: 2,
+  [PROJECTION_ENGINE_V1]: 1,
+  [PROJECTION_ENGINE_V2]: 2,
 };
 
 export interface CreateProjectionOptions extends BaseOptions {
@@ -44,16 +27,13 @@ export interface CreateProjectionOptions extends BaseOptions {
   trackEmittedStreams?: boolean;
   /**
    * Selects the projection engine version. Pinned at create time and
-   * cannot be changed later.
-   * @defaultValue {@link ProjectionEngineVersion.V1}
+   * cannot be changed later. V2 is opt-in and does not support
+   * `trackEmittedStreams`, bi-state projections, or live `outputState`
+   * result streams. See the KurrentDB documentation for the full list of
+   * limitations before choosing V2.
+   * @defaultValue {@link PROJECTION_ENGINE_V1}
    */
   engineVersion?: ProjectionEngineVersion;
-}
-
-interface ResolvedCreateProjectionOptions extends BaseOptions {
-  emitEnabled: boolean;
-  trackEmittedStreams: boolean;
-  engineVersion: ProjectionEngineVersion;
 }
 
 declare module "../Client" {
@@ -76,34 +56,22 @@ Client.prototype.createProjection = async function (
   this: Client,
   projectionName: string,
   query: string,
-  {
-    emitEnabled = false,
-    trackEmittedStreams = false,
-    engineVersion = ProjectionEngineVersion.V1,
-    ...baseOptions
-  }: CreateProjectionOptions = {}
+  options: CreateProjectionOptions = {}
 ): Promise<void> {
-  const resolved: ResolvedCreateProjectionOptions = {
-    emitEnabled,
-    trackEmittedStreams,
-    engineVersion,
-    ...baseOptions,
-  };
-
   debug.command("createProjection: %O", {
     projectionName,
     query,
-    options: resolved,
+    options,
   });
 
   if (
-    trackEmittedStreams &&
+    options.trackEmittedStreams &&
     !(await this.supports(ProjectionsService.create, "track_emitted_streams"))
   ) {
-    return createProjectionHTTP.call(this, projectionName, query, resolved);
+    return createProjectionHTTP.call(this, projectionName, query, options);
   }
 
-  return createProjectionGRPC.call(this, projectionName, query, resolved);
+  return createProjectionGRPC.call(this, projectionName, query, options);
 };
 
 const createProjectionGRPC = async function (
@@ -111,11 +79,11 @@ const createProjectionGRPC = async function (
   projectionName: string,
   query: string,
   {
-    emitEnabled,
-    trackEmittedStreams,
-    engineVersion,
+    emitEnabled = false,
+    trackEmittedStreams = false,
+    engineVersion = PROJECTION_ENGINE_V1,
     ...baseOptions
-  }: ResolvedCreateProjectionOptions
+  }: CreateProjectionOptions = {}
 ): Promise<void> {
   const req = new CreateReq();
   const options = new CreateReq.Options();
@@ -127,7 +95,9 @@ const createProjectionGRPC = async function (
 
   options.setContinuous(continuous);
   options.setQuery(query);
-  options.setEngineVersion(ENGINE_VERSION_WIRE[engineVersion]);
+  if (engineVersion === PROJECTION_ENGINE_V2) {
+    options.setEngineVersion(ENGINE_VERSION_WIRE[engineVersion]);
+  }
 
   req.setOptions(options);
 
@@ -151,11 +121,11 @@ const createProjectionHTTP = async function (
   projectionName: string,
   query: string,
   {
-    emitEnabled,
-    trackEmittedStreams,
-    engineVersion,
+    emitEnabled = false,
+    trackEmittedStreams = false,
+    engineVersion = PROJECTION_ENGINE_V1,
     ...baseOptions
-  }: ResolvedCreateProjectionOptions
+  }: CreateProjectionOptions = {}
 ) {
   await this.HTTPRequest(
     "POST",
@@ -164,9 +134,11 @@ const createProjectionHTTP = async function (
       ...baseOptions,
       searchParams: {
         name: projectionName,
-        emit: String(emitEnabled),
-        trackemittedstreams: String(trackEmittedStreams),
-        engineversion: String(ENGINE_VERSION_WIRE[engineVersion]),
+        emit: emitEnabled.toString(),
+        trackemittedstreams: trackEmittedStreams.toString(),
+        ...(engineVersion === PROJECTION_ENGINE_V2 && {
+          engineversion: ENGINE_VERSION_WIRE[engineVersion].toString(),
+        }),
       },
     },
     query
