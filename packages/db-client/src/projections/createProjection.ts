@@ -8,6 +8,24 @@ import { Client } from "../Client";
 import type { BaseOptions } from "../types";
 import { debug, convertToCommandError } from "../utils";
 
+/**
+ * The projection engine version used to execute a projection.
+ *
+ * The engine version is pinned at create time and cannot be changed later.
+ */
+export enum ProjectionEngineVersion {
+  /** The original projection engine. This is the default. */
+  V1 = 1,
+  /**
+   * The next-generation projection engine that processes partitions in
+   * parallel. V2 is opt-in and does not support `trackEmittedStreams`,
+   * bi-state projections, or live `outputState` result streams. See the
+   * KurrentDB documentation for the full list of limitations before
+   * choosing V2.
+   */
+  V2 = 2,
+}
+
 export interface CreateProjectionOptions extends BaseOptions {
   /**
    * Enables emitting from the projection.
@@ -19,6 +37,12 @@ export interface CreateProjectionOptions extends BaseOptions {
    * @defaultValue false
    */
   trackEmittedStreams?: boolean;
+  /**
+   * Selects the projection engine version. Pinned at create time and
+   * cannot be changed later.
+   * @defaultValue {@link ProjectionEngineVersion.V1}
+   */
+  engineVersion?: ProjectionEngineVersion;
 }
 
 declare module "../Client" {
@@ -66,6 +90,7 @@ const createProjectionGRPC = async function (
   {
     emitEnabled = false,
     trackEmittedStreams = false,
+    engineVersion = ProjectionEngineVersion.V1,
     ...baseOptions
   }: CreateProjectionOptions = {}
 ): Promise<void> {
@@ -79,6 +104,7 @@ const createProjectionGRPC = async function (
 
   options.setContinuous(continuous);
   options.setQuery(query);
+  options.setEngineVersion(engineVersion);
 
   req.setOptions(options);
 
@@ -104,6 +130,7 @@ const createProjectionHTTP = async function (
   {
     emitEnabled = false,
     trackEmittedStreams = false,
+    engineVersion = ProjectionEngineVersion.V1,
     ...baseOptions
   }: CreateProjectionOptions = {}
 ) {
@@ -116,6 +143,7 @@ const createProjectionHTTP = async function (
         name: projectionName,
         emit: emitEnabled.toString(),
         trackemittedstreams: trackEmittedStreams.toString(),
+        engineversion: engineVersion.toString(),
       },
     },
     query
