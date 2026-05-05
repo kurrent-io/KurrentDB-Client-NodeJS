@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 
 import { StreamsClient } from "../../../generated/kurrentdb/protocols/v1/streams_grpc_pb";
@@ -50,7 +50,7 @@ export const batchAppend = async function (
     ...baseOptions
   }: InternalOptions<AppendToStreamOptions>
 ): Promise<AppendResult> {
-  const correlationId = uuid();
+  const correlationId = randomUUID();
 
   const stream = await this.GRPCStreamCreator(
     StreamsClient,

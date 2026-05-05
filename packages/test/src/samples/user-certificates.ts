@@ -1,6 +1,6 @@
 import { KurrentDBClient } from "@kurrent/kurrentdb-client";
 import { createTestNode, jsonTestEvents } from "@test-utils";
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 
 const STREAM_NAME = uuid();
 

@@ -3,7 +3,7 @@ import { isAbsolute, resolve } from "path";
 import { Readable, Writable, Duplex, finished } from "stream";
 import * as bridge from "@kurrent/bridge";
 
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 
 import {
   CallCredentials as grpcCallCredentials,
@@ -320,7 +320,7 @@ export class Client {
       keepAliveInterval = 10_000,
       keepAliveTimeout = 10_000,
       defaultDeadline = 10_000,
-      connectionName = uuid(),
+      connectionName = randomUUID(),
       ...connectionSettings
     }: ConnectionSettings,
     channelCredentials: ChannelCredentialOptions = { insecure: false },
