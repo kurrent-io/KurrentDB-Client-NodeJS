@@ -3,6 +3,7 @@ import { collect, createTestNode, delay } from "@test-utils";
 import {
   KurrentDBClient,
   jsonEvent,
+  ProjectionEngineVersion,
   StreamNotFoundError,
 } from "@kurrent/kurrentdb-client";
 
@@ -117,5 +118,24 @@ describe("createProjection", () => {
 
     expect(emittedStream).toBeDefined();
     expect(emittedStream.event?.type).toBe("$StreamTracked");
+  });
+
+  test("v2 engine", async () => {
+    const PROJECTION_NAME = "v2_engine";
+
+    await expect(
+      client.createProjection(
+        PROJECTION_NAME,
+        `
+        fromAll()
+          .when({
+            $init: function (state, ev) {
+              return {};
+            }
+          });
+        `,
+        { engineVersion: ProjectionEngineVersion.V2 }
+      )
+    ).resolves.toBeUndefined();
   });
 });

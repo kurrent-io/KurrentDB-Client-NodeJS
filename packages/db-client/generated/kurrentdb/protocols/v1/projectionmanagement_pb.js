@@ -864,7 +864,8 @@ proto.event_store.client.projections.CreateReq.Options.toObject = function(inclu
     oneTime: (f = msg.getOneTime()) && kurrentdb_protocols_v1_shared_pb.Empty.toObject(includeInstance, f),
     pb_transient: (f = msg.getTransient()) && proto.event_store.client.projections.CreateReq.Options.Transient.toObject(includeInstance, f),
     continuous: (f = msg.getContinuous()) && proto.event_store.client.projections.CreateReq.Options.Continuous.toObject(includeInstance, f),
-    query: jspb.Message.getFieldWithDefault(msg, 4, "")
+    query: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    engineVersion: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -919,6 +920,10 @@ proto.event_store.client.projections.CreateReq.Options.deserializeBinaryFromRead
     case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setQuery(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setEngineVersion(value);
       break;
     default:
       reader.skipField();
@@ -977,6 +982,13 @@ proto.event_store.client.projections.CreateReq.Options.serializeBinaryToWriter =
   if (f.length > 0) {
     writer.writeString(
       4,
+      f
+    );
+  }
+  f = message.getEngineVersion();
+  if (f !== 0) {
+    writer.writeInt32(
+      5,
       f
     );
   }
@@ -1429,6 +1441,24 @@ proto.event_store.client.projections.CreateReq.Options.prototype.getQuery = func
  */
 proto.event_store.client.projections.CreateReq.Options.prototype.setQuery = function(value) {
   return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional int32 engine_version = 5;
+ * @return {number}
+ */
+proto.event_store.client.projections.CreateReq.Options.prototype.getEngineVersion = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.event_store.client.projections.CreateReq.Options} returns this
+ */
+proto.event_store.client.projections.CreateReq.Options.prototype.setEngineVersion = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
