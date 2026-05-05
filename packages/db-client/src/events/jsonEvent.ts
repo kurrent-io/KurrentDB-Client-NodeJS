@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 
 import type { EventData, JSONEventType } from "../types";
 
@@ -15,7 +15,7 @@ export const jsonEvent = <E extends JSONEventType>({
   type,
   data,
   metadata,
-  id = uuid(),
+  id = randomUUID(),
 }: JSONEventOptions<E>): EventData<E> =>
   ({
     id,

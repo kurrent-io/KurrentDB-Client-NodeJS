@@ -1,7 +1,7 @@
-import { stringify, v4 } from "uuid";
+import { randomUUID } from "crypto";
 import { UUID } from "../../generated/kurrentdb/protocols/v1/shared_pb";
 
-export const createUUID = (id: string = v4()): UUID => {
+export const createUUID = (id: string = randomUUID()): UUID => {
   const uuid = new UUID();
   uuid.setString(id);
   return uuid;
@@ -13,19 +13,21 @@ export function parseUUID(uuid: UUID | undefined): string | undefined {
   if (!uuid) return undefined;
 
   if (uuid.hasStructured()) {
-    const structured = uuid.getStructured()!;
-    const leastSignificantBits = BigInt(structured.getLeastSignificantBits());
-    const mostSignificantBits = BigInt(structured.getMostSignificantBits());
-    const buffer = new ArrayBuffer(16);
-    const dataView = new DataView(buffer);
-
-    dataView.setBigUint64(0, mostSignificantBits);
-    dataView.setBigUint64(8, leastSignificantBits);
-
-    const uint8Array = new Uint8Array(buffer);
-
-    return stringify(uint8Array);
+    return structuredUUIDToString(uuid.getStructured()!);
   }
 
   return uuid.getString();
 }
+
+export const structuredUUIDToString = (structured: UUID.Structured): string => {
+  const ms = toUnsignedHex(structured.getMostSignificantBits());
+  const ls = toUnsignedHex(structured.getLeastSignificantBits());
+  return `${ms.slice(0, 8)}-${ms.slice(8, 12)}-${ms.slice(12)}-${ls.slice(
+    0,
+    4
+  )}-${ls.slice(4)}`;
+};
+
+const U64_MASK = (1n << 64n) - 1n;
+const toUnsignedHex = (value: string): string =>
+  (BigInt(value) & U64_MASK).toString(16).padStart(16, "0");

@@ -1,6 +1,6 @@
 /** @jest-environment ./src/utils/enableVersionCheck.ts */
 
-import { v4 as uuid } from "uuid";
+import { randomUUID as uuid } from "crypto";
 
 import { KurrentDBClient, isCommandError } from "@kurrent/kurrentdb-client";
 import {
