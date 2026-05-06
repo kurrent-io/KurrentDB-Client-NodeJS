@@ -46,7 +46,12 @@ import type {
   PersistentSubscribeParameters,
   SubscribeParameters,
 } from "./types";
-import { hasConvertGrpcEventMethod, isJSONEventData } from "./utils";
+import {
+  describeAuth,
+  hasConvertGrpcEventMethod,
+  isJSONEventData,
+  type AuthContext,
+} from "./utils";
 
 const TRACE_ID = "$traceId" as any;
 const SPAN_ID = "$spanId" as any;
@@ -170,9 +175,15 @@ export class Instrumentation extends InstrumentationBase {
           [KurrentAttributes.DATABASE_OPERATION]: operation,
         };
 
-        if (options?.credentials) {
-          attributes[KurrentAttributes.DATABASE_USER] =
-            options.credentials.username;
+        const auth = describeAuth(
+          options?.credentials,
+          Boolean(this.credentialsProvider)
+        );
+        if (auth.username !== undefined) {
+          attributes[KurrentAttributes.DATABASE_USER] = auth.username;
+        }
+        if (auth.kind !== undefined) {
+          attributes[KurrentAttributes.KURRENT_DB_AUTH_KIND] = auth.kind;
         }
 
         const span = tracer.startSpan(KurrentAttributes.STREAM_APPEND, {
@@ -344,7 +355,7 @@ export class Instrumentation extends InstrumentationBase {
       | PersistentSubscriptionImpl<KnownEventType>,
     uri: string,
     operation: string,
-    options: SubscribeToStreamOptions | SubscribeToAllOptions | undefined,
+    authContext: AuthContext,
     tracer: Tracer
   ) {
     if (!hasConvertGrpcEventMethod(subscription)) return;
@@ -378,8 +389,14 @@ export class Instrumentation extends InstrumentationBase {
         [KurrentAttributes.SERVER_PORT]: port,
         [KurrentAttributes.DATABASE_SYSTEM]: INSTRUMENTATION_NAME,
         [KurrentAttributes.DATABASE_OPERATION]: operation,
-        [KurrentAttributes.DATABASE_USER]: options?.credentials?.username,
       };
+
+      if (authContext.username !== undefined) {
+        attributes[KurrentAttributes.DATABASE_USER] = authContext.username;
+      }
+      if (authContext.kind !== undefined) {
+        attributes[KurrentAttributes.KURRENT_DB_AUTH_KIND] = authContext.kind;
+      }
 
       const span = tracer.startSpan(
         spanName,
@@ -431,13 +448,18 @@ export class Instrumentation extends InstrumentationBase {
           args
         );
 
+        const authContext = describeAuth(
+          options?.credentials,
+          Boolean(this.credentialsProvider)
+        );
+
         this.resolveUri().then((uri) =>
           Instrumentation.applySubscriptionInstrumentation(
             KurrentAttributes.STREAM_SUBSCRIBE,
             subscription,
             uri,
             operation,
-            options,
+            authContext,
             tracer
           )
         );
@@ -478,13 +500,18 @@ export class Instrumentation extends InstrumentationBase {
           args
         );
 
+        const authContext = describeAuth(
+          options?.credentials,
+          Boolean(this.credentialsProvider)
+        );
+
         this.resolveUri().then((uri) =>
           Instrumentation.applySubscriptionInstrumentation(
             KurrentAttributes.STREAM_SUBSCRIBE,
             subscription,
             uri,
             operation,
-            options,
+            authContext,
             tracer
           )
         );

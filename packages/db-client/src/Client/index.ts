@@ -27,9 +27,12 @@ import type {
   NodePreference,
   GRPCClientConstructor,
   EndPoint,
+  BasicCredentials,
   Credentials,
   BaseOptions,
+  CredentialsProvider,
 } from "../types";
+import { toAuthorizationHeader } from "../utils/credentials";
 import {
   CancelledError,
   convertToCommandError,
@@ -147,7 +150,8 @@ export class Client {
   #keepAliveTimeout: number;
   #defaultDeadline: number;
 
-  #defaultCredentials?: Credentials;
+  #defaultCredentials?: BasicCredentials;
+  #credentialsProvider?: CredentialsProvider;
 
   #nextChannelSettings?: NextChannelSettings;
   #channel?: Promise<Channel>;
@@ -299,19 +303,19 @@ export class Client {
     rustClient: bridge.RustClient,
     connectionSettings: DNSClusterOptions,
     channelCredentials?: ChannelCredentialOptions,
-    defaultUserCredentials?: Credentials
+    defaultUserCredentials?: BasicCredentials
   );
   protected constructor(
     rustClient: bridge.RustClient,
     connectionSettings: GossipClusterOptions,
     channelCredentials?: ChannelCredentialOptions,
-    defaultUserCredentials?: Credentials
+    defaultUserCredentials?: BasicCredentials
   );
   protected constructor(
     rustClient: bridge.RustClient,
     connectionSettings: SingleNodeOptions,
     channelCredentials?: ChannelCredentialOptions,
-    defaultUserCredentials?: Credentials
+    defaultUserCredentials?: BasicCredentials
   );
   protected constructor(
     rustClient: bridge.RustClient,
@@ -324,7 +328,7 @@ export class Client {
       ...connectionSettings
     }: ConnectionSettings,
     channelCredentials: ChannelCredentialOptions = { insecure: false },
-    defaultUserCredentials?: Credentials
+    defaultUserCredentials?: BasicCredentials
   ) {
     if (keepAliveInterval < -1) {
       throw new Error(
@@ -359,7 +363,9 @@ export class Client {
     this.#insecure = !!channelCredentials.insecure;
     this.#defaultCredentials = defaultUserCredentials;
     this.#connectionName = connectionName;
-    this.#http = new HTTP(this, channelCredentials, defaultUserCredentials);
+    this.#http = new HTTP(this, channelCredentials, (perCall) =>
+      this.resolveAuthorizationHeader(perCall)
+    );
 
     if (this.#insecure) {
       debug.connection("Using insecure channel");
@@ -385,6 +391,25 @@ export class Client {
    */
   public get connectionName() {
     return this.#connectionName;
+  }
+
+  /**
+   * The {@link CredentialsProvider} currently in effect, if any. Read-only.
+   * Use {@link setCredentialsProvider} to change it.
+   */
+  public get credentialsProvider(): CredentialsProvider | undefined {
+    return this.#credentialsProvider;
+  }
+
+  /**
+   * Set or clear the {@link CredentialsProvider} invoked before every request.
+   * Per-call `credentials` override the provider. Otherwise the static
+   * `defaultCredentials` are used.
+   */
+  public setCredentialsProvider(
+    provider: CredentialsProvider | undefined
+  ): void {
+    this.#credentialsProvider = provider;
   }
 
   // Internal access to grpc client.
@@ -615,34 +640,70 @@ export class Client {
     }
   };
 
-  private createCredentialsMetadataGenerator =
-    ({
-      username,
-      password,
-    }: Credentials): Parameters<
-      typeof grpcCredentials.createFromMetadataGenerator
-    >[0] =>
+  private createMetadataGenerator =
+    (
+      resolveCredentials: () => Credentials | Promise<Credentials>
+    ): Parameters<typeof grpcCredentials.createFromMetadataGenerator>[0] =>
     (_, cb) => {
-      const metadata = new Metadata();
-
       if (this.#insecure) {
         debug.connection(
           "Credentials are unsupported in insecure mode, and will be ignored."
         );
-      } else {
-        const auth = Buffer.from(`${username}:${password}`).toString("base64");
-        metadata.add("authorization", `Basic ${auth}`);
+        return cb(null, new Metadata());
       }
 
-      return cb(null, metadata);
+      Promise.resolve()
+        .then(resolveCredentials)
+        .then((credentials) => {
+          const metadata = new Metadata();
+          metadata.add("authorization", toAuthorizationHeader(credentials));
+          cb(null, metadata);
+        })
+        .catch((err) => cb(err as Error));
     };
 
+  /**
+   * Resolve the `Authorization` header value for a given request. Captures
+   * the provider/default state at call time so in-flight requests are
+   * unaffected by concurrent {@link setCredentialsProvider} swaps.
+   */
+  private resolveAuthorizationHeader = async (
+    perCallCredentials?: Credentials
+  ): Promise<string | undefined> => {
+    if (this.#insecure) return undefined;
+
+    if (perCallCredentials) {
+      return toAuthorizationHeader(perCallCredentials);
+    }
+
+    if (this.#credentialsProvider) {
+      const credentials = await this.#credentialsProvider();
+      return toAuthorizationHeader(credentials);
+    }
+
+    if (this.#defaultCredentials) {
+      return toAuthorizationHeader(this.#defaultCredentials);
+    }
+
+    return undefined;
+  };
+
+  /**
+   * Resolve the {@link Credentials} value to forward to the Rust bridge for
+   * a given request. Per-call credentials win. Otherwise we invoke the
+   * configured {@link CredentialsProvider}. Falls back to `undefined` so the
+   * bridge uses the credentials baked into its connection string.
+   */
+  protected resolveBridgeCredentials = async (
+    perCallCredentials?: Credentials
+  ): Promise<Credentials | undefined> => {
+    if (perCallCredentials) return perCallCredentials;
+    if (this.#credentialsProvider) return await this.#credentialsProvider();
+    return undefined;
+  };
+
   protected callArguments = (
-    {
-      credentials = this.#defaultCredentials,
-      requiresLeader,
-      deadline,
-    }: BaseOptions,
+    { credentials, requiresLeader, deadline }: BaseOptions,
     callOptions?: CallOptions
   ): [Metadata, CallOptions] => {
     const metadata = new Metadata();
@@ -654,9 +715,23 @@ export class Client {
       metadata.add("requires-leader", "true");
     }
 
+    // Per-call credentials take precedence. Otherwise prefer a refresh-aware
+    // provider over the static default so token refresh actually runs per RPC.
+    let resolveCredentials:
+      | (() => Credentials | Promise<Credentials>)
+      | undefined;
     if (credentials) {
+      resolveCredentials = () => credentials;
+    } else if (this.#credentialsProvider) {
+      resolveCredentials = this.#credentialsProvider;
+    } else if (this.#defaultCredentials) {
+      const defaults = this.#defaultCredentials;
+      resolveCredentials = () => defaults;
+    }
+
+    if (resolveCredentials) {
       options.credentials = grpcCallCredentials.createFromMetadataGenerator(
-        this.createCredentialsMetadataGenerator(credentials)
+        this.createMetadataGenerator(resolveCredentials)
       );
     }
 

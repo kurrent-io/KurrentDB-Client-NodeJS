@@ -19,4 +19,5 @@ export const KurrentAttributes = {
   KURRENT_DB_SUBSCRIPTION_ID: `${kurrentdb}.subscription.id`,
   KURRENT_DB_EVENT_ID: `${kurrentdb}.event.id`,
   KURRENT_DB_EVENT_TYPE: `${kurrentdb}.event.type`,
+  KURRENT_DB_AUTH_KIND: `${kurrentdb}.auth.kind`,
 };

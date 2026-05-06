@@ -1,5 +1,5 @@
 import { RANDOM, FOLLOWER, LEADER, READ_ONLY_REPLICA } from "../constants";
-import type { Credentials, EndPoint, NodePreference } from "../types";
+import type { BasicCredentials, EndPoint, NodePreference } from "../types";
 import { debug } from "../utils";
 
 export interface QueryOptions {
@@ -21,7 +21,7 @@ export interface QueryOptions {
 
 export interface ConnectionOptions extends QueryOptions {
   dnsDiscover: boolean;
-  defaultCredentials?: Credentials;
+  defaultCredentials?: BasicCredentials;
   hosts: EndPoint[];
 }
 

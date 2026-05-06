@@ -21,7 +21,8 @@ import type * as constants from "../constants";
 
 export interface BaseOptions {
   /**
-   * Overwrite the default credentials.
+   * Overwrite the default credentials. Accepts either basic
+   * username/password credentials or a bearer token.
    */
   credentials?: Credentials;
   /**
@@ -328,10 +329,37 @@ export interface PrefixesFilter extends FilterBase {
 
 export type Filter = RegexFilter | PrefixesFilter;
 
-export interface Credentials {
+/**
+ * Username/password credentials used to authenticate against KurrentDB,
+ * rendered as an HTTP Basic `Authorization` header.
+ */
+export interface BasicCredentials {
   username: string;
   password: string;
 }
+
+/**
+ * Bearer-token credentials used to authenticate against KurrentDB, rendered
+ * as an HTTP Bearer `Authorization` header. Bearer tokens are
+ * programmatic-only and cannot be supplied via a connection string.
+ */
+export interface BearerCredentials {
+  bearerToken: string;
+}
+
+/**
+ * Credential shape accepted by the client. Either basic username/password
+ * or a bearer token.
+ */
+export type Credentials = BasicCredentials | BearerCredentials;
+
+/**
+ * Callback invoked before every RPC to obtain fresh credentials. Use this for
+ * refresh-aware token sources such as Azure Entra or OIDC. The provider runs
+ * once per outbound request, so consumers can return a cached token until
+ * expiry and rotate transparently.
+ */
+export type CredentialsProvider = () => Credentials | Promise<Credentials>;
 
 export interface Certificate {
   userCertFile: Buffer;
