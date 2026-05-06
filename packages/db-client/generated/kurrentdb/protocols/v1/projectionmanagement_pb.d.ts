@@ -49,6 +49,8 @@ export namespace CreateReq {
         setContinuous(value?: CreateReq.Options.Continuous): Options;
         getQuery(): string;
         setQuery(value: string): Options;
+        getEngineVersion(): number;
+        setEngineVersion(value: number): Options;
 
         getModeCase(): Options.ModeCase;
 
@@ -68,6 +70,7 @@ export namespace CreateReq {
             pb_transient?: CreateReq.Options.Transient.AsObject,
             continuous?: CreateReq.Options.Continuous.AsObject,
             query: string,
+            engineVersion: number,
         }
 
 

@@ -29,6 +29,10 @@ export const RETRY = "retry";
 export const SKIP = "skip";
 export const STOP = "stop";
 
+// projection engine version
+export const PROJECTION_ENGINE_V1 = "v1";
+export const PROJECTION_ENGINE_V2 = "v2";
+
 // projection status
 export const CREATING = "Creating";
 export const LOADING = "Loading";
