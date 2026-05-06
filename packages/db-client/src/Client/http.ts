@@ -130,7 +130,9 @@ export class HTTP {
         `Making %s call to %s with headers %h`,
         method,
         url.toString(),
-        headers
+        authorization
+          ? { ...headers, Authorization: "[REDACTED]" }
+          : headers
       );
 
       const req = this.#insecure
