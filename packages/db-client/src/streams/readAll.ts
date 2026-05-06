@@ -8,7 +8,6 @@ import type {
 import { FORWARDS, START } from "../constants";
 import { Client } from "../Client";
 
-import * as bridge from "@kurrent/bridge";
 import { convertRustEvent } from "../utils/convertRustEvent";
 import { convertBridgeError } from "../utils/convertBridgeError";
 
@@ -64,26 +63,28 @@ Client.prototype.readAll = function (
     ...baseOptions
   }: ReadAllOptions = {}
 ): AsyncIterableIterator<AllStreamResolvedEvent> {
-  const options: bridge.RustReadAllOptions = {
-    maxCount: BigInt(maxCount),
-    fromPosition,
-    resolvesLink: resolveLinkTos,
-    direction,
-    requiresLeader: baseOptions.requiresLeader ?? false,
-    credentials: baseOptions.credentials,
-    filter: baseOptions.filter,
-  };
-
-  let stream;
-  try {
-    stream = this.rustClient.readAll(options);
-  } catch (error) {
-    throw convertBridgeError(error);
-  }
-
   const convert = async function* (
-    stream: AsyncIterable<bridge.ResolvedEvent[]>
-  ) {
+    this: Client
+  ): AsyncIterableIterator<AllStreamResolvedEvent> {
+    const credentials = await this.resolveBridgeCredentials(
+      baseOptions.credentials
+    );
+
+    let stream;
+    try {
+      stream = this.rustClient.readAll({
+        credentials,
+        direction,
+        fromPosition,
+        filter: baseOptions.filter,
+        maxCount: BigInt(maxCount),
+        requiresLeader: baseOptions.requiresLeader ?? false,
+        resolvesLink: resolveLinkTos,
+      });
+    } catch (error) {
+      throw convertBridgeError(error);
+    }
+
     try {
       for await (const events of stream) {
         for (const event of events) {
@@ -95,5 +96,5 @@ Client.prototype.readAll = function (
     }
   };
 
-  return convert(stream);
+  return convert.call(this);
 };
