@@ -82,6 +82,7 @@ Client.prototype.appendToStream = async function <
 
   if (
     !baseOptions.credentials &&
+    !this.credentialsProvider &&
     (await this.supports(StreamsService.batchAppend))
   ) {
     return batchAppend.call(this, streamName, events, {

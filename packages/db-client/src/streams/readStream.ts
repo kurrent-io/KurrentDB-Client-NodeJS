@@ -1,5 +1,3 @@
-import * as bridge from "@kurrent/bridge";
-
 import { Client } from "../Client";
 import { FORWARDS, START, END } from "../constants";
 import type {
@@ -65,55 +63,48 @@ Client.prototype.readStream = function <
     ...baseOptions
   }: ReadStreamOptions = {}
 ): AsyncIterableIterator<ResolvedEvent<KnownEventType>> {
-  const options: bridge.RustReadStreamOptions = {
-    maxCount: BigInt(maxCount),
-    fromRevision,
-    resolvesLink: resolveLinkTos,
-    direction,
-    requiresLeader: baseOptions.requiresLeader ?? false,
-    credentials: baseOptions.credentials,
-  };
-  switch (fromRevision) {
-    case START: {
-      break;
+  if (
+    fromRevision !== START &&
+    fromRevision !== END &&
+    typeof fromRevision === "bigint"
+  ) {
+    const lowerBound = BigInt("0");
+    const upperBound = BigInt("0xffffffffffffffff");
+
+    if (fromRevision < lowerBound) {
+      throw new InvalidArgumentError(
+        `fromRevision value must be a non-negative integer. Value Received: ${fromRevision}`
+      );
     }
 
-    case END: {
-      break;
+    if (fromRevision > upperBound) {
+      throw new InvalidArgumentError(
+        `fromRevision value must be a non-negative integer, range from 0 to 18446744073709551615. Value Received: ${fromRevision}`
+      );
     }
-
-    default: {
-      const lowerBound = BigInt("0");
-      const upperBound = BigInt("0xffffffffffffffff");
-
-      if (fromRevision < lowerBound) {
-        throw new InvalidArgumentError(
-          `fromRevision value must be a non-negative integer. Value Received: ${fromRevision}`
-        );
-      }
-
-      if (fromRevision > upperBound) {
-        throw new InvalidArgumentError(
-          `fromRevision value must be a non-negative integer, range from 0 to 18446744073709551615. Value Received: ${fromRevision}`
-        );
-      }
-
-      options.fromRevision = fromRevision;
-
-      break;
-    }
-  }
-
-  let stream;
-  try {
-    stream = this.rustClient.readStream(streamName, options);
-  } catch (error) {
-    throw convertBridgeError(error, streamName);
   }
 
   const convert = async function* (
-    stream: AsyncIterable<bridge.ResolvedEvent[]>
-  ) {
+    this: Client
+  ): AsyncIterableIterator<ResolvedEvent<KnownEventType>> {
+    const credentials = await this.resolveBridgeCredentials(
+      baseOptions.credentials
+    );
+
+    let stream;
+    try {
+      stream = this.rustClient.readStream(streamName, {
+        credentials,
+        direction,
+        fromRevision,
+        maxCount: BigInt(maxCount),
+        requiresLeader: baseOptions.requiresLeader ?? false,
+        resolvesLink: resolveLinkTos,
+      });
+    } catch (error) {
+      throw convertBridgeError(error, streamName);
+    }
+
     try {
       for await (const events of stream) {
         for (const event of events) {
@@ -125,5 +116,5 @@ Client.prototype.readStream = function <
     }
   };
 
-  return convert(stream);
+  return convert.call(this);
 };

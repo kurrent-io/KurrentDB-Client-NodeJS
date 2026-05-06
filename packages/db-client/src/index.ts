@@ -9,6 +9,7 @@ export {
   SingleNodeOptions,
   ChannelCredentialOptions,
 } from "./Client";
+export { isBasicCredentials, isBearerCredentials } from "./utils/credentials";
 export * from "./events";
 export * from "./constants";
 export * from "./types";

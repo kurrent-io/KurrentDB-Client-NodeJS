@@ -24,6 +24,7 @@ instrumentation.disable();
 import * as kdb from "@kurrent/kurrentdb-client";
 import {
   AppendToStreamOptions,
+  isBasicCredentials,
   ResolvedEvent,
   streamNameFilter,
   WrongExpectedVersionError,
@@ -59,7 +60,10 @@ describe("instrumentation", () => {
       { withCredentials: false, credentials: undefined },
       {
         withCredentials: true,
-        credentials: { username: "admin", password: "changeit" },
+        credentials: {
+          username: "admin",
+          password: "changeit",
+        },
       },
     ])(
       "should create a span for append operation, withCredentials: $withCredentials",
@@ -111,9 +115,10 @@ describe("instrumentation", () => {
           [KurrentAttributes.DATABASE_OPERATION]: "appendToStream",
         };
 
-        if (withCredentials) {
+        if (withCredentials && isBasicCredentials(credentials)) {
           expectedAttributes[KurrentAttributes.DATABASE_USER] =
-            credentials!.username;
+            credentials.username;
+          expectedAttributes[KurrentAttributes.KURRENT_DB_AUTH_KIND] = "basic";
         }
 
         expect(spans.length).toBe(1);
