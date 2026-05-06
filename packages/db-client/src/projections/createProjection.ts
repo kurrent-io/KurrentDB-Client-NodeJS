@@ -5,8 +5,14 @@ import {
 import { CreateReq } from "../../generated/kurrentdb/protocols/v1/projectionmanagement_pb";
 
 import { Client } from "../Client";
-import type { BaseOptions } from "../types";
+import { PROJECTION_ENGINE_V1, PROJECTION_ENGINE_V2 } from "../constants";
+import type { BaseOptions, ProjectionEngineVersion } from "../types";
 import { debug, convertToCommandError } from "../utils";
+
+const ENGINE_VERSION_WIRE: Record<ProjectionEngineVersion, number> = {
+  [PROJECTION_ENGINE_V1]: 1,
+  [PROJECTION_ENGINE_V2]: 2,
+};
 
 export interface CreateProjectionOptions extends BaseOptions {
   /**
@@ -19,6 +25,15 @@ export interface CreateProjectionOptions extends BaseOptions {
    * @defaultValue false
    */
   trackEmittedStreams?: boolean;
+  /**
+   * Selects the projection engine version. Pinned at create time and
+   * cannot be changed later. V2 is opt-in and does not support
+   * `trackEmittedStreams`, bi-state projections, or live `outputState`
+   * result streams. See the KurrentDB documentation for the full list of
+   * limitations before choosing V2.
+   * @defaultValue {@link PROJECTION_ENGINE_V1}
+   */
+  engineVersion?: ProjectionEngineVersion;
 }
 
 declare module "../Client" {
@@ -66,6 +81,7 @@ const createProjectionGRPC = async function (
   {
     emitEnabled = false,
     trackEmittedStreams = false,
+    engineVersion = PROJECTION_ENGINE_V1,
     ...baseOptions
   }: CreateProjectionOptions = {}
 ): Promise<void> {
@@ -79,6 +95,9 @@ const createProjectionGRPC = async function (
 
   options.setContinuous(continuous);
   options.setQuery(query);
+  if (engineVersion === PROJECTION_ENGINE_V2) {
+    options.setEngineVersion(ENGINE_VERSION_WIRE[engineVersion]);
+  }
 
   req.setOptions(options);
 
@@ -104,6 +123,7 @@ const createProjectionHTTP = async function (
   {
     emitEnabled = false,
     trackEmittedStreams = false,
+    engineVersion = PROJECTION_ENGINE_V1,
     ...baseOptions
   }: CreateProjectionOptions = {}
 ) {
@@ -116,6 +136,9 @@ const createProjectionHTTP = async function (
         name: projectionName,
         emit: emitEnabled.toString(),
         trackemittedstreams: trackEmittedStreams.toString(),
+        ...(engineVersion === PROJECTION_ENGINE_V2 && {
+          engineversion: ENGINE_VERSION_WIRE[engineVersion].toString(),
+        }),
       },
     },
     query
