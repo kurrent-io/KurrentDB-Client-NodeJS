@@ -32,20 +32,29 @@ type HTTPMethod =
   | "TRACE"
   | "PATCH";
 
+/**
+ * Resolve the verbatim `Authorization` header for an HTTP fallback request,
+ * given an optional per-call credential. Returning `undefined` skips the
+ * header entirely (e.g. insecure mode).
+ */
+export type ResolveAuthorizationHeader = (
+  perCallCredentials?: Credentials
+) => Promise<string | undefined>;
+
 export class HTTP {
   #client!: Client;
   #channelCredentials!: ChannelCredentialOptions;
-  #defaultUserCredentials?: Credentials;
+  #resolveAuthorizationHeader: ResolveAuthorizationHeader;
   #insecure: boolean;
 
   constructor(
     client: Client,
     channelCredentials: ChannelCredentialOptions,
-    defaultUserCredentials?: Credentials
+    resolveAuthorizationHeader: ResolveAuthorizationHeader
   ) {
     this.#client = client;
     this.#channelCredentials = channelCredentials;
-    this.#defaultUserCredentials = defaultUserCredentials;
+    this.#resolveAuthorizationHeader = resolveAuthorizationHeader;
     this.#insecure = !!channelCredentials.insecure;
   }
 
@@ -64,18 +73,19 @@ export class HTTP {
     url: URL,
     options: HTTPRequestOptions,
     body?: string
-  ) =>
-    new Promise<T>((resolve, reject) => {
+  ): Promise<T> => {
+    const authorization = await this.#resolveAuthorizationHeader(
+      options.credentials
+    );
+
+    return new Promise<T>((resolve, reject) => {
       const headers: Record<string, string> = {
         "content-type": "application/json",
         ...(options.headers ?? {}),
       };
-      const credentials = options.credentials ?? this.#defaultUserCredentials;
 
-      if (!this.#insecure && credentials) {
-        headers["Authorization"] = `Basic ${Buffer.from(
-          `${credentials.username}:${credentials.password}`
-        ).toString("base64")}`;
+      if (authorization) {
+        headers["Authorization"] = authorization;
       }
 
       const ca = this.#channelCredentials.rootCertificate
@@ -152,6 +162,7 @@ export class HTTP {
 
       req.end();
     });
+  };
 
   private createURL = async (
     pathname: string,

@@ -61,7 +61,10 @@ describe("reconnect", () => {
 
     await timeoutNode.up();
 
-    const credentials = { username: "admin", password: "changeit" };
+    const credentials = {
+      username: "admin",
+      password: "changeit",
+    };
     const STREAM_NAME = "try_get_timeout";
 
     const client = KurrentDBClient.connectionString(
