@@ -482,6 +482,19 @@ export const valid: Array<
       ],
     },
   ],
+  [
+    "kurrentdb://localhost?tlsVerifyCert=false",
+    {
+      dnsDiscover: false,
+      tlsVerifyCert: false,
+      hosts: [
+        {
+          address: "localhost",
+          port: 2113,
+        },
+      ],
+    },
+  ],
 ];
 
 export const invalid: string[] = [
@@ -521,19 +534,6 @@ export const warning: Array<
     "kurrentdb://localhost?someNonsense=follower&doTheThing=true",
     {
       dnsDiscover: false,
-      hosts: [
-        {
-          address: "localhost",
-          port: 2113,
-        },
-      ],
-    },
-  ],
-  [
-    "kurrentdb://localhost?tlsVerifyCert=false",
-    {
-      dnsDiscover: false,
-      tlsVerifyCert: false,
       hosts: [
         {
           address: "localhost",

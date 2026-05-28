@@ -92,6 +92,9 @@ export class HTTP {
         ? [this.#channelCredentials.rootCertificate]
         : undefined;
 
+      const rejectUnauthorized =
+        this.#channelCredentials.verifyOptions?.rejectUnauthorized;
+
       const callback = (res: IncomingMessage) => {
         if (res.statusCode === 307) {
           return resolve(
@@ -148,6 +151,7 @@ export class HTTP {
               method,
               headers,
               ca,
+              rejectUnauthorized,
             },
             callback
           );

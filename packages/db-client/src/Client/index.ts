@@ -184,6 +184,22 @@ export class Client {
       insecure: options.tls === false,
     };
 
+    if (options.tlsVerifyCert === false) {
+      if (channelCredentials.insecure) {
+        debug.connection(
+          "tlsVerifyCert passed to insecure connection. Will be ignored."
+        );
+      } else {
+        debug.connection(
+          "tlsVerifyCert=false: certificate verification is disabled. Do not use in production."
+        );
+        channelCredentials.verifyOptions = {
+          ...channelCredentials.verifyOptions,
+          rejectUnauthorized: false,
+        };
+      }
+    }
+
     if (options.tlsCAFile) {
       if (channelCredentials.insecure) {
         debug.connection(
