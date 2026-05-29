@@ -278,18 +278,6 @@ const verifyKeyValuePair = (
   const key = mapToQueryOption(rawKey) ?? rawKey;
   const value = rawValue.trim();
 
-  if (key === "tlsVerifyCert" && value === "false") {
-    console.warn(
-      [
-        `"tlsVerifyCert" is not currently supported by this client, and will have no effect.`,
-        `Consider either:`,
-        `    Passing "tlsCAFile" in the connection string.`,
-        `    Setting NODE_EXTRA_CA_CERTS https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file`,
-        errorLocationString(connectionString, [from + `&`.length, to]),
-      ].join("\n")
-    );
-  }
-
   switch (key) {
     case "nodePreference": {
       const parsedValue = mapToNodePreference(value);

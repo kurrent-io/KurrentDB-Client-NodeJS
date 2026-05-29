@@ -53,15 +53,3 @@ kurrentdb://localhost?someNonsense=follower&doTheThing=true
 ]
 `;
 
-exports[`connection string parser Should warn on unknown and unsupported keys kurrentdb://localhost?tlsVerifyCert=false 1`] = `
-[
-  [
-    ""tlsVerifyCert" is not currently supported by this client, and will have no effect.
-Consider either:
-    Passing "tlsCAFile" in the connection string.
-    Setting NODE_EXTRA_CA_CERTS https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file
-kurrentdb://localhost?tlsVerifyCert=false
-                      ^^^^^^^^^^^^^^^^^^^",
-  ],
-]
-`;

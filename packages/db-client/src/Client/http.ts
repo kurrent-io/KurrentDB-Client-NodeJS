@@ -145,6 +145,7 @@ export class HTTP {
         : httpsRequest(
             url,
             {
+              ...this.#channelCredentials.verifyOptions,
               method,
               headers,
               ca,
