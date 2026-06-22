@@ -18,7 +18,7 @@ describe("RecordedEvent created", () => {
     const STREAM_NAME = "test_stream_name";
     await client.appendToStream(STREAM_NAME, jsonTestEvents());
     for await (const { event } of client.readStream(STREAM_NAME)) {
-      expect(event).toBeDefined;
+      expect(event).toBeDefined();
       expect(event?.created).toBeInstanceOf(Date);
     }
   });
