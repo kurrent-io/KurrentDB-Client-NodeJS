@@ -89,6 +89,33 @@ describe("readStream", () => {
       });
     });
 
+    describe("runtime types", () => {
+      const readFirst = () =>
+        collect(
+          client.readStream(STREAM_NAME, {
+            maxCount: 1,
+            fromRevision: BigInt(1),
+          })
+        );
+
+      test("revision is a bigint", async () => {
+        const [resolved] = await readFirst();
+
+        expect(typeof resolved.event?.revision).toBe("bigint");
+        expect(resolved.event?.revision).toBe(BigInt(1));
+      });
+
+      const supported = matchServerVersion`>=22.6.0`;
+      optionalDescribe(supported)("log position (>=22.6.0)", () => {
+        test("position commit and prepare are bigint", async () => {
+          const [resolved] = await readFirst();
+
+          expect(typeof resolved.event?.position?.commit).toBe("bigint");
+          expect(typeof resolved.event?.position?.prepare).toBe("bigint");
+        });
+      });
+    });
+
     describe("options", () => {
       test("from start", async () => {
         let count = 0;
