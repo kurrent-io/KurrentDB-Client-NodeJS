@@ -22,7 +22,7 @@ export const convertRustEvent = <T extends ResolvedEvent>(
   }
 
   if (rustClient.commitPosition != undefined) {
-    resolved.commitPosition = BigInt(rustClient.commitPosition);
+    resolved.commitPosition = rustClient.commitPosition;
   }
 
   return resolved as T;
@@ -63,16 +63,9 @@ export const convertRustRecord = <E extends EventType = EventType>(
   const metadata: E["metadata"] = parseMetadata(rustEvent, id);
   const isJson = rustEvent.isJson;
 
-  const position = {
-    commit:
-      rustEvent.position?.commit !== undefined
-        ? BigInt(rustEvent.position.commit)
-        : undefined,
-    prepare:
-      rustEvent.position?.prepare !== undefined
-        ? BigInt(rustEvent.position.prepare)
-        : undefined,
-  };
+  const position = rustEvent.position
+    ? { commit: rustEvent.position.commit, prepare: rustEvent.position.prepare }
+    : undefined;
 
   if (isJson) {
     const dataStr = Buffer.from(rustEvent.data).toString("utf8");
