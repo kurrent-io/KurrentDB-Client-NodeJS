@@ -129,14 +129,27 @@ describe("appendToStream - batch append", () => {
           ...aSpy.mock.calls[0]
         );
 
-        const bAppend = clientB.appendToStream(
-          "sibling_b_during_a_error",
-          jsonTestEvents()
-        );
+        let aSettled = false;
+        let bSettled = false;
+        const aAppend = clientA
+          .appendToStream("sibling_a_during_a_error", jsonTestEvents())
+          .finally(() => {
+            aSettled = true;
+          });
+        const bAppend = clientB
+          .appendToStream("sibling_b_during_a_error", jsonTestEvents())
+          .finally(() => {
+            bSettled = true;
+          });
 
         await new Promise((r) => setImmediate(r));
 
+        expect(aSettled).toBe(false);
+        expect(bSettled).toBe(false);
+
         aStream.emit("error", new Error("simulated transport error"));
+
+        await expect(aAppend).rejects.toThrow();
 
         const bResult = await bAppend;
         expect(bResult.success).toBe(true);
