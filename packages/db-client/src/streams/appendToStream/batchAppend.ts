@@ -73,7 +73,13 @@ export const batchAppend = async function (
           const resultingId = parseUUID(resp.getCorrelationId()!);
           const entry = promiseBank.get(resultingId);
 
-          if (!entry) return;
+          if (!entry) {
+            debug.command_grpc(
+              "batchAppend: dropping response for unknown correlationId %s",
+              resultingId
+            );
+            return;
+          }
 
           const [resolve, reject] = entry;
           promiseBank.delete(resultingId);
