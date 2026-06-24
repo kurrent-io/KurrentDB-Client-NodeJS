@@ -111,6 +111,40 @@ describe("appendToStream - batch append", () => {
         (128 * 5_000) / 1024
       );
     });
+
+    test("A stream error does not reject in-flight appends on sibling streams", async () => {
+      const clientA = KurrentDBClient.connectionString(node.connectionString());
+      const clientB = KurrentDBClient.connectionString(node.connectionString());
+      const aSpy = jest.spyOn(
+        clientA,
+        "GRPCStreamCreator" as never
+      ) as unknown as jest.SpiedFunction<KurrentDBClient["GRPCStreamCreator"]>;
+
+      try {
+        await clientA.appendToStream("sibling_a_warmup", jsonTestEvents());
+        await clientB.appendToStream("sibling_b_warmup", jsonTestEvents());
+
+        const aStream = await extractBatchStream.call(
+          clientA,
+          ...aSpy.mock.calls[0]
+        );
+
+        const bAppend = clientB.appendToStream(
+          "sibling_b_during_a_error",
+          jsonTestEvents()
+        );
+
+        await new Promise((r) => setImmediate(r));
+
+        aStream.emit("error", new Error("simulated transport error"));
+
+        const bResult = await bAppend;
+        expect(bResult.success).toBe(true);
+      } finally {
+        await clientA.dispose();
+        await clientB.dispose();
+      }
+    });
   });
 });
 

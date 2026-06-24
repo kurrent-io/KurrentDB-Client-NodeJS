@@ -30,14 +30,19 @@ import {
 
 import type { AppendToStreamOptions } from ".";
 
+type PromiseBank = Map<
+  string,
+  [resolve: (r: AppendResult) => void, reject: (error: Error) => void]
+>;
+
 const streamCache = new WeakMap<
   StreamsClient,
   Promise<ReturnType<StreamsClient["batchAppend"]>>
 >();
 
-const promiseBank = new Map<
-  string,
-  [resolve: (r: AppendResult) => void, reject: (error: Error) => void]
+const promiseBanks = new WeakMap<
+  ReturnType<StreamsClient["batchAppend"]>,
+  PromiseBank
 >();
 
 export const batchAppend = async function (
@@ -55,8 +60,10 @@ export const batchAppend = async function (
   const stream = await this.GRPCStreamCreator(
     StreamsClient,
     "appendToStream",
-    (client) =>
-      client
+    (client) => {
+      const promiseBank: PromiseBank = new Map();
+
+      const batchStream = client
         .batchAppend(
           ...this.callArguments(baseOptions, {
             deadline: Infinity,
@@ -64,8 +71,11 @@ export const batchAppend = async function (
         )
         .on("data", (resp: BatchAppendResp) => {
           const resultingId = parseUUID(resp.getCorrelationId()!);
-          const [resolve, reject] = promiseBank.get(resultingId)!;
+          const entry = promiseBank.get(resultingId);
 
+          if (!entry) return;
+
+          const [resolve, reject] = entry;
           promiseBank.delete(resultingId);
 
           if (resp.hasError()) {
@@ -120,9 +130,21 @@ export const batchAppend = async function (
             reject(convertToCommandError(error));
           }
           promiseBank.clear();
-        }),
+        });
+
+      promiseBanks.set(batchStream, promiseBank);
+
+      return batchStream;
+    },
     streamCache
   )();
+
+  const promiseBank = promiseBanks.get(stream);
+  if (!promiseBank) {
+    throw new Error(
+      "batchAppend could not find the promise bank for the stream."
+    );
+  }
 
   return new Promise(async (...batchPromise) => {
     promiseBank.set(correlationId, batchPromise);
