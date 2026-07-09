@@ -1,5 +1,6 @@
 export * from "./persistentSubscription";
 export * from "./projections";
+export * from "./schemaRegistry";
 export * from "./streams";
 
 export {
