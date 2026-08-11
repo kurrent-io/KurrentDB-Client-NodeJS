@@ -152,46 +152,57 @@ export const batchAppend = async function (
     );
   }
 
-  return new Promise(async (...batchPromise) => {
-    promiseBank.set(correlationId, batchPromise);
+  return new Promise(async (resolve, reject) => {
+    promiseBank.set(correlationId, [resolve, reject]);
 
-    const correlationUUID = createUUID(correlationId);
-    const options = new BatchAppendReq.Options();
-    const identifier = createStreamIdentifier(streamName);
-    const deadline = Timestamp.fromDate(
-      this.createDeadline(baseOptions.deadline)
-    );
+    // Anything that throws in here — most easily a non-serializable event
+    // payload reaching JSON.stringify in eventBatcher — happens while the
+    // stream is healthy, so the "error" handler above never runs and never
+    // settles this entry. The Promise constructor also discards an async
+    // executor's rejection, so without this catch the caller awaits forever
+    // and the failure surfaces only as an unhandledRejection.
+    try {
+      const correlationUUID = createUUID(correlationId);
+      const options = new BatchAppendReq.Options();
+      const identifier = createStreamIdentifier(streamName);
+      const deadline = Timestamp.fromDate(
+        this.createDeadline(baseOptions.deadline)
+      );
 
-    options.setStreamIdentifier(identifier);
-    options.setDeadline21100(deadline);
+      options.setStreamIdentifier(identifier);
+      options.setDeadline21100(deadline);
 
-    switch (streamState) {
-      case "any": {
-        options.setAny(new Empty());
-        break;
+      switch (streamState) {
+        case "any": {
+          options.setAny(new Empty());
+          break;
+        }
+        case "no_stream": {
+          options.setNoStream(new Empty());
+          break;
+        }
+        case "stream_exists": {
+          options.setStreamExists(new Empty());
+          break;
+        }
+        default: {
+          options.setStreamPosition(streamState.toString(10));
+          break;
+        }
       }
-      case "no_stream": {
-        options.setNoStream(new Empty());
-        break;
-      }
-      case "stream_exists": {
-        options.setStreamExists(new Empty());
-        break;
-      }
-      default: {
-        options.setStreamPosition(streamState.toString(10));
-        break;
-      }
-    }
 
-    for (const batch of eventBatcher(
-      events,
-      correlationUUID,
-      options,
-      batchAppendSize
-    )) {
-      debug.command_grpc("batchAppend: %g", batch);
-      await backpressuredWrite(stream, batch);
+      for (const batch of eventBatcher(
+        events,
+        correlationUUID,
+        options,
+        batchAppendSize
+      )) {
+        debug.command_grpc("batchAppend: %g", batch);
+        await backpressuredWrite(stream, batch);
+      }
+    } catch (error) {
+      promiseBank.delete(correlationId);
+      reject(convertToCommandError(error as Error));
     }
   });
 };
