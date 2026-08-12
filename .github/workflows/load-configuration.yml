@@ -56,6 +56,7 @@ jobs:
           IMAGE: ${{ inputs.image }}
           TAG: ${{ inputs.tag }}
           IMAGES: ${{ vars.KURRENTDB_DOCKER_IMAGES }}
+          SECRETS_AVAILABLE: ${{ secrets.CLOUDSMITH_CICD_USER != '' }}
         run: |
           if [ "$RUNTIME" = "qa" ]; then
             {
@@ -66,9 +67,10 @@ jobs:
             exit 0
           fi
 
-          # vars are not passed to runs triggered from forks, fall back to the
-          # anonymously pullable lts image so outside PRs can still run tests.
-          if [ -z "$IMAGES" ]; then
+          # Runs without registry credentials must use the anonymously pullable
+          # lts image: forks get neither vars nor secrets, dependabot gets vars
+          # but not secrets, so key the fallback on secrets, not on vars.
+          if [ "$SECRETS_AVAILABLE" != "true" ] || [ -z "$IMAGES" ]; then
             IMAGES='{"lts":{"registry":"docker.kurrent.io/eventstore","image":"eventstoredb-ee","tag":"lts"}}'
           fi
 
