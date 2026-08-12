@@ -26,3 +26,4 @@ jobs:
       registry: ${{ inputs.registry }}
       image: ${{ inputs.image }}
       tag: ${{ inputs.tag }}
+    secrets: inherit
