@@ -71,7 +71,7 @@ jobs:
           # lts image: forks get neither vars nor secrets, dependabot gets vars
           # but not secrets, so key the fallback on secrets, not on vars.
           if [ "$SECRETS_AVAILABLE" != "true" ] || [ -z "$IMAGES" ]; then
-            IMAGES='{"lts":{"registry":"docker.kurrent.io/eventstore","image":"eventstoredb-ee","tag":"lts"}}'
+            IMAGES='{"lts":{"registry":"docker.io/kurrentplatform","image":"kurrentdb","tag":"lts"}}'
           fi
 
           CONFIG=$(jq -ce --arg runtime "$RUNTIME" '.[$runtime]' <<< "$IMAGES") || {
