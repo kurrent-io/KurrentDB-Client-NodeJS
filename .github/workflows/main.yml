@@ -5,7 +5,7 @@ on:
       - "**.md"
   push:
     branches:
-      - main
+      - master
   schedule:
     - cron: "0 3 * * 0" # Every sunday at 3am UTC.
 
@@ -45,7 +45,7 @@ jobs:
     name: Code quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Corepack
         run: corepack enable
@@ -64,13 +64,31 @@ jobs:
           git update-index --refresh
           git diff-index --exit-code --name-status HEAD --
 
+  select_runtimes:
+    name: Select runtimes
+    runs-on: ubuntu-latest
+    outputs:
+      runtimes: ${{ steps.set.outputs.runtimes }}
+    env:
+      # Secrets are not passed to runs from forks or dependabot. Without them,
+      # only the anonymously pullable lts image can be tested.
+      SECRETS_AVAILABLE: ${{ secrets.CLOUDSMITH_CICD_USER != '' }}
+    steps:
+      - id: set
+        run: |
+          if [ "$SECRETS_AVAILABLE" = "true" ]; then
+            echo 'runtimes=["previous-lts", "lts", "ci"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'runtimes=["lts"]' >> "$GITHUB_OUTPUT"
+          fi
+
   tests:
-    needs: validation
+    needs: [validation, select_runtimes]
 
     strategy:
       fail-fast: false
       matrix:
-        runtime: [previous-lts, lts, ci]
+        runtime: ${{ fromJSON(needs.select_runtimes.outputs.runtimes) }}
 
     name: Tests
     uses: ./.github/workflows/tests.yml

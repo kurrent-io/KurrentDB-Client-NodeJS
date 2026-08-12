@@ -50,17 +50,35 @@ jobs:
     steps:
       - name: Set KurrentDB Runtime Configuration Properties
         id: set
+        env:
+          RUNTIME: ${{ inputs.runtime }}
+          REGISTRY: ${{ inputs.registry }}
+          IMAGE: ${{ inputs.image }}
+          TAG: ${{ inputs.tag }}
+          IMAGES: ${{ vars.KURRENTDB_DOCKER_IMAGES }}
         run: |
-          case ${{ inputs.runtime }} in
-            "qa")
-              echo "registry=${{ inputs.registry }}" >> $GITHUB_OUTPUT
-              echo "image=${{ inputs.image }}" >> $GITHUB_OUTPUT
-              echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
-            ;;
+          if [ "$RUNTIME" = "qa" ]; then
+            {
+              echo "registry=$REGISTRY"
+              echo "image=$IMAGE"
+              echo "tag=$TAG"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-            *)
-              echo "registry=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].registry }}" >> $GITHUB_OUTPUT
-              echo "image=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].image }}" >> $GITHUB_OUTPUT
-              echo "tag=${{ fromJSON(vars.KURRENTDB_DOCKER_IMAGES)[inputs.runtime].tag }}" >> $GITHUB_OUTPUT
-            ;;
-          esac
+          # vars are not passed to runs triggered from forks, fall back to the
+          # anonymously pullable lts image so outside PRs can still run tests.
+          if [ -z "$IMAGES" ]; then
+            IMAGES='{"lts":{"registry":"docker.kurrent.io/eventstore","image":"eventstoredb-ee","tag":"lts"}}'
+          fi
+
+          CONFIG=$(jq -ce --arg runtime "$RUNTIME" '.[$runtime]' <<< "$IMAGES") || {
+            echo "No image configuration for runtime '$RUNTIME'" >&2
+            exit 1
+          }
+
+          {
+            echo "registry=$(jq -r '.registry' <<< "$CONFIG")"
+            echo "image=$(jq -r '.image' <<< "$CONFIG")"
+            echo "tag=$(jq -r '.tag' <<< "$CONFIG")"
+          } >> "$GITHUB_OUTPUT"
