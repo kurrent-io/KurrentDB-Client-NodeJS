@@ -201,8 +201,9 @@ export const batchAppend = async function (
         await backpressuredWrite(stream, batch);
       }
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       promiseBank.delete(correlationId);
-      reject(convertToCommandError(error as Error));
+      reject(convertToCommandError(err));
     }
   });
 };

@@ -192,6 +192,43 @@ describe("appendToStream - batch append", () => {
         process.off("unhandledRejection", collectUnhandled);
       }
     });
+
+    test("A non-Error thrown while building the batch rejects with an Error", async () => {
+      let settled = false;
+      const append = client
+        .appendToStream("non_error_throw", [
+          // JSON.stringify calls toJSON on the payload, and that user code is
+          // free to throw anything at all — a bare string here. Passing the
+          // raw value on to convertToCommandError blows up inside the catch
+          // (it probes the value with the `in` operator), which leaves this
+          // append hanging, so the value is wrapped in an Error first.
+          jsonEvent({
+            type: "non_error_throw",
+            data: {
+              toJSON() {
+                throw "toJSON refused to serialize";
+              },
+            } as never,
+          }),
+        ])
+        .finally(() => {
+          settled = true;
+        });
+
+      const error = await append.catch((reason: unknown) => reason);
+
+      expect(settled).toBe(true);
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toMatch(/toJSON refused to serialize/);
+
+      // The failure was local to this append: the shared batch stream is still
+      // usable afterwards.
+      const result = await client.appendToStream(
+        "non_error_throw_recovery",
+        jsonTestEvents()
+      );
+      expect(result.success).toBe(true);
+    });
   });
 });
 
