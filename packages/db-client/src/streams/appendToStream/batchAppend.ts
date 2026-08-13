@@ -63,6 +63,7 @@ export const batchAppend = async function (
     (client) => {
       const promiseBank: PromiseBank = new Map();
 
+
       const batchStream = client
         .batchAppend(
           ...this.callArguments(baseOptions, {
