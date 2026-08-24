@@ -7,7 +7,7 @@ import {
   matchServerVersion,
   optionalDescribe,
 } from "@test-utils";
-import { KurrentDBClient } from "@kurrent/kurrentdb-client";
+import { KurrentDBClient, jsonEvent } from "@kurrent/kurrentdb-client";
 import { StreamsClient } from "@kurrent/kurrentdb-client/generated/kurrentdb/protocols/v1/streams_grpc_pb";
 
 describe("appendToStream - batch append", () => {
@@ -157,6 +157,77 @@ describe("appendToStream - batch append", () => {
         await clientA.dispose();
         await clientB.dispose();
       }
+    });
+
+    test("An event that cannot be serialized rejects instead of hanging", async () => {
+      const unhandled: unknown[] = [];
+      const collectUnhandled = (reason: unknown) => unhandled.push(reason);
+      process.on("unhandledRejection", collectUnhandled);
+
+      try {
+        let settled = false;
+        const append = client
+          .appendToStream("unserializable_event", [
+            // A bigint is not JSON-serializable, and is easy to end up with by
+            // accident here: this client hands revisions and positions back as
+            // bigints, so round-tripping one into an event payload throws in
+            // eventBatcher. The stream itself stays healthy throughout, so the
+            // "error" handler never runs and cannot settle this append.
+            jsonEvent({
+              type: "unserializable",
+              data: { revision: BigInt(0) } as never,
+            }),
+          ])
+          .finally(() => {
+            settled = true;
+          });
+
+        await expect(append).rejects.toThrow(/BigInt/);
+        expect(settled).toBe(true);
+
+        // Give an orphaned rejection a turn of the loop to surface.
+        await new Promise((r) => setImmediate(r));
+        expect(unhandled).toEqual([]);
+      } finally {
+        process.off("unhandledRejection", collectUnhandled);
+      }
+    });
+
+    test("A non-Error thrown while building the batch rejects with an Error", async () => {
+      let settled = false;
+      const append = client
+        .appendToStream("non_error_throw", [
+          // JSON.stringify calls toJSON on the payload, and that user code is
+          // free to throw anything at all — a bare string here. Passing the
+          // raw value on to convertToCommandError blows up inside the catch
+          // (it probes the value with the `in` operator), which leaves this
+          // append hanging, so the value is wrapped in an Error first.
+          jsonEvent({
+            type: "non_error_throw",
+            data: {
+              toJSON() {
+                throw "toJSON refused to serialize";
+              },
+            } as never,
+          }),
+        ])
+        .finally(() => {
+          settled = true;
+        });
+
+      const error = await append.catch((reason: unknown) => reason);
+
+      expect(settled).toBe(true);
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toMatch(/toJSON refused to serialize/);
+
+      // The failure was local to this append: the shared batch stream is still
+      // usable afterwards.
+      const result = await client.appendToStream(
+        "non_error_throw_recovery",
+        jsonTestEvents()
+      );
+      expect(result.success).toBe(true);
     });
   });
 });
