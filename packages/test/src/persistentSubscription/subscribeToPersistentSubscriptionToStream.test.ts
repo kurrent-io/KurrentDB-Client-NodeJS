@@ -234,6 +234,14 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
       const defer = new Defer();
 
       const nacked: string[] = [];
+      const ackedRetries = new Set<string>();
+      let finishSeen = false;
+
+      const maybeResolve = () => {
+        if (finishSeen && ackedRetries.size === retryCount) {
+          defer.resolve();
+        }
+      };
 
       const onError = jest.fn((error) => {
         defer.reject(error);
@@ -246,7 +254,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
 
         if (event.event.type === "finish-test") {
           await subscription.ack(event);
-          defer.resolve();
+          finishSeen = true;
+          maybeResolve();
           return;
         }
 
@@ -261,6 +270,10 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
         }
 
         await subscription.ack(event);
+        if (event.event.type === "retry-event") {
+          ackedRetries.add(event.event.id);
+        }
+        maybeResolve();
         return;
       });
 
@@ -331,6 +344,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
         const GROUP_NAME = "async_iter_nack_group_name";
         const doSomething = jest.fn();
         const nacked: string[] = [];
+        const ackedRetries = new Set<string>();
+        let finishSeen = false;
 
         // Skip the first twenty events and retry the next 20 events.
         // we should see the number of times that the `onEvent` callback
@@ -365,7 +380,9 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
 
           if (resolvedEvent.event.type === "finish-test") {
             await subscription.ack(resolvedEvent);
-            break;
+            finishSeen = true;
+            if (ackedRetries.size === retryCount) break;
+            continue;
           }
 
           if (!nacked.includes(resolvedEvent.event.id)) {
@@ -379,6 +396,10 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
           }
 
           await subscription.ack(resolvedEvent);
+          if (resolvedEvent.event.type === "retry-event") {
+            ackedRetries.add(resolvedEvent.event.id);
+          }
+          if (finishSeen && ackedRetries.size === retryCount) break;
         }
 
         expect(doSomething).toBeCalledTimes(
