@@ -93,7 +93,9 @@ const createNodes = (
           "EVENTSTORE_LOG_CONFIG=/etc/eventstore/config/logconfig.json",
           "EVENTSTORE_DISCOVER_VIA_DNS=false",
           "EVENTSTORE_ALLOW_UNKNOWN_OPTIONS=true",
-          `EVENTSTORE_LICENSING__LICENSE_KEY=${process.env.KURRENTDB_LICENSE_KEY ?? ""}`,
+          `EVENTSTORE_LICENSING__LICENSE_KEY=${
+            process.env.KURRENTDB_LICENSE_KEY ?? ""
+          }`,
           "EventStore__Plugins__UserCertificates__Enabled=true",
           ...(insecure
             ? [`EVENTSTORE_INSECURE=true`]
