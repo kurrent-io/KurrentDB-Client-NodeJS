@@ -20,6 +20,7 @@ import {
   AppendRecordSizeExceededErrorDetails,
   AppendConsistencyViolationErrorDetails,
 } from "../../generated/kurrentdb/protocols/v2/streams/errors_pb";
+import { NotLeaderNodeErrorDetails } from "../../generated/kurrentdb/protocols/v2/errors_pb";
 
 export enum ErrorType {
   TIMEOUT = "timeout",
@@ -99,8 +100,14 @@ export class NotLeaderError extends CommandErrorBase {
   public type: ErrorType.NOT_LEADER = ErrorType.NOT_LEADER;
   public leader: EndPoint;
 
-  constructor(error: ServiceError) {
+  constructor(error: ServiceError, leader?: EndPoint) {
     super(error);
+
+    if (leader) {
+      this.leader = leader;
+      return;
+    }
+
     const metadata: any = error.metadata?.getMap
       ? error.metadata.getMap()
       : error.metadata;
@@ -677,6 +684,17 @@ export const convertToCommandError = (error: Error): CommandError | Error => {
             details.value
           ).toObject()
         );
+      } else if (details.typeUrl.endsWith("NotLeaderNodeErrorDetails")) {
+        const { currentLeader } = NotLeaderNodeErrorDetails.deserializeBinary(
+          details.value
+        ).toObject();
+
+        if (!currentLeader) return new UnavailableError(error);
+
+        return new NotLeaderError(error, {
+          address: currentLeader.host,
+          port: currentLeader.port,
+        });
       } else if (
         details.typeUrl.endsWith("AppendConsistencyViolationErrorDetails")
       ) {
