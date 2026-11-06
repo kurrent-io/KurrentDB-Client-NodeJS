@@ -29,8 +29,7 @@ jobs:
         run: node -v
 
       - name: Corepack
-        shell: bash
-        run: corepack enable --install-directory "$(node -p 'path.dirname(process.execPath)')"
+        run: corepack enable
 
       - name: Yarn version
         run: yarn --version
