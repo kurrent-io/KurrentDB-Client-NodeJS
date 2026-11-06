@@ -234,6 +234,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
       const defer = new Defer();
 
       const nacked: string[] = [];
+      let finished = false;
+      let redelivered = 0;
 
       const onError = jest.fn((error) => {
         defer.reject(error);
@@ -245,12 +247,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
         if (!event.event) return;
 
         if (event.event.type === "finish-test") {
-          await subscription.ack(event);
-          defer.resolve();
-          return;
-        }
-
-        if (!nacked.includes(event.event.id)) {
+          finished = true;
+        } else if (!nacked.includes(event.event.id)) {
           nacked.push(event.event.id);
           await subscription.nack(
             event.event.type === "skip-event" ? "skip" : "retry",
@@ -258,10 +256,13 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
             event
           );
           return;
+        } else {
+          redelivered++;
         }
 
         await subscription.ack(event);
-        return;
+
+        if (finished && redelivered === retryCount) defer.resolve();
       });
 
       const subscription = client
@@ -331,6 +332,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
         const GROUP_NAME = "async_iter_nack_group_name";
         const doSomething = jest.fn();
         const nacked: string[] = [];
+        let finished = false;
+        let redelivered = 0;
 
         // Skip the first twenty events and retry the next 20 events.
         // we should see the number of times that the `onEvent` callback
@@ -364,11 +367,8 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
           doSomething(resolvedEvent);
 
           if (resolvedEvent.event.type === "finish-test") {
-            await subscription.ack(resolvedEvent);
-            break;
-          }
-
-          if (!nacked.includes(resolvedEvent.event.id)) {
+            finished = true;
+          } else if (!nacked.includes(resolvedEvent.event.id)) {
             nacked.push(resolvedEvent.event.id);
             await subscription.nack(
               resolvedEvent.event.type === "skip-event" ? "skip" : "retry",
@@ -376,9 +376,13 @@ describe("subscribeToPersistentSubscriptionToStream", () => {
               resolvedEvent
             );
             continue;
+          } else {
+            redelivered++;
           }
 
           await subscription.ack(resolvedEvent);
+
+          if (finished && redelivered === retryCount) break;
         }
 
         expect(doSomething).toBeCalledTimes(

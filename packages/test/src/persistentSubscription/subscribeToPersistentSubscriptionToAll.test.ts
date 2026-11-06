@@ -269,6 +269,8 @@ describe("subscribeToPersistentSubscriptionToAll", () => {
         const defer = new Defer();
 
         const nacked: string[] = [];
+        let finished = false;
+        let redelivered = 0;
 
         const onError = jest.fn((error) => {
           defer.reject(error);
@@ -280,27 +282,25 @@ describe("subscribeToPersistentSubscriptionToAll", () => {
           if (!event.event) return;
 
           if (event.event.type === FINISH_TEST) {
-            await subscription.ack(event);
-            defer.resolve();
-            return;
-          }
+            finished = true;
+          } else if (!event.event.streamId.startsWith("$")) {
+            if (!nacked.includes(event.event.id)) {
+              nacked.push(event.event.id);
+              await subscription.nack(
+                event.event.type === "skip-event" ? "skip" : "retry",
+                "To test it",
+                event
+              );
+              return;
+            }
 
-          if (
-            !event.event.streamId.startsWith("$") &&
-            !nacked.includes(event.event.id)
-          ) {
-            nacked.push(event.event.id);
-
-            await subscription.nack(
-              event.event.type === "skip-event" ? "skip" : "retry",
-              "To test it",
-              event
-            );
-            return;
+            redelivered++;
           }
 
           await subscription.ack(event);
-          return;
+
+          // mark + retried
+          if (finished && redelivered === 1 + retryCount) defer.resolve();
         });
 
         const subscription = client
@@ -374,6 +374,8 @@ describe("subscribeToPersistentSubscriptionToAll", () => {
           const FINISH_TEST = "async_iter_nack_finish_test";
           const doSomething = jest.fn();
           const nacked: string[] = [];
+          let finished = false;
+          let redelivered = 0;
 
           const { position } = await client.appendToStream(
             STREAM_NAME,
@@ -411,24 +413,25 @@ describe("subscribeToPersistentSubscriptionToAll", () => {
             doSomething(resolvedEvent);
 
             if (resolvedEvent.event.type === FINISH_TEST) {
-              await subscription.ack(resolvedEvent);
-              break;
-            }
+              finished = true;
+            } else if (!resolvedEvent.event.streamId.startsWith("$")) {
+              if (!nacked.includes(resolvedEvent.event.id)) {
+                nacked.push(resolvedEvent.event.id);
+                await subscription.nack(
+                  resolvedEvent.event.type === "skip-event" ? "skip" : "retry",
+                  "To test it",
+                  resolvedEvent
+                );
+                continue;
+              }
 
-            if (
-              !resolvedEvent.event.streamId.startsWith("$") &&
-              !nacked.includes(resolvedEvent.event.id)
-            ) {
-              nacked.push(resolvedEvent.event.id);
-              await subscription.nack(
-                resolvedEvent.event.type === "skip-event" ? "skip" : "retry",
-                "To test it",
-                resolvedEvent
-              );
-              continue;
+              redelivered++;
             }
 
             await subscription.ack(resolvedEvent);
+
+            // mark + retried
+            if (finished && redelivered === 1 + retryCount) break;
           }
 
           // mark + skipped + retried
