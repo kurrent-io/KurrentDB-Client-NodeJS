@@ -94,4 +94,5 @@ jobs:
       - name: Run Tests
         run: yarn test ${{ matrix.group.path }} --ci --run-in-band --forceExit
         env:
+          KURRENTDB_LICENSE_KEY: ${{ secrets.KURRENTDB_TEST_LICENSE_KEY }}
           KURRENT_IMAGE: "${{ needs.load_configuration.outputs.registry }}/${{ needs.load_configuration.outputs.image }}:${{ needs.load_configuration.outputs.tag }}"
