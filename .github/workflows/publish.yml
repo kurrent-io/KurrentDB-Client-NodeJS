@@ -1,0 +1,58 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tagged commit is on master
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/files/.nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - name: Corepack
+        run: corepack enable
+
+      - name: Install
+        run: yarn
+
+      - name: Tag matches package versions
+        run: |
+          for pkg in db-client opentelemetry; do
+            version="v$(jq -r .version packages/$pkg/package.json)"
+            if [ "$version" != "$GITHUB_REF_NAME" ]; then
+              echo "::error::packages/$pkg is $version but tag is $GITHUB_REF_NAME"
+              exit 1
+            fi
+          done
+
+      - name: Build
+        run: yarn build
+
+      - name: Pack
+        run: |
+          yarn workspace @kurrent/kurrentdb-client pack --out "$RUNNER_TEMP/db-client.tgz"
+          yarn workspace @kurrent/opentelemetry pack --out "$RUNNER_TEMP/opentelemetry.tgz"
+
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Publish
+        run: |
+          npm publish "$RUNNER_TEMP/db-client.tgz" --access public
+          npm publish "$RUNNER_TEMP/opentelemetry.tgz" --access public
