@@ -4,6 +4,8 @@ import { Readable, Writable, Duplex, finished } from "stream";
 import * as bridge from "@kurrent/bridge";
 
 import { randomUUID } from "crypto";
+import { isIP } from "net";
+import type { ConnectionOptions } from "tls";
 
 import {
   CallCredentials as grpcCallCredentials,
@@ -398,6 +400,21 @@ export class Client {
         channelCredentials.userCertFile,
         channelCredentials.verifyOptions
       );
+
+      // grpc-js sends the raw host as TLS servername, which Node 26 rejects for IPs
+      const createSecureConnector =
+        this.#channelCredentials._createSecureConnector.bind(
+          this.#channelCredentials
+        );
+      this.#channelCredentials._createSecureConnector = (...args) => {
+        const connector = createSecureConnector(...args);
+        const options = (connector as { connectionOptions?: ConnectionOptions })
+          .connectionOptions;
+        if (options && isIP(options.servername ?? "")) {
+          delete options.servername;
+        }
+        return connector;
+      };
     }
   }
 
