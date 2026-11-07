@@ -14,6 +14,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tagged commit is on master
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
 
       - uses: actions/setup-node@v4
         with:
