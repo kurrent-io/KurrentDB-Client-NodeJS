@@ -17,8 +17,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tagged commit is on master
-        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+      - name: Tagged commit is on master or a release branch
+        run: git branch -r --contains "$GITHUB_SHA" | grep -Eq 'origin/(master|release/[^ ]+)$'
 
       - uses: actions/setup-node@v4
         with:
