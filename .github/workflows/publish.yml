@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Tagged commit is on master or a release branch
-        run: git branch -r --contains "$GITHUB_SHA" | grep -Eq 'origin/(master|release/[^ ]+)$'
+        run: git for-each-ref --format='%(refname:short)' --contains "$GITHUB_SHA" refs/remotes/origin | grep -Eqx 'origin/(master|release/[^/]+)'
 
       - uses: actions/setup-node@v4
         with:
