@@ -764,9 +764,18 @@ export class Client {
   protected get capabilities(): Promise<ServerFeatures> {
     if (!this.#serverFeatures) {
       debug.command("Fetching server capabilities");
-      this.#serverFeatures = this.execute(
+      const serverFeatures = this.execute(
         ...ServerFeatures.createServerFeatures
       );
+      this.#serverFeatures = serverFeatures;
+      // A failed lookup must not be cached. If it failed because discovery
+      // found no usable node, nothing else resets it, and every later call
+      // would rethrow this rejection without attempting discovery again.
+      serverFeatures.catch(() => {
+        if (this.#serverFeatures === serverFeatures) {
+          this.#serverFeatures = undefined;
+        }
+      });
     }
     return this.#serverFeatures;
   }
