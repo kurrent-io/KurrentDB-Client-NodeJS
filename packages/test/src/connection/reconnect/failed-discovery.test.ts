@@ -1,6 +1,10 @@
 import { createServer, type AddressInfo, type Server } from "net";
 
-import { jsonEvent, KurrentDBClient } from "@kurrent/kurrentdb-client";
+import {
+  jsonEvent,
+  KurrentDBClient,
+  UnavailableError,
+} from "@kurrent/kurrentdb-client";
 
 // https://github.com/kurrent-io/KurrentDB-Client-NodeJS/issues/538
 describe("reconnect", () => {
@@ -44,5 +48,37 @@ describe("reconnect", () => {
       "Failed to discover after 2 attempts."
     );
     expect(gossipConnections).toBeGreaterThan(connectionsAfterFirstFailure);
+  });
+
+  test("a late error from a previous channel is not an unhandled rejection", async () => {
+    const unhandled: unknown[] = [];
+    const collectUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on("unhandledRejection", collectUnhandled);
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const internals = client as any;
+
+      // The current channel is now a discovery that is going to fail.
+      const discovery: Promise<unknown> = internals.getChannel();
+
+      // Meanwhile a request on the channel this one replaced fails. As in
+      // execute and GRPCStreamCreator, nothing awaits handleError.
+      const previousChannel = {};
+      internals.handleError(
+        { getChannel: () => previousChannel },
+        new UnavailableError()
+      );
+
+      await expect(discovery).rejects.toThrow(
+        "Failed to discover after 2 attempts."
+      );
+
+      // Give an orphaned rejection a turn of the loop to surface.
+      await new Promise((r) => setImmediate(r));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", collectUnhandled);
+    }
   });
 });

@@ -579,7 +579,10 @@ export class Client {
     debug.connection("Got reconnection error", error.message);
 
     const failedChannel = client.getChannel();
-    const currentChannel = await this.#channel;
+    // The current channel may be a discovery that is about to fail. That
+    // failure is reported to whoever started it; rethrowing it here would be
+    // an unhandled rejection, because no caller awaits handleError.
+    const currentChannel = await this.#channel?.catch(() => undefined);
     if (failedChannel !== currentChannel) {
       debug.connection("Channel already reconnected");
       return;
