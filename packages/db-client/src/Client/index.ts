@@ -579,7 +579,10 @@ export class Client {
     debug.connection("Got reconnection error", error.message);
 
     const failedChannel = client.getChannel();
-    const currentChannel = await this.#channel;
+    // The current channel may be a discovery that is about to fail. That
+    // failure is reported to whoever started it; rethrowing it here would be
+    // an unhandled rejection, because no caller awaits handleError.
+    const currentChannel = await this.#channel?.catch(() => undefined);
     if (failedChannel !== currentChannel) {
       debug.connection("Channel already reconnected");
       return;
@@ -764,9 +767,18 @@ export class Client {
   protected get capabilities(): Promise<ServerFeatures> {
     if (!this.#serverFeatures) {
       debug.command("Fetching server capabilities");
-      this.#serverFeatures = this.execute(
+      const serverFeatures = this.execute(
         ...ServerFeatures.createServerFeatures
       );
+      this.#serverFeatures = serverFeatures;
+      // A failed lookup must not be cached. If it failed because discovery
+      // found no usable node, nothing else resets it, and every later call
+      // would rethrow this rejection without attempting discovery again.
+      serverFeatures.catch(() => {
+        if (this.#serverFeatures === serverFeatures) {
+          this.#serverFeatures = undefined;
+        }
+      });
     }
     return this.#serverFeatures;
   }
